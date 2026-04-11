@@ -1,0 +1,92 @@
+version: '3.9'
+
+# Docker Compose para produção
+# Uso: docker-compose -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-salao_da_lu}
+      POSTGRES_USER: ${DB_USER:-salao}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - salao-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-salao} -d ${DB_NAME:-salao_da_lu}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - salao-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    image: salaodalu/backend:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-salao}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-salao_da_lu}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    networks:
+      - salao-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+
+  # Serviço opcional para processamento de jobs em background
+  # worker:
+  #   image: salaodalu/backend:latest
+  #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   environment:
+  #     DATABASE_URL: postgresql://${DB_USER:-salao}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-salao_da_lu}?schema=public
+  #     JWT_SECRET: ${JWT_SECRET}
+  #     REDIS_HOST: redis
+  #     REDIS_PORT: 6379
+  #     NODE_ENV: production
+  #   command: npm run start:worker
+  #   networks:
+  #     - salao-network
+  #   profiles:
+  #     - worker
+
+networks:
+  salao-network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:

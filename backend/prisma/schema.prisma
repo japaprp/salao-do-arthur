@@ -1,0 +1,263 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  PROFESSIONAL
+  CLIENT
+  RECEPTION
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CHECKED_IN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Tenant {
+  id         String       @id @default(uuid())
+  name       String
+  subdomain  String       @unique
+  locale     String       @default("pt-BR")
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  users      User[]
+  professionals Professional[]
+  clients    Client[]
+  services   Service[]
+  resources  Resource[]
+  appointments Appointment[]
+  transactions Transaction[]
+  commissions Commission[]
+  loyaltyWallets LoyaltyWallet[]
+  campaigns  Campaign[]
+  notifications Notification[]
+  auditLogs  AuditLog[]
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  phone        String?      @unique
+  passwordHash String
+  name         String
+  role         UserRole
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+  professional Professional?
+  client       Client?
+  notifications Notification[]
+  auditLogs    AuditLog[]
+}
+
+model Professional {
+  id               String      @id @default(uuid())
+  userId           String      @unique
+  tenantId         String
+  specialty        String?
+  commissionPercent Decimal    @default(40.0)
+  active           Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  user             User        @relation(fields: [userId], references: [id])
+  tenant           Tenant      @relation(fields: [tenantId], references: [id])
+  favoriteByClients Client[]   @relation("FavoriteProfessional")
+  appointments     Appointment[]
+  transactions     Transaction[]
+  commissions      Commission[]
+}
+
+model Client {
+  id                    String      @id @default(uuid())
+  userId                String      @unique
+  tenantId              String
+  loyaltyPoints         Int         @default(0)
+  lifetimeValue         Decimal     @default(0.0)
+  favoriteProfessionalId String?
+  preferences           Json?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  user                  User        @relation(fields: [userId], references: [id])
+  tenant                Tenant      @relation(fields: [tenantId], references: [id])
+  favoriteProfessional  Professional? @relation("FavoriteProfessional", fields: [favoriteProfessionalId], references: [id])
+  appointments          Appointment[]
+  loyaltyWallet         LoyaltyWallet?
+}
+
+model Service {
+  id                  String      @id @default(uuid())
+  tenantId            String
+  name                String
+  description         String?
+  durationMinutes     Int
+  price               Decimal
+  bufferBeforeMinutes Int         @default(0)
+  bufferAfterMinutes  Int         @default(0)
+  parallelAllowed     Boolean     @default(false)
+  active              Boolean     @default(true)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  tenant              Tenant      @relation(fields: [tenantId], references: [id])
+  appointments        Appointment[]
+}
+
+model Appointment {
+  id             String      @id @default(uuid())
+  tenantId       String
+  clientId       String
+  professionalId String
+  serviceId      String
+  status         AppointmentStatus
+  scheduledAt    DateTime
+  durationMinutes Int
+  price          Decimal
+  discount       Decimal     @default(0.0)
+  totalAmount    Decimal
+  checkinAt      DateTime?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenant         Tenant      @relation(fields: [tenantId], references: [id])
+  client         Client      @relation(fields: [clientId], references: [id])
+  professional   Professional @relation(fields: [professionalId], references: [id])
+  service        Service     @relation(fields: [serviceId], references: [id])
+  resourceBookings ResourceBooking[]
+  transactions   Transaction[]
+  commissions    Commission[]
+}
+
+model Resource {
+  id         String      @id @default(uuid())
+  tenantId   String
+  type       String
+  name       String
+  capacity   Int         @default(1)
+  active     Boolean     @default(true)
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  resourceBookings ResourceBooking[]
+}
+
+model ResourceBooking {
+  id            String      @id @default(uuid())
+  appointmentId String
+  resourceId    String
+  reservedAt    DateTime
+  releasedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  resource      Resource    @relation(fields: [resourceId], references: [id])
+}
+
+model Transaction {
+  id            String      @id @default(uuid())
+  tenantId      String
+  appointmentId String?
+  professionalId String?
+  type          String
+  category      String
+  amount        Decimal
+  status        String
+  description   String?
+  recordedAt    DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+  tenant        Tenant      @relation(fields: [tenantId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  professional  Professional? @relation(fields: [professionalId], references: [id])
+}
+
+model Commission {
+  id             String      @id @default(uuid())
+  tenantId       String
+  professionalId String
+  appointmentId  String?
+  percentage     Decimal
+  amount         Decimal
+  paid           Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenant         Tenant      @relation(fields: [tenantId], references: [id])
+  professional   Professional @relation(fields: [professionalId], references: [id])
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id])
+}
+
+model LoyaltyWallet {
+  id            String      @id @default(uuid())
+  tenantId      String
+  clientId      String      @unique
+  pointsBalance Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  tenant        Tenant      @relation(fields: [tenantId], references: [id])
+  client        Client      @relation(fields: [clientId], references: [id])
+  loyaltyTransactions LoyaltyTransaction[]
+}
+
+model LoyaltyTransaction {
+  id        String      @id @default(uuid())
+  walletId  String
+  points    Int
+  type      String
+  reason    String?
+  metadata  Json?
+  createdAt DateTime    @default(now())
+  wallet    LoyaltyWallet @relation(fields: [walletId], references: [id])
+}
+
+model Campaign {
+  id        String      @id @default(uuid())
+  tenantId  String
+  name      String
+  type      String
+  criteria  Json
+  discount  Json?
+  active    Boolean     @default(true)
+  triggers  Json?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+}
+
+model Notification {
+  id        String      @id @default(uuid())
+  tenantId  String
+  userId    String
+  channel   String
+  title     String
+  body      String?
+  payload   Json?
+  sentAt    DateTime?
+  read      Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  tenantId   String
+  userId     String?
+  action     String
+  entity     String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  user       User?       @relation(fields: [userId], references: [id])
+}

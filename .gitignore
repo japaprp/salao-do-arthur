@@ -1,0 +1,83 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+web/.env
+!.env.example
+!.env.prod.example
+!backend/.env.example
+!web/.env.example
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+out/
+coverage/
+*.lcov
+.nyc_output/
+.generated/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# IDE and editor
+.idea/
+*.iml
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# Flutter / mobile generated files
+android/.gradle/
+android/app/debug.keystore
+ios/Pods/
+ios/Runner.xcworkspace/
+*.apk
+*.aar
+*.ap_
+*.dex
+*.dSYM
+*.app
+*.ipa
+
+# Logs and runtime data
+logs/
+*.log
+lerna-debug.log*
+pids/
+*.pid
+*.pid.lock
+*.seed
+
+# Temporary folders
+tmp/
+temp/
+.local/
+postgres_data/
+
+# OS generated files
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

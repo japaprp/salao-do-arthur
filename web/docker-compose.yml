@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://backend:3000/api
+    depends_on:
+      - backend
+    networks:
+      - salao-network
+    restart: unless-stopped
+
+networks:
+  salao-network:
+    external: true
