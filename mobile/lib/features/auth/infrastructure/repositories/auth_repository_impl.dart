@@ -61,8 +61,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> signOut() {
-    return _localDataSource.clearSession();
+  Future<void> signOut() async {
+    final session = _localDataSource.readSession();
+
+    try {
+      if (session != null) {
+        await _remoteDataSource.signOut(session.accessToken);
+      }
+    } on DioException {
+      // A limpeza local da sessão tem precedência sobre falha remota de logout.
+    } finally {
+      await _localDataSource.clearSession();
+    }
   }
 
   Failure _mapFailure(Object error) {

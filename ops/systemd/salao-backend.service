@@ -1,0 +1,18 @@
+[Unit]
+Description=Salao da Lu Backend
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+Group=www-data
+WorkingDirectory=/var/www/salao/backend/current
+EnvironmentFile=/var/www/salao/shared/backend.env
+ExecStart=/usr/bin/env node dist/main
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

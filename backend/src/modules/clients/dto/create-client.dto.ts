@@ -19,7 +19,7 @@ export class CreateClientDto {
 
   @IsOptional()
   @IsObject()
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
 }
 
 export type CreateClientInput = CreateClientDto & {

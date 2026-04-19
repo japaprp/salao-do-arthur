@@ -29,13 +29,21 @@ export function readStoredToken(): string | null {
   return localStorage.getItem(TOKEN_STORAGE_KEY);
 }
 
-export function persistAuthSession(user: User, token: string): void {
+export function persistAuthSession(user: User, accessToken: string): void {
   if (typeof window === 'undefined') {
     return;
   }
 
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
+}
+
+export function updateStoredTokens(accessToken: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
 }
 
 export function clearAuthSession(): void {

@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@ne
 import { ProfessionalsService } from './professionals.service';
 import { CreateProfessionalDto } from './dto/create-professional.dto';
 import { UpdateProfessionalDto } from './dto/update-professional.dto';
+import { SyncProfessionalServicesDto } from './dto/sync-professional-services.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
@@ -43,6 +44,14 @@ export class ProfessionalsController {
     return this.professionalsService.findAvailableForService(serviceId, user.tenantId);
   }
 
+  @Get(':id/services')
+  @ApiOperation({ summary: 'Listar vínculos entre profissional e serviços' })
+  @ApiParam({ name: 'id', description: 'ID do profissional' })
+  @ApiResponse({ status: 200, description: 'Lista de vínculos retornada' })
+  findServiceLinks(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.professionalsService.findServiceLinks(id, user.tenantId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Buscar profissional por ID' })
   @ApiParam({ name: 'id', description: 'ID do profissional' })
@@ -63,6 +72,18 @@ export class ProfessionalsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.professionalsService.update(id, updateProfessionalDto, user.tenantId);
+  }
+
+  @Put(':id/services')
+  @ApiOperation({ summary: 'Sincronizar serviços vinculados ao profissional' })
+  @ApiParam({ name: 'id', description: 'ID do profissional' })
+  @ApiResponse({ status: 200, description: 'Vínculos atualizados com sucesso' })
+  syncServices(
+    @Param('id') id: string,
+    @Body() syncProfessionalServicesDto: SyncProfessionalServicesDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.professionalsService.syncServices(id, syncProfessionalServicesDto, user.tenantId);
   }
 
   @Delete(':id')

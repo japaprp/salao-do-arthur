@@ -1,14 +1,28 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Professional } from '@prisma/client';
 import { CreateProfessionalInput } from '../dto/create-professional.dto';
 import { UpdateProfessionalDto } from '../dto/update-professional.dto';
+
+const professionalWithRelations = Prisma.validator<Prisma.ProfessionalDefaultArgs>()({
+  include: {
+    user: true,
+    services: {
+      include: {
+        service: true,
+      },
+      orderBy: [{ active: 'desc' }, { sortOrder: 'asc' }, { service: { name: 'asc' } }],
+    },
+  },
+});
+
+export type ProfessionalWithRelations = Prisma.ProfessionalGetPayload<typeof professionalWithRelations>;
 
 @Injectable()
 export class ProfessionalsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createProfessionalDto: CreateProfessionalInput): Promise<Professional> {
+  async create(createProfessionalDto: CreateProfessionalInput): Promise<ProfessionalWithRelations> {
     return this.prisma.withTenant(createProfessionalDto.tenantId, transaction =>
       transaction.professional.create({
         data: {
@@ -18,50 +32,68 @@ export class ProfessionalsRepository {
           commissionPercent: createProfessionalDto.commissionPercent,
           active: createProfessionalDto.active ?? true,
         },
+        include: professionalWithRelations.include,
       }),
     );
   }
 
-  async findAllByTenant(tenantId: string): Promise<Professional[]> {
+  async findAllByTenant(tenantId: string): Promise<ProfessionalWithRelations[]> {
     return this.prisma.withTenant(tenantId, transaction =>
       transaction.professional.findMany({
-        where: { tenantId, active: true },
-        include: { user: true },
+        where: { tenantId },
+        include: professionalWithRelations.include,
+        orderBy: [{ active: 'desc' }, { createdAt: 'desc' }],
       }),
     );
   }
 
-  async findByIdAndTenant(id: string, tenantId: string): Promise<Professional | null> {
+  async findByIdAndTenant(id: string, tenantId: string): Promise<ProfessionalWithRelations | null> {
     return this.prisma.withTenant(tenantId, transaction =>
       transaction.professional.findFirst({
         where: { id, tenantId },
-        include: { user: true },
+        include: professionalWithRelations.include,
       }),
     );
   }
 
-  async findByUserId(userId: string): Promise<Professional | null> {
+  async findByUserId(userId: string): Promise<ProfessionalWithRelations | null> {
     return this.prisma.professional.findUnique({
       where: { userId },
-      include: { user: true },
+      include: professionalWithRelations.include,
     });
   }
 
-  async findByUserIdAndTenant(userId: string, tenantId: string): Promise<Professional | null> {
+  async findByUserIdAndTenant(
+    userId: string,
+    tenantId: string,
+  ): Promise<ProfessionalWithRelations | null> {
     return this.prisma.withTenant(tenantId, transaction =>
       transaction.professional.findFirst({
         where: { userId, tenantId },
-        include: { user: true },
+        include: professionalWithRelations.include,
       }),
     );
   }
 
-  async findAvailableForService(serviceId: string, tenantId: string): Promise<Professional[]> {
-    // TODO: Implementar lógica de disponibilidade baseada em especialidade/serviço
+  async findAvailableForService(
+    serviceId: string,
+    tenantId: string,
+  ): Promise<ProfessionalWithRelations[]> {
     return this.prisma.withTenant(tenantId, transaction =>
       transaction.professional.findMany({
-        where: { tenantId, active: true },
-        include: { user: true },
+        where: {
+          tenantId,
+          active: true,
+          services: {
+            some: {
+              serviceId,
+              tenantId,
+              active: true,
+            },
+          },
+        },
+        include: professionalWithRelations.include,
+        orderBy: [{ user: { name: 'asc' } }],
       }),
     );
   }
@@ -70,7 +102,7 @@ export class ProfessionalsRepository {
     id: string,
     tenantId: string,
     updateProfessionalDto: UpdateProfessionalDto,
-  ): Promise<Professional> {
+  ): Promise<ProfessionalWithRelations> {
     return this.prisma.withTenant(tenantId, async transaction => {
       await transaction.professional.findFirstOrThrow({
         where: { id, tenantId },
@@ -80,11 +112,12 @@ export class ProfessionalsRepository {
       return transaction.professional.update({
         where: { id },
         data: updateProfessionalDto,
+        include: professionalWithRelations.include,
       });
     });
   }
 
-  async remove(id: string, tenantId: string): Promise<Professional> {
+  async remove(id: string, tenantId: string): Promise<ProfessionalWithRelations> {
     return this.prisma.withTenant(tenantId, async transaction => {
       await transaction.professional.findFirstOrThrow({
         where: { id, tenantId },
@@ -94,6 +127,7 @@ export class ProfessionalsRepository {
       return transaction.professional.update({
         where: { id },
         data: { active: false },
+        include: professionalWithRelations.include,
       });
     });
   }

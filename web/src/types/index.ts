@@ -31,6 +31,7 @@ export interface Professional {
   createdAt: IsoDateTimeString;
   updatedAt: IsoDateTimeString;
   user?: User;
+  serviceLinks?: ProfessionalServiceAssignment[];
 }
 
 export interface Client {
@@ -60,6 +61,20 @@ export interface Service {
   active: boolean;
   createdAt: IsoDateTimeString;
   updatedAt: IsoDateTimeString;
+}
+
+export interface ProfessionalServiceAssignment {
+  id: string;
+  tenantId: string;
+  professionalId: string;
+  serviceId: string;
+  customPrice?: number | null;
+  customDurationMinutes?: number | null;
+  active: boolean;
+  sortOrder: number;
+  createdAt: IsoDateTimeString;
+  updatedAt: IsoDateTimeString;
+  service?: Service;
 }
 
 export interface Appointment {
@@ -102,11 +117,13 @@ export enum AppointmentStatus {
 }
 
 export interface LoginForm {
+  tenantSubdomain: string;
   email: string;
   password: string;
 }
 
-export interface RegisterForm {
+export interface AdminRegisterForm {
+  organizationName: string;
   name: string;
   email: string;
   password: string;
@@ -143,17 +160,69 @@ export interface UpdateAppointmentDto extends Partial<CreateAppointmentDto> {
 
 export interface AuthResponse {
   accessToken: string;
+  refreshToken: string;
   tokenType: string;
   expiresIn: string | number;
-  user?: User;
+  refreshExpiresIn?: string | number;
+  user: User;
+}
+
+export interface SyncProfessionalServiceInput {
+  serviceId: string;
+  customPrice?: number | null;
+  customDurationMinutes?: number | null;
+  active?: boolean;
+  sortOrder?: number;
 }
 
 export interface DashboardStats {
-  totalAppointments: number;
-  scheduledAppointments: number;
+  activeAppointments: number;
   totalClients: number;
   projectedRevenue: number;
   averageTicket: number;
+  upcomingAppointments: Appointment[];
+}
+
+export interface ReportsSummary {
+  activeAppointments: number;
+  projectedRevenue: number;
+  totalClients: number;
+  newClients: number;
+  totalCompletedAppointments: number;
+  monthlyCompletedAppointments: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  averageTicket: number;
+}
+
+export interface MonthlyMetricPoint {
+  monthKey: string;
+  label: string;
+  revenue: number;
+  appointments: number;
+}
+
+export interface TopServiceMetric {
+  serviceId: string;
+  name: string;
+  count: number;
+  percentage: number;
+  revenue: number;
+}
+
+export interface ProfessionalPerformanceMetric {
+  professionalId: string;
+  name: string;
+  appointments: number;
+  revenue: number;
+}
+
+export interface ReportsOverview {
+  summary: ReportsSummary;
+  monthlyData: MonthlyMetricPoint[];
+  topServices: TopServiceMetric[];
+  professionalPerformance: ProfessionalPerformanceMetric[];
+  topService: TopServiceMetric | null;
   upcomingAppointments: Appointment[];
 }
 

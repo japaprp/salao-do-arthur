@@ -1,6 +1,7 @@
+import { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-export const setupSwagger = (app: any) => {
+export const setupSwagger = (app: INestApplication): void => {
   const config = new DocumentBuilder()
     .setTitle('Salão da Lu API')
     .setDescription('API completa para gestão de salão de beleza')

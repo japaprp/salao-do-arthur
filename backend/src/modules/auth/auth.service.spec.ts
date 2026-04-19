@@ -1,6 +1,5 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from './auth.service';
@@ -13,8 +12,12 @@ jest.mock('bcryptjs', () => ({
 const mockedBcrypt = jest.mocked(bcrypt);
 
 describe('AuthService', () => {
+  const fixedDate = new Date('2026-04-14T12:00:00.000Z');
+
   const usersService = {
     findByEmailAndTenant: jest.fn(),
+    findByIdAndTenant: jest.fn(),
+    findById: jest.fn(),
   };
 
   const tenantsService = {
@@ -25,14 +28,27 @@ describe('AuthService', () => {
 
   const jwtService = {
     sign: jest.fn(),
+    verify: jest.fn(),
   };
 
   const prismaService = {
     withTenant: jest.fn(),
+    refreshToken: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+    },
+  };
+
+  const configValues: Record<string, string> = {
+    JWT_EXPIRES_IN: '1h',
+    REFRESH_TOKEN_EXPIRES_IN: '7d',
+    REFRESH_TOKEN_SECRET: 'refresh-secret-for-tests',
   };
 
   const configService = {
-    get: jest.fn((key: string, fallback?: string | number) => fallback),
+    get: jest.fn((key: string, fallback?: string | number) => configValues[key] ?? fallback),
   } as unknown as ConfigService;
 
   let service: AuthService;
@@ -48,7 +64,7 @@ describe('AuthService', () => {
     );
   });
 
-  it('returns a signed access token on successful login', async () => {
+  it('returns access token and refresh token on successful login', async () => {
     tenantsService.findBySubdomain.mockResolvedValue({
       id: 'tenant-1',
       subdomain: 'salao-da-lu',
@@ -57,10 +73,26 @@ describe('AuthService', () => {
       id: 'user-1',
       email: 'cliente@salao.com',
       passwordHash: 'hashed-password',
+      name: 'Cliente Demo',
       role: UserRole.CLIENT,
       tenantId: 'tenant-1',
+      phone: null,
+      isActive: true,
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+      deletedAt: null,
     });
-    jwtService.sign.mockReturnValue('signed-token');
+    jwtService.sign
+      .mockReturnValueOnce('signed-access-token')
+      .mockReturnValueOnce('signed-refresh-token');
+    prismaService.refreshToken.create.mockResolvedValue({
+      id: 'rt-1',
+      userId: 'user-1',
+      token: 'signed-refresh-token',
+      expiresAt: new Date('2026-04-21T12:00:00.000Z'),
+      revokedAt: null,
+      createdAt: fixedDate,
+    });
     mockedBcrypt.compare.mockResolvedValue(true as never);
 
     const result = await service.login({
@@ -70,18 +102,32 @@ describe('AuthService', () => {
     });
 
     expect(result).toEqual({
-      accessToken: 'signed-token',
+      accessToken: 'signed-access-token',
+      refreshToken: 'signed-refresh-token',
       tokenType: 'Bearer',
-      expiresIn: '2h',
-    });
-    expect(jwtService.sign).toHaveBeenCalledWith({
-      sub: 'user-1',
-      email: 'cliente@salao.com',
-      role: UserRole.CLIENT,
-      tenantId: 'tenant-1',
+      expiresIn: '1h',
+      refreshExpiresIn: '7d',
+      user: {
+        id: 'user-1',
+        email: 'cliente@salao.com',
+        name: 'Cliente Demo',
+        role: UserRole.CLIENT,
+        tenantId: 'tenant-1',
+        phone: null,
+        isActive: true,
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+        deletedAt: null,
+      },
     });
     expect(tenantsService.findBySubdomain).toHaveBeenCalledWith('salao-da-lu');
     expect(usersService.findByEmailAndTenant).toHaveBeenCalledWith('cliente@salao.com', 'tenant-1');
+    expect(prismaService.refreshToken.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-1',
+        token: 'signed-refresh-token',
+      }),
+    });
   });
 
   it('throws UnauthorizedException when password is invalid', async () => {
@@ -93,8 +139,13 @@ describe('AuthService', () => {
       id: 'user-1',
       email: 'cliente@salao.com',
       passwordHash: 'hashed-password',
+      name: 'Cliente Demo',
       role: UserRole.CLIENT,
       tenantId: 'tenant-1',
+      phone: null,
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+      deletedAt: null,
     });
     mockedBcrypt.compare.mockResolvedValue(false as never);
 
@@ -130,6 +181,9 @@ describe('AuthService', () => {
           tenantId: 'tenant-1',
         }),
       },
+      adminProfile: {
+        create: jest.fn(),
+      },
     };
     prismaService.withTenant.mockImplementation(async (_tenantId, callback) =>
       callback(transaction),
@@ -161,6 +215,7 @@ describe('AuthService', () => {
         tenantId: 'tenant-1',
       },
     });
+    expect(transaction.adminProfile.create).not.toHaveBeenCalled();
     expect(result).toEqual({
       id: 'user-1',
       email: 'cliente@salao.com',
@@ -170,7 +225,7 @@ describe('AuthService', () => {
     });
   });
 
-  it('registers a manager for a newly created tenant without creating a client profile', async () => {
+  it('registers a manager for a newly created tenant and authenticates the onboarding flow', async () => {
     tenantsService.createTenant.mockResolvedValue({ id: 'tenant-new' });
     const transaction = {
       user: {
@@ -181,22 +236,44 @@ describe('AuthService', () => {
           name: 'Dona do Salão',
           role: UserRole.MANAGER,
           tenantId: 'tenant-new',
+          phone: null,
+          isActive: true,
+          createdAt: fixedDate,
+          updatedAt: fixedDate,
+          deletedAt: null,
         }),
       },
       client: {
         create: jest.fn(),
       },
+      adminProfile: {
+        create: jest.fn().mockResolvedValue({
+          id: 'admin-profile-1',
+          userId: 'user-1',
+          tenantId: 'tenant-new',
+        }),
+      },
     };
     prismaService.withTenant.mockImplementation(async (_tenantId, callback) =>
       callback(transaction),
     );
+    prismaService.refreshToken.create.mockResolvedValue({
+      id: 'rt-1',
+      userId: 'user-1',
+      token: 'signed-refresh-token',
+      expiresAt: new Date('2026-04-21T12:00:00.000Z'),
+      revokedAt: null,
+      createdAt: fixedDate,
+    });
+    jwtService.sign
+      .mockReturnValueOnce('signed-access-token')
+      .mockReturnValueOnce('signed-refresh-token');
     mockedBcrypt.hash.mockResolvedValue('hashed-password' as never);
 
-    await service.register({
+    const result = await service.registerAdmin({
       email: 'dona@salao.com',
       password: 'senha-segura',
       name: 'Dona do Salão',
-      role: UserRole.MANAGER,
       organizationName: 'Salão da Lú Premium',
       locale: 'pt-BR',
     });
@@ -217,6 +294,31 @@ describe('AuthService', () => {
       },
     });
     expect(transaction.client.create).not.toHaveBeenCalled();
+    expect(transaction.adminProfile.create).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-1',
+        tenantId: 'tenant-new',
+      },
+    });
+    expect(result).toEqual({
+      accessToken: 'signed-access-token',
+      refreshToken: 'signed-refresh-token',
+      tokenType: 'Bearer',
+      expiresIn: '1h',
+      refreshExpiresIn: '7d',
+      user: {
+        id: 'user-1',
+        email: 'dona@salao.com',
+        name: 'Dona do Salão',
+        role: UserRole.MANAGER,
+        tenantId: 'tenant-new',
+        phone: null,
+        isActive: true,
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+        deletedAt: null,
+      },
+    });
   });
 
   it('supports legacy register flow with tenantId when informed', async () => {
@@ -238,6 +340,9 @@ describe('AuthService', () => {
           userId: 'user-1',
           tenantId: 'tenant-1',
         }),
+      },
+      adminProfile: {
+        create: jest.fn(),
       },
     };
     prismaService.withTenant.mockImplementation(async (_tenantId, callback) =>

@@ -29,7 +29,7 @@ export class ServicesRepository {
   async findAllByTenant(tenantId: string): Promise<Service[]> {
     return this.prisma.withTenant(tenantId, transaction =>
       transaction.service.findMany({
-        where: { tenantId, active: true },
+        where: { tenantId },
         orderBy: { name: 'asc' },
       }),
     );

@@ -19,7 +19,10 @@ export class UsersRepository {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findFirst({
+      where: { email },
+      orderBy: { createdAt: 'asc' },
+    });
   }
 
   async findByEmailAndTenant(email: string, tenantId: string): Promise<User | null> {
@@ -31,7 +34,10 @@ export class UsersRepository {
   }
 
   async findByPhone(phone: string): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { phone } });
+    return this.prisma.user.findFirst({
+      where: { phone },
+      orderBy: { createdAt: 'asc' },
+    });
   }
 
   async createUser(data: {

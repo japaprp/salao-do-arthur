@@ -28,6 +28,10 @@ export const AuthGuard = ({
     }
   }, [isAuthenticated, isLoading, requireAuth, redirectTo, router]);
 
+  if (!requireAuth) {
+    return <>{children}</>;
+  }
+
   if (isLoading) {
     return (
       <Box
@@ -35,6 +39,7 @@ export const AuthGuard = ({
         justifyContent="center"
         alignItems="center"
         minHeight="100vh"
+        bgcolor="background.default"
       >
         <Loading size="large" />
       </Box>
@@ -42,10 +47,6 @@ export const AuthGuard = ({
   }
 
   if (requireAuth && !isAuthenticated) {
-    return null; // Não renderiza nada enquanto redireciona
-  }
-
-  if (!requireAuth && isAuthenticated) {
     return null; // Não renderiza nada enquanto redireciona
   }
 

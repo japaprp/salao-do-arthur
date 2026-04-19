@@ -25,10 +25,11 @@ class AuthRemoteDataSource {
     );
 
     final accessToken = loginResponse['accessToken'] as String? ?? '';
+    final refreshToken = loginResponse['refreshToken'] as String? ?? '';
     final tokenType = loginResponse['tokenType'] as String? ?? 'Bearer';
     final expiresIn = '${loginResponse['expiresIn'] ?? ''}';
 
-    if (accessToken.isEmpty) {
+    if (accessToken.isEmpty || refreshToken.isEmpty) {
       throw const AppException(
         message: 'Resposta de login invalida.',
       );
@@ -41,6 +42,7 @@ class AuthRemoteDataSource {
 
     return AuthSessionModel(
       accessToken: accessToken,
+      refreshToken: refreshToken,
       tokenType: tokenType,
       expiresIn: expiresIn,
       user: AuthUserModel.fromProfile(profileResponse),
@@ -62,6 +64,13 @@ class AuthRemoteDataSource {
       tenantSubdomain: command.tenantSubdomain,
       email: command.email,
       password: command.password,
+    );
+  }
+
+  Future<void> signOut(String accessToken) async {
+    await _apiClient.post(
+      ApiEndpoints.authLogout,
+      accessToken: accessToken,
     );
   }
 }

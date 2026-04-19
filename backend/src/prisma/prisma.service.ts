@@ -17,12 +17,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     tenantId: string,
     operation: (client: TenantPrismaClient) => Promise<T>,
   ): Promise<T> {
-    return this.$transaction(async transaction => {
-      await transaction.$executeRaw`
-        SELECT set_config('app.current_tenant_id', ${tenantId}, true)
-      `;
+    void tenantId;
 
-      return operation(transaction);
-    });
+    return this.$transaction(async transaction => operation(transaction));
   }
 }

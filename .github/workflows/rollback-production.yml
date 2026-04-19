@@ -1,0 +1,50 @@
+name: Rollback Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: Componente para rollback
+        required: true
+        type: choice
+        options:
+          - backend
+          - web
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    name: Rollback production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Upload rollback script
+        env:
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+          SSH_PORT: ${{ secrets.PRODUCTION_PORT }}
+          SSH_USER: ${{ secrets.PRODUCTION_USER }}
+        run: |
+          ssh -p "${SSH_PORT}" "${SSH_USER}@${SSH_HOST}" "mkdir -p /tmp/salao-deploy"
+          scp -P "${SSH_PORT}" ops/deploy/production-rollback.sh "${SSH_USER}@${SSH_HOST}:/tmp/salao-deploy/production-rollback.sh"
+
+      - name: Run rollback
+        env:
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+          SSH_PORT: ${{ secrets.PRODUCTION_PORT }}
+          SSH_USER: ${{ secrets.PRODUCTION_USER }}
+          APP_ROOT: ${{ secrets.PRODUCTION_APP_ROOT }}
+        run: |
+          ssh -p "${SSH_PORT}" "${SSH_USER}@${SSH_HOST}" \
+            "chmod +x /tmp/salao-deploy/production-rollback.sh && APP_ROOT='${APP_ROOT}' /tmp/salao-deploy/production-rollback.sh '${{ inputs.component }}'"

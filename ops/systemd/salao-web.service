@@ -1,0 +1,18 @@
+[Unit]
+Description=Salao da Lu Web
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+Group=www-data
+WorkingDirectory=/var/www/salao/web/current
+EnvironmentFile=/var/www/salao/shared/web.env
+ExecStart=/usr/bin/env node .next/standalone/server.js
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

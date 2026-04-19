@@ -11,6 +11,8 @@ class AuthLocalDataSource {
   AuthSessionModel? readSession() {
     final accessToken =
         _sharedPreferences.getString(AppStorageKeys.accessToken);
+    final refreshToken =
+        _sharedPreferences.getString(AppStorageKeys.refreshToken);
     final tokenType = _sharedPreferences.getString(AppStorageKeys.tokenType);
     final expiresIn = _sharedPreferences.getString(AppStorageKeys.expiresIn);
     final email = _sharedPreferences.getString(AppStorageKeys.userEmail);
@@ -19,6 +21,7 @@ class AuthLocalDataSource {
     final tenantId = _sharedPreferences.getString(AppStorageKeys.tenantId);
 
     if (accessToken == null ||
+        refreshToken == null ||
         tokenType == null ||
         expiresIn == null ||
         email == null ||
@@ -30,6 +33,7 @@ class AuthLocalDataSource {
 
     return AuthSessionModel(
       accessToken: accessToken,
+      refreshToken: refreshToken,
       tokenType: tokenType,
       expiresIn: expiresIn,
       user: AuthUserModel.fromStorage(
@@ -49,6 +53,10 @@ class AuthLocalDataSource {
     await _sharedPreferences.setString(
       AppStorageKeys.accessToken,
       session.accessToken,
+    );
+    await _sharedPreferences.setString(
+      AppStorageKeys.refreshToken,
+      session.refreshToken,
     );
     await _sharedPreferences.setString(
       AppStorageKeys.tokenType,
@@ -82,6 +90,7 @@ class AuthLocalDataSource {
 
   Future<void> clearSession() async {
     await _sharedPreferences.remove(AppStorageKeys.accessToken);
+    await _sharedPreferences.remove(AppStorageKeys.refreshToken);
     await _sharedPreferences.remove(AppStorageKeys.tokenType);
     await _sharedPreferences.remove(AppStorageKeys.expiresIn);
     await _sharedPreferences.remove(AppStorageKeys.userId);

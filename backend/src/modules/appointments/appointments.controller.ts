@@ -12,8 +12,8 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { CreateSelfAppointmentDto } from './dto/create-self-appointment.dto';
 import { GetAvailableSlotsDto } from './dto/get-available-slots.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { AppointmentStatus } from '@prisma/client';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
+import { PaginationDto } from '../../common/dtos/pagination.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
@@ -40,10 +40,12 @@ export class AppointmentsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar todos os agendamentos' })
-  @ApiResponse({ status: 200, description: 'Lista de agendamentos retornada' })
-  findAll(@CurrentUser() user: AuthenticatedUser) {
-    return this.appointmentsService.findAllByTenant(user.tenantId);
+  @ApiOperation({ summary: 'Listar todos os agendamentos com paginação' })
+  @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Deslocamento (padrão: 0)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limite por página (padrão: 20, máximo: 100)' })
+  @ApiResponse({ status: 200, description: 'Lista paginada de agendamentos retornada' })
+  findAll(@Query() pagination: PaginationDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.appointmentsService.findAllByTenantPaginated(user.tenantId, pagination);
   }
 
   @Get('mine')
@@ -101,11 +103,21 @@ export class AppointmentsController {
   }
 
   @Get('client/:clientId')
-  @ApiOperation({ summary: 'Buscar agendamentos por cliente' })
+  @ApiOperation({ summary: 'Buscar agendamentos por cliente com paginação' })
   @ApiParam({ name: 'clientId', description: 'ID do cliente' })
+  @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Deslocamento (padrão: 0)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Limite por página (padrão: 20, máximo: 100)' })
   @ApiResponse({ status: 200, description: 'Agendamentos encontrados' })
-  findByClient(@Param('clientId') clientId: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.appointmentsService.findByClientAndTenant(clientId, user.tenantId);
+  findByClient(
+    @Param('clientId') clientId: string,
+    @Query() pagination: PaginationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.appointmentsService.findByClientAndTenantPaginated(
+      clientId,
+      user.tenantId,
+      pagination,
+    );
   }
 
   @Get(':id')

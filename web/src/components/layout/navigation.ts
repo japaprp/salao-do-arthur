@@ -1,16 +1,13 @@
-import type { SvgIconComponent } from '@mui/icons-material';
-import {
-  Assessment as AssessmentIcon,
-  Business as BusinessIcon,
-  CalendarToday as CalendarIcon,
-  Dashboard as DashboardIcon,
-  People as PeopleIcon,
-  Person as PersonIcon,
-} from '@mui/icons-material';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import BusinessIcon from '@mui/icons-material/Business';
+import CalendarIcon from '@mui/icons-material/CalendarToday';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import PeopleIcon from '@mui/icons-material/People';
+import PersonIcon from '@mui/icons-material/Person';
 
 export interface NavigationItem {
   label: string;
-  icon: SvgIconComponent;
+  icon: typeof DashboardIcon;
   path: string;
 }
 

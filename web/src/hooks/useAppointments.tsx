@@ -5,7 +5,18 @@ import {
   CreateAppointmentDto,
   UpdateAppointmentDto,
 } from '@/types';
-import { mockAppointments } from '@/lib/fixtures/appointments';
+import { api } from '@/lib/api/client';
+import { normalizeAppointment } from '@/lib/api/normalizers';
+
+type AppointmentsResponse =
+  | unknown[]
+  | {
+      data?: unknown[];
+      total?: number;
+      offset?: number;
+      limit?: number;
+      hasMore?: boolean;
+    };
 
 export const useAppointments = (filters?: {
   date?: string;
@@ -16,7 +27,18 @@ export const useAppointments = (filters?: {
   return useQuery({
     queryKey: ['appointments', filters],
     queryFn: async () => {
-      return mockAppointments.filter((appointment: Appointment) => {
+      const response = await api.get<AppointmentsResponse>('/appointments');
+      const rawAppointments = Array.isArray(response)
+        ? response
+        : Array.isArray(response.data)
+          ? response.data
+          : [];
+
+      const appointments = rawAppointments.map((appointment) =>
+        normalizeAppointment(appointment),
+      );
+
+      return appointments.filter((appointment: Appointment) => {
         if (filters?.status && appointment.status !== filters.status) {
           return false;
         }
@@ -43,20 +65,8 @@ export const useCreateAppointment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateAppointmentDto) => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return {
-        id: Date.now().toString(),
-        tenantId: 'tenant-1',
-        status: data.status ?? AppointmentStatus.SCHEDULED,
-        price: data.price ?? 0,
-        discount: data.discount ?? 0,
-        totalAmount: (data.price ?? 0) - (data.discount ?? 0),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        ...data,
-      };
-    },
+    mutationFn: async (data: CreateAppointmentDto) =>
+      normalizeAppointment(await api.post('/appointments', data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
@@ -67,10 +77,8 @@ export const useUpdateAppointment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdateAppointmentDto }) => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return { id, ...data };
-    },
+    mutationFn: async ({ id, data }: { id: string; data: UpdateAppointmentDto }) =>
+      normalizeAppointment(await api.put(`/appointments/${id}`, data)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
@@ -81,9 +89,7 @@ export const useDeleteAppointment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await new Promise(resolve => setTimeout(resolve, 500));
-    },
+    mutationFn: async (id: string) => normalizeAppointment(await api.delete(`/appointments/${id}`)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },

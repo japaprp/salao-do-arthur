@@ -214,4 +214,52 @@ export class AppointmentsRepository {
       });
     });
   }
+
+  async findAllByTenantPaginated(
+    tenantId: string,
+    offset: number,
+    limit: number,
+  ): Promise<Appointment[]> {
+    return this.prisma.withTenant(tenantId, transaction =>
+      transaction.appointment.findMany({
+        where: { tenantId },
+        include: appointmentInclude,
+        orderBy: { scheduledAt: 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+    );
+  }
+
+  async countByTenant(tenantId: string): Promise<number> {
+    return this.prisma.withTenant(tenantId, transaction =>
+      transaction.appointment.count({ where: { tenantId } }),
+    );
+  }
+
+  async findByClientAndTenantPaginated(
+    clientId: string,
+    tenantId: string,
+    offset: number,
+    limit: number,
+  ): Promise<Appointment[]> {
+    return this.prisma.withTenant(tenantId, transaction =>
+      transaction.appointment.findMany({
+        where: { clientId, tenantId },
+        include: {
+          professional: { include: { user: true } },
+          service: true,
+        },
+        orderBy: { scheduledAt: 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+    );
+  }
+
+  async countByClientAndTenant(clientId: string, tenantId: string): Promise<number> {
+    return this.prisma.withTenant(tenantId, transaction =>
+      transaction.appointment.count({ where: { clientId, tenantId } }),
+    );
+  }
 }

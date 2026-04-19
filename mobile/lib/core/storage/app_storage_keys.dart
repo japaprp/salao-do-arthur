@@ -3,6 +3,7 @@ class AppStorageKeys {
 
   static const onboardingCompleted = 'foundation.onboarding.completed';
   static const accessToken = 'auth.access_token';
+  static const refreshToken = 'auth.refresh_token';
   static const tokenType = 'auth.token_type';
   static const expiresIn = 'auth.expires_in';
   static const userEmail = 'auth.user.email';

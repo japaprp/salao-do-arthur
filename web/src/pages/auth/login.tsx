@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
+import NextLink from 'next/link';
 import {
   Alert,
   Box,
@@ -21,13 +22,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { LoginForm } from '@/types';
 
 const loginSchema = yup.object().shape({
+  tenantSubdomain: yup
+    .string()
+    .trim()
+    .required('Código do salão é obrigatório'),
   email: yup
     .string()
     .email('Email inválido')
     .required('Email é obrigatório'),
   password: yup
     .string()
-    .min(6, 'Senha deve ter pelo menos 6 caracteres')
+    .min(8, 'Senha deve ter pelo menos 8 caracteres')
     .required('Senha é obrigatória'),
 });
 
@@ -47,9 +52,9 @@ const Login: NextPage = () => {
     setError(null);
 
     try {
-      await login(data.email, data.password);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login');
+      await login(data.tenantSubdomain, data.email, data.password);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao fazer login');
     }
   };
 
@@ -85,7 +90,7 @@ const Login: NextPage = () => {
                 Salão da Lu
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Entre na sua conta administrativa
+                Entre com o código do salão, email e senha da conta administrativa
               </Typography>
 
               {error ? (
@@ -103,10 +108,24 @@ const Login: NextPage = () => {
                   margin="normal"
                   required
                   fullWidth
+                  id="tenantSubdomain"
+                  label="Código do salão"
+                  autoComplete="organization"
+                  placeholder="salao-da-lu"
+                  {...register('tenantSubdomain')}
+                  error={!!errors.tenantSubdomain}
+                  helperText={errors.tenantSubdomain?.message}
+                />
+
+                <Input
+                  margin="normal"
+                  required
+                  fullWidth
                   id="email"
                   label="Email"
                   autoComplete="email"
                   autoFocus
+                  placeholder="gestora@salao.com"
                   {...register('email')}
                   error={!!errors.email}
                   helperText={errors.email?.message}
@@ -143,8 +162,8 @@ const Login: NextPage = () => {
                     </Link>
                   </Grid>
                   <Grid item>
-                    <Link href="#" variant="body2">
-                      {"Não tem conta? Cadastre-se"}
+                    <Link component={NextLink} href="/auth/register" variant="body2">
+                      {'Não tem salão? Criar conta gestora'}
                     </Link>
                   </Grid>
                 </Grid>

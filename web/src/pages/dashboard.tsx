@@ -1,39 +1,34 @@
 import React from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
-import { Box, Container, Grid, Typography } from '@mui/material';
-import {
-  Add as AddIcon,
-  AttachMoney as MoneyIcon,
-  CalendarToday as CalendarIcon,
-  People as PeopleIcon,
-  TrendingUp as TrendingIcon,
-} from '@mui/icons-material';
+import { Alert, Box, Container, Grid, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import CalendarIcon from '@mui/icons-material/CalendarToday';
+import MoneyIcon from '@mui/icons-material/AttachMoney';
+import PeopleIcon from '@mui/icons-material/People';
+import TrendingIcon from '@mui/icons-material/TrendingUp';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { UpcomingAppointmentsPanel } from '@/components/dashboard/UpcomingAppointmentsPanel';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
-import { useAppointments } from '@/hooks/useAppointments';
+import Card from '@/components/ui/Card';
 import { useAuth } from '@/hooks/useAuth';
+import { useReportsOverview } from '@/hooks/useReportsOverview';
 import { formatCurrency } from '@/lib/formatters/appointments';
-import { AppointmentStatus } from '@/types';
+import {
+  metricGridProps,
+  sidePanelGridProps,
+  widePanelGridProps,
+} from '@/lib/ui/gridPresets';
 
 const DashboardPage: NextPage = () => {
   const { user } = useAuth();
-  const { data: appointments, isLoading } = useAppointments();
-  const appointmentList = appointments ?? [];
-  const scheduledAppointments = appointmentList.filter(
-    (appointment) => appointment.status !== AppointmentStatus.CANCELLED,
-  );
-  const projectedRevenue = scheduledAppointments.reduce(
-    (total, appointment) => total + appointment.totalAmount,
-    0,
-  );
-  const totalClients = new Set(appointmentList.map((appointment) => appointment.clientId)).size;
-  const averageTicket = scheduledAppointments.length
-    ? projectedRevenue / scheduledAppointments.length
-    : 0;
+  const { data: reportsOverview, isLoading, error } = useReportsOverview();
+  const summary = reportsOverview?.summary;
+  const upcomingAppointments = reportsOverview?.upcomingAppointments ?? [];
+  const errorMessage =
+    error instanceof Error ? error.message : 'Não foi possível carregar o dashboard.';
 
   return (
     <AuthGuard>
@@ -59,75 +54,72 @@ const DashboardPage: NextPage = () => {
               </Button>
             </Box>
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              <Grid item xs={12} sm={6} md={3}>
+            {error ? (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {errorMessage}
+              </Alert>
+            ) : null}
+
+            <Grid container spacing={2.5} sx={{ mb: 4 }}>
+              <Grid item {...metricGridProps}>
                 <StatCard
                   title="Agendamentos ativos"
                   subtitle="Carga operacional da agenda"
-                  value={scheduledAppointments.length.toString()}
+                  value={`${summary?.activeAppointments ?? 0}`}
                   icon={<CalendarIcon color="primary" />}
                   footnote="Inclui agendados, check-in e atendimentos em andamento."
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item {...metricGridProps}>
                 <StatCard
                   title="Receita prevista"
                   subtitle="Base nos agendamentos em carteira"
-                  value={formatCurrency(projectedRevenue)}
+                  value={formatCurrency(summary?.projectedRevenue ?? 0)}
                   icon={<MoneyIcon color="success" />}
                   valueColor="success.main"
-                  footnote="Sem depender de números estáticos artificiais."
+                  footnote="Calculada pela API a partir dos agendamentos ativos."
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item {...metricGridProps}>
                 <StatCard
-                  title="Clientes com agenda"
-                  subtitle="Base ativa vinculada aos atendimentos"
-                  value={totalClients.toString()}
+                  title="Clientes totais"
+                  subtitle="Base real do tenant"
+                  value={`${summary?.totalClients ?? 0}`}
                   icon={<PeopleIcon color="secondary" />}
                   valueColor="secondary.main"
-                  footnote="Métrica derivada dos registros carregados."
+                  footnote={`+${summary?.newClients ?? 0} novos clientes no mês.`}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item {...metricGridProps}>
                 <StatCard
                   title="Ticket médio"
-                  subtitle="Valor médio por atendimento"
-                  value={formatCurrency(averageTicket)}
+                  subtitle="Concluídos no mês"
+                  value={formatCurrency(summary?.averageTicket ?? 0)}
                   icon={<TrendingIcon color="warning" />}
                   valueColor="warning.main"
-                  footnote="Pronto para ser recalculado com dados reais."
+                  footnote={`${summary?.monthlyCompletedAppointments ?? 0} concluídos no mês atual.`}
                 />
               </Grid>
             </Grid>
 
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={8}>
+            <Grid container spacing={2.5}>
+              <Grid item {...widePanelGridProps}>
                 <UpcomingAppointmentsPanel
-                  appointments={appointmentList.slice(0, 4)}
+                  appointments={upcomingAppointments}
                   isLoading={isLoading}
                 />
               </Grid>
 
-              <Grid item xs={12} md={4}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12}>
-                    <Box
-                      sx={{
-                        p: 3,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 3,
-                        bgcolor: 'background.paper',
-                      }}
+              <Grid item {...sidePanelGridProps}>
+                <Grid container spacing={2.5}>
+                  <Grid item xs={12} sm={6} lg={12}>
+                    <Card
+                      title="Ações rápidas"
+                      subtitle="Fluxos operacionais frequentes"
+                      density="compact"
+                      sx={{ minHeight: { xs: 220, sm: 236, lg: 250 } }}
                     >
-                      <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                        Ações rápidas
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Fluxos operacionais mais frequentes do salão.
-                      </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Stack spacing={1}>
                         <Button variant="primary" fullWidth startIcon={<AddIcon />}>
                           Novo Agendamento
                         </Button>
@@ -137,54 +129,44 @@ const DashboardPage: NextPage = () => {
                         <Button variant="outlined" fullWidth startIcon={<CalendarIcon />}>
                           Ver Agenda Hoje
                         </Button>
-                      </Box>
-                    </Box>
+                      </Stack>
+                    </Card>
                   </Grid>
 
-                  <Grid item xs={12}>
-                    <Box
-                      sx={{
-                        p: 3,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 3,
-                        bgcolor: 'background.paper',
-                      }}
+                  <Grid item xs={12} sm={6} lg={12}>
+                    <Card
+                      title="Resumo de operação"
+                      subtitle="Leitura rápida da carteira atual"
+                      density="compact"
+                      sx={{ minHeight: { xs: 220, sm: 236, lg: 250 } }}
                     >
-                      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-                        Resumo de operação
-                      </Typography>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Stack spacing={1.15}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2">Agendamentos carregados</Typography>
+                          <Typography variant="body2">Agendamentos ativos</Typography>
                           <Typography variant="body2" fontWeight={600}>
-                            {appointmentList.length}
+                            {summary?.activeAppointments ?? 0}
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2">Concluídos</Typography>
+                          <Typography variant="body2">Concluídos no mês</Typography>
                           <Typography variant="body2" fontWeight={600}>
-                            {
-                              appointmentList.filter(
-                                (appointment) => appointment.status === AppointmentStatus.COMPLETED,
-                              ).length
-                            }
+                            {summary?.monthlyCompletedAppointments ?? 0}
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                           <Typography variant="body2">Receita prevista</Typography>
                           <Typography variant="body2" fontWeight={600} color="success.main">
-                            {formatCurrency(projectedRevenue)}
+                            {formatCurrency(summary?.projectedRevenue ?? 0)}
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                           <Typography variant="body2">Ticket médio</Typography>
                           <Typography variant="body2" fontWeight={600}>
-                            {formatCurrency(averageTicket)}
+                            {formatCurrency(summary?.averageTicket ?? 0)}
                           </Typography>
                         </Box>
-                      </Box>
-                    </Box>
+                      </Stack>
+                    </Card>
                   </Grid>
                 </Grid>
               </Grid>

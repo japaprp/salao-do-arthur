@@ -1,20 +1,41 @@
-import React from 'react';
-import { NextPage } from 'next';
+import { useEffect } from 'react';
+import type { NextPage } from 'next';
 import Head from 'next/head';
-import { AuthGuard } from '@/components/auth/AuthGuard';
+import { useRouter } from 'next/router';
+import { Box } from '@mui/material';
+import Loading from '@/components/ui/Loading';
+import { useAuth } from '@/hooks/useAuth';
 
 const Home: NextPage = () => {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    void router.replace(isAuthenticated ? '/dashboard' : '/auth/login');
+  }, [isAuthenticated, isLoading, router]);
+
   return (
     <>
       <Head>
-        <title>Salão da Lu - Painel Administrativo</title>
-        <meta name="description" content="Sistema de gestão para salões de beleza" />
-        <link rel="icon" href="/favicon.ico" />
+        <title>Salão da Lu</title>
+        <meta
+          name="description"
+          content="Aplicativo de gestão do Salão da Lu para agenda, clientes, profissionais e serviços."
+        />
       </Head>
 
-      <AuthGuard requireAuth={false} redirectTo="/dashboard">
-        <div />
-      </AuthGuard>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <Loading size="large" />
+      </Box>
     </>
   );
 };

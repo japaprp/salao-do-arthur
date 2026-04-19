@@ -23,16 +23,14 @@ export const UpcomingAppointmentsPanel: React.FC<UpcomingAppointmentsPanelProps>
   return (
     <Card
       title="Próximos agendamentos"
+      subtitle="Agenda operacional sincronizada com o contrato atual"
+      density="compact"
       action={
         <Button variant="outlined" size="small">
           Ver agenda completa
         </Button>
       }
     >
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Agenda operacional já alinhada ao contrato do backend.
-      </Typography>
-
       {isLoading ? (
         <Typography variant="body2" color="text.secondary">
           Carregando agendamentos...
@@ -42,36 +40,47 @@ export const UpcomingAppointmentsPanel: React.FC<UpcomingAppointmentsPanelProps>
           Nenhum agendamento encontrado.
         </Typography>
       ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {appointments.map((appointment) => (
             <Box
               key={appointment.id}
               sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
+                flexWrap: 'wrap',
                 gap: 2,
-                alignItems: 'center',
-                p: 2,
+                alignItems: 'flex-start',
+                p: 1.75,
                 border: '1px solid',
                 borderColor: 'divider',
-                borderRadius: 2,
+                borderRadius: 2.5,
               }}
             >
-              <Box>
+              <Box sx={{ minWidth: 0, flex: '1 1 180px' }}>
                 <Typography variant="subtitle1" fontWeight={600}>
                   {getAppointmentClientName(appointment)}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {appointment.service?.name} • {getAppointmentProfessionalName(appointment)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {formatAppointmentDateTime(appointment.scheduledAt)} • {formatCurrency(appointment.totalAmount)}
+                  {formatAppointmentDateTime(appointment.scheduledAt)} •{' '}
+                  {formatCurrency(appointment.totalAmount)}
                 </Typography>
               </Box>
               <Chip
                 label={formatAppointmentStatusLabel(appointment.status)}
                 color={appointment.status === 'COMPLETED' ? 'success' : 'primary'}
                 variant={appointment.status === 'COMPLETED' ? 'filled' : 'outlined'}
+                size="small"
               />
             </Box>
           ))}

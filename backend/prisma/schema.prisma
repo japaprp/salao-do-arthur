@@ -1,9 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -15,6 +16,22 @@ enum UserRole {
   RECEPTION
 }
 
+enum PermissionScope {
+  GLOBAL
+  TENANT
+  SELF
+}
+
+enum WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 enum AppointmentStatus {
   SCHEDULED
   CHECKED_IN
@@ -23,135 +40,734 @@ enum AppointmentStatus {
   CANCELLED
 }
 
+enum TimeOffStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum WaitlistStatus {
+  WAITING
+  OFFERED
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+  CONVERTED
+}
+
+enum PromotionType {
+  SEASONAL
+  SERVICE
+  PRODUCT
+  COMBO
+  CART
+  CASHBACK
+  BIRTHDAY
+  REENGAGEMENT
+  REFERRAL
+}
+
+enum PromotionScope {
+  ALL
+  CLIENT_SEGMENT
+  SERVICE
+  SERVICE_CATEGORY
+  PRODUCT
+  PRODUCT_CATEGORY
+}
+
+enum CouponDiscountType {
+  PERCENTAGE
+  FIXED
+  CASHBACK
+  FREE_SHIPPING
+}
+
+enum BannerPlacement {
+  HOME
+  HIGHLIGHTS
+  CAMPAIGNS
+  CHECKOUT
+  PROFILE
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  PREPARING
+  READY_FOR_PICKUP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  BANK_TRANSFER
+}
+
+enum DeliveryMethod {
+  PICKUP
+  DELIVERY
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  RESERVE
+  RELEASE
+  RETURN
+}
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+  SMS
+  IN_APP
+  WHATSAPP
+}
+
+enum NotificationStatus {
+  DRAFT
+  SCHEDULED
+  QUEUED
+  SENT
+  FAILED
+  READ
+}
+
+enum GalleryMediaType {
+  IMAGE
+  VIDEO
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LoyaltyLevel {
+  BRONZE
+  SILVER
+  GOLD
+  VIP
+}
+
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REWARDED
+  EXPIRED
+  CANCELLED
+}
+
+enum CommissionRuleType {
+  PERCENTAGE
+  FIXED
+  HYBRID
+}
+
+enum GoalPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  CUSTOM
+}
+
+enum SupportMessageStatus {
+  OPEN
+  WAITING_CUSTOMER
+  WAITING_TEAM
+  RESOLVED
+  CLOSED
+}
+
+enum FileAssetKind {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  AVATAR
+  BANNER
+}
+
 model Tenant {
-  id         String       @id @default(uuid())
-  name       String
-  subdomain  String       @unique
-  locale     String       @default("pt-BR")
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  users      User[]
-  professionals Professional[]
-  clients    Client[]
-  services   Service[]
-  resources  Resource[]
-  appointments Appointment[]
-  transactions Transaction[]
-  commissions Commission[]
-  loyaltyWallets LoyaltyWallet[]
-  campaigns  Campaign[]
-  notifications Notification[]
-  auditLogs  AuditLog[]
+  id                    String                     @id @default(uuid())
+  name                  String
+  subdomain             String                     @unique
+  locale                String                     @default("pt-BR")
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  deletedAt             DateTime?
+  settings              SalonSettings?
+  users                 User[]
+  roles                 Role[]
+  permissions           Permission[]
+  adminProfiles         AdminProfile[]
+  professionals         Professional[]
+  professionalServices  ProfessionalService[]
+  workingHours          WorkingHour[]
+  timeOffs              TimeOff[]
+  clients               Client[]
+  serviceCategories     ServiceCategory[]
+  services              Service[]
+  serviceAddons         ServiceAddon[]
+  appointments          Appointment[]
+  appointmentServices   AppointmentService[]
+  appointmentHistory    AppointmentStatusHistory[]
+  waitlistEntries       Waitlist[]
+  resources             Resource[]
+  transactions          Transaction[]
+  commissions           Commission[]
+  commissionRules       CommissionRule[]
+  loyaltyWallets        LoyaltyWallet[]
+  loyaltyTransactions   LoyaltyTransaction[]
+  referrals             Referral[]
+  campaigns             Campaign[]
+  promotions            Promotion[]
+  coupons               Coupon[]
+  banners               Banner[]
+  productCategories     ProductCategory[]
+  products              Product[]
+  productImages         ProductImage[]
+  inventory             Inventory[]
+  stockMovements        StockMovement[]
+  carts                 Cart[]
+  cartItems             CartItem[]
+  orders                Order[]
+  orderItems            OrderItem[]
+  payments              Payment[]
+  refunds               Refund[]
+  notifications         Notification[]
+  notificationTemplates NotificationTemplate[]
+  galleryCategories     GalleryCategory[]
+  galleryItems          GalleryItem[]
+  reviews               Review[]
+  goals                 Goal[]
+  goalProgress          GoalProgress[]
+  auditLogs             AuditLog[]
+  activityLogs          ActivityLog[]
+  files                 FileAsset[]
+  addresses             Address[]
+  supportMessages       SupportMessage[]
+
+  @@index([deletedAt])
 }
 
 model User {
-  id           String       @id @default(uuid())
-  email        String       @unique
-  phone        String?      @unique
-  passwordHash String
-  name         String
-  role         UserRole
-  tenantId     String
-  tenant       Tenant       @relation(fields: [tenantId], references: [id])
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  deletedAt    DateTime?
-  professional Professional?
-  client       Client?
-  notifications Notification[]
-  auditLogs    AuditLog[]
+  id                      String                     @id @default(uuid())
+  email                   String
+  phone                   String?
+  passwordHash            String
+  name                    String
+  role                    UserRole
+  tenantId                String
+  isActive                Boolean                    @default(true)
+  emailVerifiedAt         DateTime?
+  phoneVerifiedAt         DateTime?
+  lastLoginAt             DateTime?
+  avatarAssetId           String?
+  preferences             Json?
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+  deletedAt               DateTime?
+  tenant                  Tenant                     @relation(fields: [tenantId], references: [id])
+  avatarAsset             FileAsset?                 @relation("UserAvatar", fields: [avatarAssetId], references: [id])
+  professional            Professional?
+  client                  Client?
+  adminProfile            AdminProfile?
+  roleAssignments         UserRoleAssignment[]
+  directPermissions       UserPermission[]
+  notifications           Notification[]
+  auditLogs               AuditLog[]
+  activityLogs            ActivityLog[]
+  uploadedAssets          FileAsset[]                @relation("FileAssetUploadedBy")
+  approvedTimeOffs        TimeOff[]                  @relation("TimeOffApprovedByUser")
+  supportMessages         SupportMessage[]           @relation("SupportMessageCreatedByUser")
+  assignedSupportMessages SupportMessage[]           @relation("SupportMessageAssignedToUser")
+  moderatedReviews        Review[]                   @relation("ReviewModeratedByUser")
+  changedStatuses         AppointmentStatusHistory[]
+  orders                  Order[]                    @relation("UserOrders")
+  carts                   Cart[]                     @relation("UserCarts")
+  addresses               Address[]
+  refundsCreated          Refund[]                   @relation("RefundCreatedByUser")
+  StockMovement           StockMovement[]
+  Referral                Referral[]
+  refreshTokens           RefreshToken[]
+
+  @@unique([tenantId, email])
+  @@unique([tenantId, phone])
+  @@index([tenantId, role])
+  @@index([tenantId, isActive])
+  @@index([deletedAt])
+}
+
+model Role {
+  id              String               @id @default(uuid())
+  tenantId        String
+  name            String
+  code            String
+  description     String?
+  scope           PermissionScope      @default(TENANT)
+  isSystem        Boolean              @default(false)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  deletedAt       DateTime?
+  tenant          Tenant               @relation(fields: [tenantId], references: [id])
+  rolePermissions RolePermission[]
+  userAssignments UserRoleAssignment[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, deletedAt])
+}
+
+model Permission {
+  id              String           @id @default(uuid())
+  tenantId        String
+  name            String
+  code            String
+  resource        String
+  action          String
+  description     String?
+  scope           PermissionScope  @default(TENANT)
+  isSystem        Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, resource, action])
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+model UserRoleAssignment {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model UserPermission {
+  id           String     @id @default(uuid())
+  userId       String
+  permissionId String
+  granted      Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([userId, permissionId])
+}
+
+model AdminProfile {
+  id                   String    @id @default(uuid())
+  userId               String    @unique
+  tenantId             String
+  position             String?
+  canApproveFinancials Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  deletedAt            DateTime?
+  user                 User      @relation(fields: [userId], references: [id])
+  tenant               Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, deletedAt])
+}
+
+model SalonSettings {
+  id                         String    @id @default(uuid())
+  tenantId                   String    @unique
+  salonName                  String
+  legalName                  String?
+  description                String?
+  phone                      String?
+  whatsapp                   String?
+  email                      String?
+  timezone                   String    @default("America/Sao_Paulo")
+  currency                   String    @default("BRL")
+  locale                     String    @default("pt-BR")
+  appointmentLeadTimeMinutes Int       @default(60)
+  cancellationWindowHours    Int       @default(24)
+  reminderLeadHours          Json?
+  allowWaitlist              Boolean   @default(true)
+  enableCheckout             Boolean   @default(true)
+  enableLoyalty              Boolean   @default(true)
+  enableReferrals            Boolean   @default(true)
+  enableProductCatalog       Boolean   @default(true)
+  primaryColor               String?
+  secondaryColor             String?
+  accentColor                String?
+  instagram                  String?
+  facebook                   String?
+  tiktok                     String?
+  privacyPolicyUrl           String?
+  termsAcceptedAt            DateTime?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+  tenant                     Tenant    @relation(fields: [tenantId], references: [id])
 }
 
 model Professional {
-  id               String      @id @default(uuid())
-  userId           String      @unique
-  tenantId         String
-  specialty        String?
-  commissionPercent Decimal    @default(40.0)
-  active           Boolean     @default(true)
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  user             User        @relation(fields: [userId], references: [id])
-  tenant           Tenant      @relation(fields: [tenantId], references: [id])
-  favoriteByClients Client[]   @relation("FavoriteProfessional")
-  appointments     Appointment[]
-  transactions     Transaction[]
-  commissions      Commission[]
+  id                 String                @id @default(uuid())
+  userId             String                @unique
+  tenantId           String
+  specialty          String?
+  bio                String?
+  commissionPercent  Decimal               @default(40.0)
+  active             Boolean               @default(true)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  deletedAt          DateTime?
+  user               User                  @relation(fields: [userId], references: [id])
+  tenant             Tenant                @relation(fields: [tenantId], references: [id])
+  favoriteByClients  Client[]              @relation("FavoriteProfessional")
+  appointments       Appointment[]
+  services           ProfessionalService[]
+  workingHours       WorkingHour[]
+  timeOffs           TimeOff[]
+  galleryItems       GalleryItem[]
+  waitlistEntries    Waitlist[]            @relation("WaitlistPreferredProfessional")
+  transactions       Transaction[]
+  commissions        Commission[]
+  commissionRules    CommissionRule[]
+  goals              Goal[]
+  goalProgress       GoalProgress[]
+  reviews            Review[]
+  AppointmentService AppointmentService[]
+
+  @@index([tenantId, active])
+  @@index([deletedAt])
 }
 
 model Client {
-  id                    String      @id @default(uuid())
-  userId                String      @unique
-  tenantId              String
-  loyaltyPoints         Int         @default(0)
-  lifetimeValue         Decimal     @default(0.0)
+  id                     String           @id @default(uuid())
+  userId                 String           @unique
+  tenantId               String
+  loyaltyPoints          Int              @default(0)
+  lifetimeValue          Decimal          @default(0.0)
+  loyaltyLevel           LoyaltyLevel     @default(BRONZE)
+  birthDate              DateTime?
+  marketingOptIn         Boolean          @default(false)
   favoriteProfessionalId String?
-  preferences           Json?
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
-  user                  User        @relation(fields: [userId], references: [id])
-  tenant                Tenant      @relation(fields: [tenantId], references: [id])
-  favoriteProfessional  Professional? @relation("FavoriteProfessional", fields: [favoriteProfessionalId], references: [id])
-  appointments          Appointment[]
-  loyaltyWallet         LoyaltyWallet?
+  preferences            Json?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  deletedAt              DateTime?
+  user                   User             @relation(fields: [userId], references: [id])
+  tenant                 Tenant           @relation(fields: [tenantId], references: [id])
+  favoriteProfessional   Professional?    @relation("FavoriteProfessional", fields: [favoriteProfessionalId], references: [id])
+  appointments           Appointment[]
+  waitlistEntries        Waitlist[]
+  carts                  Cart[]
+  orders                 Order[]
+  loyaltyWallet          LoyaltyWallet?
+  addresses              Address[]
+  reviews                Review[]
+  referralsMade          Referral[]       @relation("ReferralReferrerClient")
+  referralsReceived      Referral[]       @relation("ReferralReferredClient")
+  supportMessages        SupportMessage[]
+  ActivityLog            ActivityLog[]
+
+  @@index([tenantId, loyaltyLevel])
+  @@index([favoriteProfessionalId])
+  @@index([deletedAt])
+}
+
+model ServiceCategory {
+  id          String           @id @default(uuid())
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  color       String?
+  icon        String?
+  active      Boolean          @default(true)
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  services    Service[]
+  rules       CommissionRule[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, active])
 }
 
 model Service {
-  id                  String      @id @default(uuid())
+  id                  String                @id @default(uuid())
   tenantId            String
+  categoryId          String?
   name                String
   description         String?
   durationMinutes     Int
   price               Decimal
-  bufferBeforeMinutes Int         @default(0)
-  bufferAfterMinutes  Int         @default(0)
-  parallelAllowed     Boolean     @default(false)
-  active              Boolean     @default(true)
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-  tenant              Tenant      @relation(fields: [tenantId], references: [id])
+  bufferBeforeMinutes Int                   @default(0)
+  bufferAfterMinutes  Int                   @default(0)
+  parallelAllowed     Boolean               @default(false)
+  active              Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  deletedAt           DateTime?
+  tenant              Tenant                @relation(fields: [tenantId], references: [id])
+  category            ServiceCategory?      @relation(fields: [categoryId], references: [id])
+  addons              ServiceAddon[]
+  professionalLinks   ProfessionalService[]
   appointments        Appointment[]
+  appointmentServices AppointmentService[]
+  galleryItems        GalleryItem[]
+  reviews             Review[]
+  waitlistEntries     Waitlist[]
+  commissionRules     CommissionRule[]
+
+  @@index([tenantId, active])
+  @@index([tenantId, categoryId])
+  @@index([deletedAt])
+}
+
+model ServiceAddon {
+  id              String               @id @default(uuid())
+  tenantId        String
+  serviceId       String
+  name            String
+  description     String?
+  durationMinutes Int                  @default(0)
+  price           Decimal              @default(0.0)
+  active          Boolean              @default(true)
+  sortOrder       Int                  @default(0)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  deletedAt       DateTime?
+  tenant          Tenant               @relation(fields: [tenantId], references: [id])
+  service         Service              @relation(fields: [serviceId], references: [id])
+  appointmentRows AppointmentService[]
+
+  @@index([tenantId, serviceId, active])
+}
+
+model ProfessionalService {
+  id                    String       @id @default(uuid())
+  tenantId              String
+  professionalId        String
+  serviceId             String
+  customPrice           Decimal?
+  customDurationMinutes Int?
+  active                Boolean      @default(true)
+  sortOrder             Int          @default(0)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  tenant                Tenant       @relation(fields: [tenantId], references: [id])
+  professional          Professional @relation(fields: [professionalId], references: [id])
+  service               Service      @relation(fields: [serviceId], references: [id])
+
+  @@unique([professionalId, serviceId])
+  @@index([tenantId, active])
+}
+
+model WorkingHour {
+  id                  String        @id @default(uuid())
+  tenantId            String
+  professionalId      String?
+  dayOfWeek           WeekDay
+  startTime           String
+  endTime             String
+  slotIntervalMinutes Int           @default(30)
+  active              Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  tenant              Tenant        @relation(fields: [tenantId], references: [id])
+  professional        Professional? @relation(fields: [professionalId], references: [id])
+
+  @@index([tenantId, professionalId, dayOfWeek])
+}
+
+model TimeOff {
+  id               String        @id @default(uuid())
+  tenantId         String
+  professionalId   String?
+  approvedByUserId String?
+  title            String
+  reason           String?
+  startAt          DateTime
+  endAt            DateTime
+  status           TimeOffStatus @default(APPROVED)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+  tenant           Tenant        @relation(fields: [tenantId], references: [id])
+  professional     Professional? @relation(fields: [professionalId], references: [id])
+  approvedBy       User?         @relation("TimeOffApprovedByUser", fields: [approvedByUserId], references: [id])
+
+  @@index([tenantId, professionalId, startAt, endAt])
 }
 
 model Appointment {
-  id             String      @id @default(uuid())
-  tenantId       String
-  clientId       String
-  professionalId String
-  serviceId      String
-  status         AppointmentStatus
-  scheduledAt    DateTime
+  id                  String                     @id @default(uuid())
+  tenantId            String
+  clientId            String
+  professionalId      String
+  serviceId           String
+  promotionId         String?
+  couponId            String?
+  status              AppointmentStatus
+  scheduledAt         DateTime
+  durationMinutes     Int
+  price               Decimal
+  discount            Decimal                    @default(0.0)
+  totalAmount         Decimal
+  checkinAt           DateTime?
+  startedAt           DateTime?
+  finishedAt          DateTime?
+  confirmedAt         DateTime?
+  cancelledAt         DateTime?
+  noShowAt            DateTime?
+  followUpSuggestedAt DateTime?
+  notes               String?
+  internalNotes       String?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  deletedAt           DateTime?
+  tenant              Tenant                     @relation(fields: [tenantId], references: [id])
+  client              Client                     @relation(fields: [clientId], references: [id])
+  professional        Professional               @relation(fields: [professionalId], references: [id])
+  service             Service                    @relation(fields: [serviceId], references: [id])
+  promotion           Promotion?                 @relation(fields: [promotionId], references: [id])
+  coupon              Coupon?                    @relation(fields: [couponId], references: [id])
+  serviceRows         AppointmentService[]
+  statusHistory       AppointmentStatusHistory[]
+  waitlistConversions Waitlist[]                 @relation("WaitlistConvertedAppointment")
+  resourceBookings    ResourceBooking[]
+  transactions        Transaction[]
+  payments            Payment[]
+  reviews             Review[]
+  commissions         Commission[]
+  orders              Order[]                    @relation("AppointmentOrders")
+
+  @@index([tenantId, scheduledAt])
+  @@index([tenantId, professionalId, scheduledAt])
+  @@index([tenantId, clientId, scheduledAt])
+  @@index([tenantId, status])
+  @@index([deletedAt])
+}
+
+model AppointmentService {
+  id              String        @id @default(uuid())
+  tenantId        String
+  appointmentId   String
+  serviceId       String
+  addonId         String?
+  professionalId  String?
+  sequence        Int           @default(0)
   durationMinutes Int
-  price          Decimal
-  discount       Decimal     @default(0.0)
-  totalAmount    Decimal
-  checkinAt      DateTime?
-  startedAt      DateTime?
-  finishedAt     DateTime?
-  notes          String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  tenant         Tenant      @relation(fields: [tenantId], references: [id])
-  client         Client      @relation(fields: [clientId], references: [id])
-  professional   Professional @relation(fields: [professionalId], references: [id])
-  service        Service     @relation(fields: [serviceId], references: [id])
-  resourceBookings ResourceBooking[]
-  transactions   Transaction[]
-  commissions    Commission[]
+  price           Decimal
+  discount        Decimal       @default(0.0)
+  totalAmount     Decimal
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
+  appointment     Appointment   @relation(fields: [appointmentId], references: [id])
+  service         Service       @relation(fields: [serviceId], references: [id])
+  addon           ServiceAddon? @relation(fields: [addonId], references: [id])
+  professional    Professional? @relation(fields: [professionalId], references: [id])
+
+  @@index([tenantId, appointmentId, sequence])
+}
+
+model AppointmentStatusHistory {
+  id              String             @id @default(uuid())
+  tenantId        String
+  appointmentId   String
+  changedByUserId String?
+  fromStatus      AppointmentStatus?
+  toStatus        AppointmentStatus
+  notes           String?
+  createdAt       DateTime           @default(now())
+  tenant          Tenant             @relation(fields: [tenantId], references: [id])
+  appointment     Appointment        @relation(fields: [appointmentId], references: [id])
+  changedBy       User?              @relation(fields: [changedByUserId], references: [id])
+
+  @@index([tenantId, appointmentId, createdAt])
+}
+
+model Waitlist {
+  id                      String         @id @default(uuid())
+  tenantId                String
+  clientId                String
+  serviceId               String
+  preferredProfessionalId String?
+  convertedAppointmentId  String?
+  preferredDate           DateTime?
+  timeWindowStart         String?
+  timeWindowEnd           String?
+  status                  WaitlistStatus @default(WAITING)
+  notes                   String?
+  offeredAt               DateTime?
+  respondedAt             DateTime?
+  expiresAt               DateTime?
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+  deletedAt               DateTime?
+  tenant                  Tenant         @relation(fields: [tenantId], references: [id])
+  client                  Client         @relation(fields: [clientId], references: [id])
+  service                 Service        @relation(fields: [serviceId], references: [id])
+  preferredProfessional   Professional?  @relation("WaitlistPreferredProfessional", fields: [preferredProfessionalId], references: [id])
+  convertedAppointment    Appointment?   @relation("WaitlistConvertedAppointment", fields: [convertedAppointmentId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([tenantId, preferredProfessionalId, preferredDate])
 }
 
 model Resource {
-  id         String      @id @default(uuid())
-  tenantId   String
-  type       String
-  name       String
-  capacity   Int         @default(1)
-  active     Boolean     @default(true)
-  metadata   Json?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  id               String            @id @default(uuid())
+  tenantId         String
+  type             String
+  name             String
+  capacity         Int               @default(1)
+  active           Boolean           @default(true)
+  metadata         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
   resourceBookings ResourceBooking[]
+
+  @@index([tenantId, active])
 }
 
 model ResourceBooking {
@@ -163,101 +779,800 @@ model ResourceBooking {
   createdAt     DateTime    @default(now())
   appointment   Appointment @relation(fields: [appointmentId], references: [id])
   resource      Resource    @relation(fields: [resourceId], references: [id])
+
+  @@index([appointmentId, resourceId])
 }
 
 model Transaction {
-  id            String      @id @default(uuid())
-  tenantId      String
-  appointmentId String?
+  id             String        @id @default(uuid())
+  tenantId       String
+  appointmentId  String?
   professionalId String?
-  type          String
-  category      String
-  amount        Decimal
-  status        String
-  description   String?
-  recordedAt    DateTime    @default(now())
-  createdAt     DateTime    @default(now())
-  tenant        Tenant      @relation(fields: [tenantId], references: [id])
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  professional  Professional? @relation(fields: [professionalId], references: [id])
+  type           String
+  category       String
+  amount         Decimal
+  status         String
+  description    String?
+  recordedAt     DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  tenant         Tenant        @relation(fields: [tenantId], references: [id])
+  appointment    Appointment?  @relation(fields: [appointmentId], references: [id])
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+
+  @@index([tenantId, status, recordedAt])
 }
 
-model Commission {
-  id             String      @id @default(uuid())
+model Promotion {
+  id           String         @id @default(uuid())
+  tenantId     String
+  name         String
+  slug         String
+  description  String?
+  type         PromotionType
+  scope        PromotionScope @default(ALL)
+  active       Boolean        @default(true)
+  autoApply    Boolean        @default(false)
+  priority     Int            @default(0)
+  usageLimit   Int?
+  usageCount   Int            @default(0)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  criteria     Json?
+  benefit      Json?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  coupons      Coupon[]
+  banners      Banner[]
+  appointments Appointment[]
+  carts        Cart[]
+  orders       Order[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, active, startsAt, endsAt])
+}
+
+model Coupon {
+  id                String             @id @default(uuid())
+  tenantId          String
+  promotionId       String?
+  code              String
+  description       String?
+  discountType      CouponDiscountType
+  discountValue     Decimal
+  minOrderAmount    Decimal?
+  maxDiscountAmount Decimal?
+  usageLimit        Int?
+  usagePerCustomer  Int?
+  usageCount        Int                @default(0)
+  active            Boolean            @default(true)
+  startsAt          DateTime?
+  endsAt            DateTime?
+  metadata          Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  promotion         Promotion?         @relation(fields: [promotionId], references: [id])
+  carts             Cart[]
+  orders            Order[]
+  appointments      Appointment[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, active])
+}
+
+model Banner {
+  id                 String          @id @default(uuid())
+  tenantId           String
+  promotionId        String?
+  imageAssetId       String?
+  mobileImageAssetId String?
+  title              String
+  subtitle           String?
+  description        String?
+  placement          BannerPlacement @default(HOME)
+  ctaLabel           String?
+  ctaUrl             String?
+  active             Boolean         @default(true)
+  startsAt           DateTime?
+  endsAt             DateTime?
+  priority           Int             @default(0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  deletedAt          DateTime?
+  tenant             Tenant          @relation(fields: [tenantId], references: [id])
+  promotion          Promotion?      @relation(fields: [promotionId], references: [id])
+  imageAsset         FileAsset?      @relation("BannerImage", fields: [imageAssetId], references: [id])
+  mobileImageAsset   FileAsset?      @relation("BannerMobileImage", fields: [mobileImageAssetId], references: [id])
+
+  @@index([tenantId, placement, active])
+}
+
+model ProductCategory {
+  id          String    @id @default(uuid())
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  products    Product[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, active])
+}
+
+model Product {
+  id               String           @id @default(uuid())
+  tenantId         String
+  categoryId       String?
+  name             String
+  slug             String
+  sku              String?
+  description      String?
+  shortDescription String?
+  price            Decimal
+  compareAtPrice   Decimal?
+  costPrice        Decimal?
+  featured         Boolean          @default(false)
+  active           Boolean          @default(true)
+  shippable        Boolean          @default(true)
+  trackInventory   Boolean          @default(true)
+  metadata         Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+  tenant           Tenant           @relation(fields: [tenantId], references: [id])
+  category         ProductCategory? @relation(fields: [categoryId], references: [id])
+  images           ProductImage[]
+  inventory        Inventory?
+  cartItems        CartItem[]
+  orderItems       OrderItem[]
+  galleryItems     GalleryItem[]
+  StockMovement    StockMovement[]
+
+  @@unique([tenantId, slug])
+  @@unique([tenantId, sku])
+  @@index([tenantId, active])
+  @@index([tenantId, categoryId])
+}
+
+model ProductImage {
+  id        String     @id @default(uuid())
+  tenantId  String
+  productId String
+  assetId   String?
+  url       String?
+  alt       String?
+  sortOrder Int        @default(0)
+  isCover   Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  product   Product    @relation(fields: [productId], references: [id])
+  asset     FileAsset? @relation(fields: [assetId], references: [id])
+
+  @@index([tenantId, productId, sortOrder])
+}
+
+model Inventory {
+  id           String          @id @default(uuid())
+  tenantId     String
+  productId    String          @unique
+  availableQty Int             @default(0)
+  reservedQty  Int             @default(0)
+  reorderPoint Int             @default(0)
+  safetyStock  Int             @default(0)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  tenant       Tenant          @relation(fields: [tenantId], references: [id])
+  product      Product         @relation(fields: [productId], references: [id])
+  movements    StockMovement[]
+
+  @@index([tenantId, availableQty])
+}
+
+model StockMovement {
+  id              String            @id @default(uuid())
+  tenantId        String
+  inventoryId     String
+  productId       String
+  orderId         String?
+  createdByUserId String?
+  type            StockMovementType
+  quantity        Int
+  previousQty     Int
+  newQty          Int
+  reason          String?
+  createdAt       DateTime          @default(now())
+  tenant          Tenant            @relation(fields: [tenantId], references: [id])
+  inventory       Inventory         @relation(fields: [inventoryId], references: [id])
+  product         Product           @relation(fields: [productId], references: [id])
+  order           Order?            @relation(fields: [orderId], references: [id])
+  createdBy       User?             @relation(fields: [createdByUserId], references: [id])
+
+  @@index([tenantId, type, createdAt])
+}
+
+model Cart {
+  id           String     @id @default(uuid())
+  tenantId     String
+  userId       String?
+  clientId     String?
+  couponId     String?
+  promotionId  String?
+  active       Boolean    @default(true)
+  expiresAt    DateTime?
+  checkedOutAt DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  customerUser User?      @relation("UserCarts", fields: [userId], references: [id])
+  client       Client?    @relation(fields: [clientId], references: [id])
+  coupon       Coupon?    @relation(fields: [couponId], references: [id])
+  promotion    Promotion? @relation(fields: [promotionId], references: [id])
+  items        CartItem[]
+
+  @@index([tenantId, active, updatedAt])
+}
+
+model CartItem {
+  id             String   @id @default(uuid())
   tenantId       String
-  professionalId String
-  appointmentId  String?
-  percentage     Decimal
-  amount         Decimal
-  paid           Boolean     @default(false)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  tenant         Tenant      @relation(fields: [tenantId], references: [id])
-  professional   Professional @relation(fields: [professionalId], references: [id])
-  appointment    Appointment? @relation(fields: [appointmentId], references: [id])
+  cartId         String
+  productId      String
+  quantity       Int      @default(1)
+  unitPrice      Decimal
+  discountAmount Decimal  @default(0.0)
+  totalAmount    Decimal
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  cart           Cart     @relation(fields: [cartId], references: [id])
+  product        Product  @relation(fields: [productId], references: [id])
+
+  @@index([tenantId, cartId])
+}
+
+model Order {
+  id                String          @id @default(uuid())
+  tenantId          String
+  userId            String?
+  clientId          String?
+  appointmentId     String?
+  couponId          String?
+  promotionId       String?
+  shippingAddressId String?
+  billingAddressId  String?
+  number            String
+  status            OrderStatus     @default(DRAFT)
+  subtotalAmount    Decimal
+  discountAmount    Decimal         @default(0.0)
+  shippingAmount    Decimal         @default(0.0)
+  totalAmount       Decimal
+  deliveryMethod    DeliveryMethod  @default(PICKUP)
+  notes             String?
+  placedAt          DateTime?
+  paidAt            DateTime?
+  cancelledAt       DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+  tenant            Tenant          @relation(fields: [tenantId], references: [id])
+  customerUser      User?           @relation("UserOrders", fields: [userId], references: [id])
+  client            Client?         @relation(fields: [clientId], references: [id])
+  appointment       Appointment?    @relation("AppointmentOrders", fields: [appointmentId], references: [id])
+  coupon            Coupon?         @relation(fields: [couponId], references: [id])
+  promotion         Promotion?      @relation(fields: [promotionId], references: [id])
+  shippingAddress   Address?        @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id])
+  billingAddress    Address?        @relation("OrderBillingAddress", fields: [billingAddressId], references: [id])
+  items             OrderItem[]
+  payments          Payment[]
+  stockMovements    StockMovement[]
+  commissions       Commission[]
+
+  @@unique([tenantId, number])
+  @@index([tenantId, status, placedAt])
+}
+
+model OrderItem {
+  id             String   @id @default(uuid())
+  tenantId       String
+  orderId        String
+  productId      String?
+  productName    String
+  sku            String?
+  quantity       Int
+  unitPrice      Decimal
+  discountAmount Decimal  @default(0.0)
+  totalAmount    Decimal
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  order          Order    @relation(fields: [orderId], references: [id])
+  product        Product? @relation(fields: [productId], references: [id])
+
+  @@index([tenantId, orderId])
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  tenantId          String
+  orderId           String?
+  appointmentId     String?
+  provider          String
+  providerReference String?
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  amount            Decimal
+  currency          String        @default("BRL")
+  installments      Int           @default(1)
+  paidAt            DateTime?
+  expiresAt         DateTime?
+  failureReason     String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+  tenant            Tenant        @relation(fields: [tenantId], references: [id])
+  order             Order?        @relation(fields: [orderId], references: [id])
+  appointment       Appointment?  @relation(fields: [appointmentId], references: [id])
+  refunds           Refund[]
+
+  @@index([tenantId, status, createdAt])
+}
+
+model Refund {
+  id              String   @id @default(uuid())
+  tenantId        String
+  paymentId       String
+  createdByUserId String?
+  amount          Decimal
+  reason          String?
+  status          String
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  payment         Payment  @relation(fields: [paymentId], references: [id])
+  createdBy       User?    @relation("RefundCreatedByUser", fields: [createdByUserId], references: [id])
+}
+
+model NotificationTemplate {
+  id            String              @id @default(uuid())
+  tenantId      String
+  name          String
+  slug          String
+  channel       NotificationChannel
+  titleTemplate String
+  bodyTemplate  String
+  variables     Json?
+  active        Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  deletedAt     DateTime?
+  tenant        Tenant              @relation(fields: [tenantId], references: [id])
+  notifications Notification[]
+
+  @@unique([tenantId, slug])
+}
+
+model Notification {
+  id          String                @id @default(uuid())
+  tenantId    String
+  userId      String
+  templateId  String?
+  channel     NotificationChannel
+  status      NotificationStatus    @default(DRAFT)
+  title       String
+  body        String?
+  payload     Json?
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  readAt      DateTime?
+  read        Boolean               @default(false)
+  createdAt   DateTime              @default(now())
+  deletedAt   DateTime?
+  tenant      Tenant                @relation(fields: [tenantId], references: [id])
+  user        User                  @relation(fields: [userId], references: [id])
+  template    NotificationTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([tenantId, status, scheduledAt])
+  @@index([userId, readAt])
+}
+
+model GalleryCategory {
+  id          String        @id @default(uuid())
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  active      Boolean       @default(true)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  items       GalleryItem[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, active])
+}
+
+model GalleryItem {
+  id             String           @id @default(uuid())
+  tenantId       String
+  categoryId     String?
+  professionalId String?
+  serviceId      String?
+  productId      String?
+  assetId        String?
+  coverAssetId   String?
+  beforeAssetId  String?
+  afterAssetId   String?
+  title          String
+  description    String?
+  mediaType      GalleryMediaType @default(IMAGE)
+  externalUrl    String?
+  featured       Boolean          @default(false)
+  active         Boolean          @default(true)
+  publishedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+  tenant         Tenant           @relation(fields: [tenantId], references: [id])
+  category       GalleryCategory? @relation(fields: [categoryId], references: [id])
+  professional   Professional?    @relation(fields: [professionalId], references: [id])
+  service        Service?         @relation(fields: [serviceId], references: [id])
+  product        Product?         @relation(fields: [productId], references: [id])
+  asset          FileAsset?       @relation("GalleryItemPrimaryAsset", fields: [assetId], references: [id])
+  coverAsset     FileAsset?       @relation("GalleryItemCoverAsset", fields: [coverAssetId], references: [id])
+  beforeAsset    FileAsset?       @relation("GalleryItemBeforeAsset", fields: [beforeAssetId], references: [id])
+  afterAsset     FileAsset?       @relation("GalleryItemAfterAsset", fields: [afterAssetId], references: [id])
+
+  @@index([tenantId, active, featured])
+}
+
+model Review {
+  id                String        @id @default(uuid())
+  tenantId          String
+  clientId          String
+  appointmentId     String?
+  professionalId    String?
+  serviceId         String?
+  moderatedByUserId String?
+  rating            Int
+  title             String?
+  body              String?
+  status            ReviewStatus  @default(PENDING)
+  approvedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+  tenant            Tenant        @relation(fields: [tenantId], references: [id])
+  client            Client        @relation(fields: [clientId], references: [id])
+  appointment       Appointment?  @relation(fields: [appointmentId], references: [id])
+  professional      Professional? @relation(fields: [professionalId], references: [id])
+  service           Service?      @relation(fields: [serviceId], references: [id])
+  moderatedBy       User?         @relation("ReviewModeratedByUser", fields: [moderatedByUserId], references: [id])
+
+  @@index([tenantId, status, createdAt])
 }
 
 model LoyaltyWallet {
-  id            String      @id @default(uuid())
-  tenantId      String
-  clientId      String      @unique
-  pointsBalance Int         @default(0)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  tenant        Tenant      @relation(fields: [tenantId], references: [id])
-  client        Client      @relation(fields: [clientId], references: [id])
+  id                  String               @id @default(uuid())
+  tenantId            String
+  clientId            String               @unique
+  pointsBalance       Int                  @default(0)
+  cashbackBalance     Decimal              @default(0.0)
+  currentLevel        LoyaltyLevel         @default(BRONZE)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
+  client              Client               @relation(fields: [clientId], references: [id])
   loyaltyTransactions LoyaltyTransaction[]
+
+  @@index([tenantId, currentLevel])
 }
 
 model LoyaltyTransaction {
-  id        String      @id @default(uuid())
-  walletId  String
-  points    Int
-  type      String
-  reason    String?
-  metadata  Json?
-  createdAt DateTime    @default(now())
-  wallet    LoyaltyWallet @relation(fields: [walletId], references: [id])
+  id            String        @id @default(uuid())
+  tenantId      String
+  walletId      String
+  appointmentId String?
+  orderId       String?
+  points        Int
+  amount        Decimal?
+  type          String
+  reason        String?
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+  wallet        LoyaltyWallet @relation(fields: [walletId], references: [id])
+
+  @@index([tenantId, createdAt])
+}
+
+model Referral {
+  id               String         @id @default(uuid())
+  tenantId         String
+  referrerClientId String
+  referredUserId   String?
+  referredClientId String?
+  code             String
+  status           ReferralStatus @default(PENDING)
+  rewardPoints     Int            @default(0)
+  rewardAmount     Decimal        @default(0.0)
+  metadata         Json?
+  convertedAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  tenant           Tenant         @relation(fields: [tenantId], references: [id])
+  referrerClient   Client         @relation("ReferralReferrerClient", fields: [referrerClientId], references: [id])
+  referredUser     User?          @relation(fields: [referredUserId], references: [id])
+  referredClient   Client?        @relation("ReferralReferredClient", fields: [referredClientId], references: [id])
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
 }
 
 model Campaign {
-  id        String      @id @default(uuid())
+  id        String    @id @default(uuid())
   tenantId  String
   name      String
   type      String
   criteria  Json
   discount  Json?
-  active    Boolean     @default(true)
   triggers  Json?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  tenant    Tenant      @relation(fields: [tenantId], references: [id])
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, active])
 }
 
-model Notification {
-  id        String      @id @default(uuid())
-  tenantId  String
-  userId    String
-  channel   String
-  title     String
-  body      String?
-  payload   Json?
-  sentAt    DateTime?
-  read      Boolean     @default(false)
-  createdAt DateTime    @default(now())
-  tenant    Tenant      @relation(fields: [tenantId], references: [id])
-  user      User        @relation(fields: [userId], references: [id])
+model CommissionRule {
+  id                String             @id @default(uuid())
+  tenantId          String
+  professionalId    String?
+  serviceId         String?
+  serviceCategoryId String?
+  type              CommissionRuleType
+  percentage        Decimal?
+  fixedAmount       Decimal?
+  active            Boolean            @default(true)
+  startsAt          DateTime?
+  endsAt            DateTime?
+  metadata          Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  professional      Professional?      @relation(fields: [professionalId], references: [id])
+  service           Service?           @relation(fields: [serviceId], references: [id])
+  serviceCategory   ServiceCategory?   @relation(fields: [serviceCategoryId], references: [id])
+  commissions       Commission[]
+
+  @@index([tenantId, active, startsAt, endsAt])
+}
+
+model Commission {
+  id             String          @id @default(uuid())
+  tenantId       String
+  professionalId String
+  appointmentId  String?
+  orderId        String?
+  ruleId         String?
+  percentage     Decimal
+  amount         Decimal
+  paid           Boolean         @default(false)
+  paidAt         DateTime?
+  metadata       Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  professional   Professional    @relation(fields: [professionalId], references: [id])
+  appointment    Appointment?    @relation(fields: [appointmentId], references: [id])
+  order          Order?          @relation(fields: [orderId], references: [id])
+  rule           CommissionRule? @relation(fields: [ruleId], references: [id])
+
+  @@index([tenantId, paid, createdAt])
+}
+
+model Goal {
+  id             String         @id @default(uuid())
+  tenantId       String
+  professionalId String?
+  name           String
+  description    String?
+  metricKey      String
+  targetValue    Decimal
+  currentValue   Decimal        @default(0.0)
+  period         GoalPeriod
+  active         Boolean        @default(true)
+  startsAt       DateTime
+  endsAt         DateTime
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+  tenant         Tenant         @relation(fields: [tenantId], references: [id])
+  professional   Professional?  @relation(fields: [professionalId], references: [id])
+  progress       GoalProgress[]
+
+  @@index([tenantId, active, startsAt, endsAt])
+}
+
+model GoalProgress {
+  id             String        @id @default(uuid())
+  tenantId       String
+  goalId         String
+  professionalId String?
+  value          Decimal
+  notes          String?
+  metadata       Json?
+  recordedAt     DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  tenant         Tenant        @relation(fields: [tenantId], references: [id])
+  goal           Goal          @relation(fields: [goalId], references: [id])
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+
+  @@index([tenantId, goalId, recordedAt])
 }
 
 model AuditLog {
-  id         String      @id @default(uuid())
-  tenantId   String
-  userId     String?
-  action     String
-  entity     String
-  entityId   String?
-  metadata   Json?
-  createdAt  DateTime    @default(now())
-  tenant     Tenant      @relation(fields: [tenantId], references: [id])
-  user       User?       @relation(fields: [userId], references: [id])
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  severity  String?
+  metadata  Json?
+  before    Json?
+  after     Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, entity, entityId])
+}
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  tenantId    String
+  userId      String?
+  clientId    String?
+  action      String
+  module      String
+  description String?
+  entity      String?
+  entityId    String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
+  client      Client?  @relation(fields: [clientId], references: [id])
+
+  @@index([tenantId, module, createdAt])
+}
+
+model FileAsset {
+  id                  String         @id @default(uuid())
+  tenantId            String
+  uploadedByUserId    String?
+  kind                FileAssetKind
+  storageProvider     String
+  bucket              String?
+  objectKey           String
+  publicUrl           String?
+  mimeType            String
+  bytes               Int
+  width               Int?
+  height              Int?
+  durationSeconds     Int?
+  checksum            String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  deletedAt           DateTime?
+  tenant              Tenant         @relation(fields: [tenantId], references: [id])
+  uploadedBy          User?          @relation("FileAssetUploadedBy", fields: [uploadedByUserId], references: [id])
+  userAvatars         User[]         @relation("UserAvatar")
+  bannerImages        Banner[]       @relation("BannerImage")
+  bannerMobileImages  Banner[]       @relation("BannerMobileImage")
+  productImages       ProductImage[]
+  galleryAssets       GalleryItem[]  @relation("GalleryItemPrimaryAsset")
+  galleryCoverAssets  GalleryItem[]  @relation("GalleryItemCoverAsset")
+  galleryBeforeAssets GalleryItem[]  @relation("GalleryItemBeforeAsset")
+  galleryAfterAssets  GalleryItem[]  @relation("GalleryItemAfterAsset")
+
+  @@index([tenantId, kind, createdAt])
+}
+
+model Address {
+  id             String    @id @default(uuid())
+  tenantId       String
+  userId         String?
+  clientId       String?
+  label          String?
+  recipientName  String
+  phone          String?
+  postalCode     String
+  street         String
+  number         String?
+  complement     String?
+  neighborhood   String?
+  city           String
+  state          String
+  country        String    @default("BR")
+  latitude       Decimal?
+  longitude      Decimal?
+  isDefault      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
+  user           User?     @relation(fields: [userId], references: [id])
+  client         Client?   @relation(fields: [clientId], references: [id])
+  shippingOrders Order[]   @relation("OrderShippingAddress")
+  billingOrders  Order[]   @relation("OrderBillingAddress")
+
+  @@index([tenantId, city, state])
+}
+
+model SupportMessage {
+  id               String               @id @default(uuid())
+  tenantId         String
+  userId           String
+  clientId         String?
+  assignedToUserId String?
+  subject          String
+  body             String
+  status           SupportMessageStatus @default(OPEN)
+  channel          NotificationChannel  @default(IN_APP)
+  attachments      Json?
+  resolvedAt       DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  deletedAt        DateTime?
+  tenant           Tenant               @relation(fields: [tenantId], references: [id])
+  user             User                 @relation("SupportMessageCreatedByUser", fields: [userId], references: [id])
+  client           Client?              @relation(fields: [clientId], references: [id])
+  assignedTo       User?                @relation("SupportMessageAssignedToUser", fields: [assignedToUserId], references: [id])
+
+  @@index([tenantId, status, createdAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([token])
 }

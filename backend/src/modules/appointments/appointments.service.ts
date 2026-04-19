@@ -12,6 +12,7 @@ import { CreateAppointmentInput } from './dto/create-appointment.dto';
 import { CreateSelfAppointmentDto } from './dto/create-self-appointment.dto';
 import { GetAvailableSlotsDto } from './dto/get-available-slots.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { PaginationDto, PaginatedResponse } from '../../common/dtos/pagination.dto';
 import { AppointmentStatus } from '@prisma/client';
 
 const BUSINESS_DAY_START_MINUTES = 9 * 60;
@@ -124,6 +125,55 @@ export class AppointmentsService {
   async findMine(userId: string, tenantId: string) {
     const client = await this.clientsService.findByUserIdAndTenant(userId, tenantId);
     return this.appointmentsRepository.findByClientAndTenant(client.id, tenantId);
+  }
+
+  async findAllByTenantPaginated(
+    tenantId: string,
+    pagination: PaginationDto,
+  ): Promise<PaginatedResponse<any>> {
+    const [data, total] = await Promise.all([
+      this.appointmentsRepository.findAllByTenantPaginated(
+        tenantId,
+        pagination.offset,
+        pagination.limit,
+      ),
+      this.appointmentsRepository.countByTenant(tenantId),
+    ]);
+
+    return {
+      data,
+      total,
+      offset: pagination.offset,
+      limit: pagination.limit,
+      hasMore: pagination.offset + pagination.limit < total,
+    };
+  }
+
+  async findByClientAndTenantPaginated(
+    clientId: string,
+    tenantId: string,
+    pagination: PaginationDto,
+  ): Promise<PaginatedResponse<any>> {
+    // Verificar se cliente existe no tenant
+    await this.clientsService.findByIdAndTenant(clientId, tenantId);
+
+    const [data, total] = await Promise.all([
+      this.appointmentsRepository.findByClientAndTenantPaginated(
+        clientId,
+        tenantId,
+        pagination.offset,
+        pagination.limit,
+      ),
+      this.appointmentsRepository.countByClientAndTenant(clientId, tenantId),
+    ]);
+
+    return {
+      data,
+      total,
+      offset: pagination.offset,
+      limit: pagination.limit,
+      hasMore: pagination.offset + pagination.limit < total,
+    };
   }
 
   async getAvailableSlots(query: GetAvailableSlotsDto, tenantId: string) {

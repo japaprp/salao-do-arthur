@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Client } from '@prisma/client';
+import { Client, Prisma } from '@prisma/client';
 import { CreateClientInput } from '../dto/create-client.dto';
 import { UpdateClientDto } from '../dto/update-client.dto';
 
@@ -9,16 +9,18 @@ export class ClientsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createClientDto: CreateClientInput): Promise<Client> {
+    const data: Prisma.ClientUncheckedCreateInput = {
+      userId: createClientDto.userId,
+      tenantId: createClientDto.tenantId,
+      loyaltyPoints: createClientDto.loyaltyPoints ?? 0,
+      lifetimeValue: createClientDto.lifetimeValue ?? 0,
+      favoriteProfessionalId: createClientDto.favoriteProfessionalId,
+      preferences: createClientDto.preferences as Prisma.InputJsonValue | undefined,
+    };
+
     return this.prisma.withTenant(createClientDto.tenantId, transaction =>
       transaction.client.create({
-        data: {
-          userId: createClientDto.userId,
-          tenantId: createClientDto.tenantId,
-          loyaltyPoints: createClientDto.loyaltyPoints ?? 0,
-          lifetimeValue: createClientDto.lifetimeValue ?? 0,
-          favoriteProfessionalId: createClientDto.favoriteProfessionalId,
-          preferences: createClientDto.preferences,
-        },
+        data,
       }),
     );
   }
@@ -109,6 +111,16 @@ export class ClientsRepository {
   }
 
   async update(id: string, tenantId: string, updateClientDto: UpdateClientDto): Promise<Client> {
+    const data: Prisma.ClientUncheckedUpdateInput = {};
+
+    if (updateClientDto.favoriteProfessionalId !== undefined) {
+      data.favoriteProfessionalId = updateClientDto.favoriteProfessionalId;
+    }
+
+    if (updateClientDto.preferences !== undefined) {
+      data.preferences = updateClientDto.preferences as Prisma.InputJsonValue;
+    }
+
     return this.prisma.withTenant(tenantId, async transaction => {
       await transaction.client.findFirstOrThrow({
         where: { id, tenantId },
@@ -117,7 +129,7 @@ export class ClientsRepository {
 
       return transaction.client.update({
         where: { id },
-        data: updateClientDto,
+        data,
       });
     });
   }

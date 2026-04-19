@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { UsersModule } from '../users/users.module';
 import { TenantsModule } from '../tenants/tenants.module';
 
@@ -18,7 +19,7 @@ import { TenantsModule } from '../tenants/tenants.module';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET', 'change_this_secret'),
         signOptions: {
-          expiresIn: configService.get<string | number>('JWT_EXPIRES_IN', '2h'),
+          expiresIn: configService.get<string | number>('JWT_EXPIRES_IN', '1h'),
         },
       }),
     }),
@@ -26,6 +27,6 @@ import { TenantsModule } from '../tenants/tenants.module';
     TenantsModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, RefreshTokenStrategy],
 })
 export class AuthModule {}

@@ -7,5 +7,5 @@ export class UpdateClientDto {
 
   @IsOptional()
   @IsObject()
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
 }

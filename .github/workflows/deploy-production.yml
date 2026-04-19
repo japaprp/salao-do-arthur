@@ -1,0 +1,91 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: Componente para deploy
+        required: true
+        type: choice
+        options:
+          - all
+          - backend
+          - web
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Prepare release id
+        run: echo "RELEASE_ID=${GITHUB_SHA::12}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+
+      - name: Create backend artifact
+        if: ${{ inputs.component == 'all' || inputs.component == 'backend' }}
+        run: tar --exclude='node_modules' --exclude='dist' --exclude='.env' -czf backend-release.tgz -C backend .
+
+      - name: Create web artifact
+        if: ${{ inputs.component == 'all' || inputs.component == 'web' }}
+        run: tar --exclude='node_modules' --exclude='.next' --exclude='.env.local' --exclude='.env.production' -czf web-release.tgz -C web .
+
+      - name: Configure SSH
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PRODUCTION_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Upload deployment scripts
+        env:
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+          SSH_PORT: ${{ secrets.PRODUCTION_PORT }}
+          SSH_USER: ${{ secrets.PRODUCTION_USER }}
+        run: |
+          ssh -p "${SSH_PORT}" "${SSH_USER}@${SSH_HOST}" "mkdir -p /tmp/salao-deploy"
+          scp -P "${SSH_PORT}" ops/deploy/production-release.sh "${SSH_USER}@${SSH_HOST}:/tmp/salao-deploy/production-release.sh"
+
+      - name: Upload backend artifact
+        if: ${{ inputs.component == 'all' || inputs.component == 'backend' }}
+        env:
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+          SSH_PORT: ${{ secrets.PRODUCTION_PORT }}
+          SSH_USER: ${{ secrets.PRODUCTION_USER }}
+        run: scp -P "${SSH_PORT}" backend-release.tgz "${SSH_USER}@${SSH_HOST}:/tmp/salao-deploy/backend-${RELEASE_ID}.tgz"
+
+      - name: Upload web artifact
+        if: ${{ inputs.component == 'all' || inputs.component == 'web' }}
+        env:
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+          SSH_PORT: ${{ secrets.PRODUCTION_PORT }}
+          SSH_USER: ${{ secrets.PRODUCTION_USER }}
+        run: scp -P "${SSH_PORT}" web-release.tgz "${SSH_USER}@${SSH_HOST}:/tmp/salao-deploy/web-${RELEASE_ID}.tgz"
+
+      - name: Run backend deploy
+        if: ${{ inputs.component == 'all' || inputs.component == 'backend' }}
+        env:
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+          SSH_PORT: ${{ secrets.PRODUCTION_PORT }}
+          SSH_USER: ${{ secrets.PRODUCTION_USER }}
+          APP_ROOT: ${{ secrets.PRODUCTION_APP_ROOT }}
+        run: |
+          ssh -p "${SSH_PORT}" "${SSH_USER}@${SSH_HOST}" \
+            "chmod +x /tmp/salao-deploy/production-release.sh && APP_ROOT='${APP_ROOT}' /tmp/salao-deploy/production-release.sh backend '${RELEASE_ID}' '/tmp/salao-deploy/backend-${RELEASE_ID}.tgz'"
+
+      - name: Run web deploy
+        if: ${{ inputs.component == 'all' || inputs.component == 'web' }}
+        env:
+          SSH_HOST: ${{ secrets.PRODUCTION_HOST }}
+          SSH_PORT: ${{ secrets.PRODUCTION_PORT }}
+          SSH_USER: ${{ secrets.PRODUCTION_USER }}
+          APP_ROOT: ${{ secrets.PRODUCTION_APP_ROOT }}
+        run: |
+          ssh -p "${SSH_PORT}" "${SSH_USER}@${SSH_HOST}" \
+            "chmod +x /tmp/salao-deploy/production-release.sh && APP_ROOT='${APP_ROOT}' /tmp/salao-deploy/production-release.sh web '${RELEASE_ID}' '/tmp/salao-deploy/web-${RELEASE_ID}.tgz'"

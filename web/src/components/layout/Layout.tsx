@@ -18,12 +18,10 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import {
-  AccountCircle as AccountCircleIcon,
-  ChevronLeft as ChevronLeftIcon,
-  Logout as LogoutIcon,
-  Menu as MenuIcon,
-} from '@mui/icons-material';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
 import { styled } from '@mui/material/styles';
 import { useRouter } from 'next/router';
 import { navigationItems } from '@/components/layout/navigation';
@@ -102,7 +100,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
 
   const handleLogout = () => {
     handleClose();
-    logout();
+    void logout();
   };
 
   const handleNavigation = (path: string) => {

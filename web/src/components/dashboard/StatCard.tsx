@@ -20,15 +20,55 @@ export const StatCard: React.FC<StatCardProps> = ({
   valueColor = 'primary.main',
 }) => {
   return (
-    <Card title={title} subtitle={subtitle} hover>
-      <Box display="flex" alignItems="center" gap={1}>
-        {icon}
-        <Typography variant="h4" fontWeight={700} color={valueColor}>
+    <Card
+      title={title}
+      subtitle={subtitle}
+      hover
+      density="compact"
+      sx={{ minHeight: { xs: 170, md: 186 } }}
+    >
+      <Box
+        display="flex"
+        alignItems="flex-start"
+        justifyContent="space-between"
+        gap={1.5}
+        sx={{ mb: footnote ? 1.25 : 0 }}
+      >
+        <Box
+          sx={{
+            width: 42,
+            height: 42,
+            borderRadius: 2.5,
+            display: 'grid',
+            placeItems: 'center',
+            bgcolor: 'action.hover',
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </Box>
+        <Typography
+          variant="h4"
+          fontWeight={800}
+          color={valueColor}
+          sx={{ lineHeight: 1.05, textAlign: 'right' }}
+        >
           {value}
         </Typography>
       </Box>
       {footnote ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            lineHeight: 1.6,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
           {footnote}
         </Typography>
       ) : null}

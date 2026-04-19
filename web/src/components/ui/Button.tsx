@@ -2,13 +2,23 @@ import React from 'react';
 import { Button as MuiButton, ButtonProps as MuiButtonProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
+type MuiVariant = NonNullable<MuiButtonProps['variant']>;
+type ButtonTone = 'primary' | 'secondary' | 'accent' | 'success' | 'error';
+type ButtonVariant = ButtonTone | MuiVariant;
+
 interface ButtonProps extends Omit<MuiButtonProps, 'variant'> {
-  variant?: 'primary' | 'secondary' | 'accent' | 'success' | 'error' | 'outlined' | 'text';
+  variant?: ButtonVariant;
   size?: 'small' | 'medium' | 'large';
   fullWidth?: boolean;
 }
 
-const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => ({
+interface StyledButtonProps {
+  $tone: ButtonTone;
+}
+
+const StyledButton = styled(MuiButton, {
+  shouldForwardProp: (prop) => prop !== '$tone',
+})<StyledButtonProps>(({ theme, $tone }) => ({
   borderRadius: theme.shape.borderRadius,
   fontWeight: 500,
   textTransform: 'none',
@@ -25,7 +35,7 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => ({
   },
 
   // Variants customizados
-  ...(variant === 'primary' && {
+  ...($tone === 'primary' && {
     backgroundColor: theme.palette.primary.main,
     color: theme.palette.primary.contrastText,
     '&:hover': {
@@ -33,7 +43,7 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => ({
     },
   }),
 
-  ...(variant === 'secondary' && {
+  ...($tone === 'secondary' && {
     backgroundColor: theme.palette.secondary.main,
     color: theme.palette.secondary.contrastText,
     '&:hover': {
@@ -41,7 +51,7 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => ({
     },
   }),
 
-  ...(variant === 'accent' && {
+  ...($tone === 'accent' && {
     backgroundColor: '#F59E0B',
     color: '#FFFFFF',
     '&:hover': {
@@ -49,7 +59,7 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => ({
     },
   }),
 
-  ...(variant === 'success' && {
+  ...($tone === 'success' && {
     backgroundColor: theme.palette.success.main,
     color: theme.palette.success.contrastText,
     '&:hover': {
@@ -57,7 +67,7 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => ({
     },
   }),
 
-  ...(variant === 'error' && {
+  ...($tone === 'error' && {
     backgroundColor: theme.palette.error.main,
     color: theme.palette.error.contrastText,
     '&:hover': {
@@ -65,6 +75,9 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => ({
     },
   }),
 }));
+
+const isMuiVariant = (variant: ButtonVariant): variant is MuiVariant =>
+  variant === 'contained' || variant === 'outlined' || variant === 'text';
 
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
@@ -74,10 +87,12 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   // Mapeia variants customizados para variants MUI
-  const muiVariant = variant === 'outlined' || variant === 'text' ? variant : 'contained';
+  const muiVariant = isMuiVariant(variant) ? variant : 'contained';
+  const tone: ButtonTone = isMuiVariant(variant) ? 'primary' : variant;
 
   return (
     <StyledButton
+      $tone={tone}
       variant={muiVariant}
       size={size}
       fullWidth={fullWidth}

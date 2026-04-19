@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3001",
+    "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
@@ -14,17 +15,18 @@
   "dependencies": {
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
+    "@hookform/resolvers": "^3.3.0",
     "@mui/icons-material": "^5.14.0",
     "@mui/material": "^5.14.0",
     "@mui/x-date-pickers": "^6.10.0",
     "@tanstack/react-query": "^4.29.0",
+    "@tanstack/react-query-devtools": "^4.44.0",
     "axios": "^1.4.0",
     "date-fns": "^2.30.0",
     "next": "13.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.45.0",
-    "@hookform/resolvers": "^3.3.0",
     "yup": "^1.2.0"
   },
   "devDependencies": {

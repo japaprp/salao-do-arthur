@@ -1,29 +1,28 @@
-/** @type {import('next').NextConfig} */
+const buildId = (process.env.APP_BUILD_ID || process.env.GITHUB_SHA || 'local-build').slice(0, 32);
+const standaloneEnabled =
+  process.env.NEXT_STANDALONE === 'true' || process.env.NODE_ENV === 'production';
+
 const nextConfig = {
   experimental: {
     appDir: true,
   },
-  output: 'standalone',
+  generateBuildId: async () => buildId,
+  ...(standaloneEnabled && {
+    output: 'standalone',
+  }),
   images: {
     domains: ['localhost'],
     unoptimized: process.env.NODE_ENV === 'development',
   },
-  env: {
-    API_URL: process.env.API_URL || 'http://localhost:3000',
+  // ✅ TypeScript: Verificar erros em produção
+  typescript: {
+    ignoreBuildErrors: false, // CRÍTICO: Sempre verificar em build
   },
-  webpack: (config, { isServer }) => {
-    // Configurações adicionais do webpack se necessário
-    return config;
+  // ✅ ESLint: Sempre executar durante build
+  eslint: {
+    ignoreDuringBuilds: false, // CRÍTICO: Sempre verificar em build
+    dirs: ['src'], // Apenas verificar src
   },
-  // Configurações para desenvolvimento
-  ...(process.env.NODE_ENV === 'development' && {
-    rewrites: async () => [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:3000/api/:path*',
-      },
-    ],
-  }),
 };
 
 module.exports = nextConfig;

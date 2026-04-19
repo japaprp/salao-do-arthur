@@ -3,6 +3,8 @@ class ApiEndpoints {
 
   static const String authLogin = '/auth/login';
   static const String authRegister = '/auth/register';
+  static const String authRefresh = '/auth/refresh';
+  static const String authLogout = '/auth/logout';
   static const String authProfile = '/auth/profile';
   static const String clientsMe = '/clients/me';
   static const String servicesActive = '/services/active';
