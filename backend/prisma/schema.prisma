@@ -1567,7 +1567,7 @@ model SupportMessage {
 model RefreshToken {
   id        String   @id @default(uuid())
   userId    String
-  token     String   @unique
+  token     String   @unique @db.VarChar(512)
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime @default(now())
