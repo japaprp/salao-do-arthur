@@ -2,9 +2,9 @@
 
 Estado atual do projeto mobile:
 
-- `applicationId` ainda esta generico: `com.salaodalu.salao_da_lu_mobile`
+- `applicationId` definido: `com.barbeariadoartur.barbearia_do_artur_mobile`
 - build de `release` ainda usa chave de debug
-- nome exibido do app ainda esta tecnico: `salao_da_lu_mobile`
+- nome exibido do app definido: `Barbearia do Artur`
 - icones e branding ainda estao no padrao gerado pelo Flutter
 - ainda nao existe configuracao de ambiente de producao para API
 

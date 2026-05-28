@@ -1,5 +1,5 @@
 [Unit]
-Description=Salao da Lu Web
+Description=Barbearia do Artur Web
 After=network.target
 
 [Service]

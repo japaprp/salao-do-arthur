@@ -4,9 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterAdminDto } from './dto/register-admin.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
@@ -50,6 +52,21 @@ export class AuthController {
     const authResponse = await this.authService.registerAdmin(registerAdminDto);
     this.setRefreshTokenCookie(response, authResponse.refreshToken);
     return authResponse;
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Solicitar link de recuperação de senha' })
+  @ApiResponse({ status: 200, description: 'Solicitação recebida sem expor existência do email' })
+  forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Redefinir senha com link temporário' })
+  @ApiResponse({ status: 200, description: 'Senha atualizada com sucesso' })
+  @ApiResponse({ status: 401, description: 'Link inválido ou expirado' })
+  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 
   @UseGuards(RefreshTokenGuard)

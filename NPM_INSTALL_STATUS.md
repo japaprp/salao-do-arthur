@@ -166,7 +166,7 @@ npm run list scripts
 
 4. **Aplicar RLS ao Banco**
    ```bash
-   psql -U postgres -d salao_da_lu < database/rls_policies.sql
+   psql -U postgres -d barbearia_do_artur < database/rls_policies.sql
    ```
 
 5. **Seguir IMMEDIATE_ACTION_PLAN.md**

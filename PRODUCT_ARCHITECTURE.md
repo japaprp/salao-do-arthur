@@ -1,8 +1,8 @@
-# Salão da Lu - Arquitetura Oficial do Produto
+# Barbearia do Artur - Arquitetura Oficial do Produto
 
 ## Visão do produto
 
-`Salão da Lu` é um produto multi-superfície para operação de salão de beleza com:
+`Barbearia do Artur` é um produto multi-superfície para operação de salão de beleza com:
 
 - aplicativo do cliente
 - área operacional do profissional

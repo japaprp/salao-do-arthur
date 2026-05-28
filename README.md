@@ -1,9 +1,9 @@
-# Salao Da Lu
+# Barbearia do Artur
 
 Setup local sem Docker:
 
 1. Inicie o `MySQL` no XAMPP.
-2. Crie o banco `salao_dev`.
+2. Crie o banco `barbearia_dev`.
 3. No backend:
 
 ```powershell

@@ -1,4 +1,4 @@
-# Makefile - Salão da Lu
+# Makefile - Barbearia do Artur
 # Comandos comuns para desenvolvimento e deploy
 
 .PHONY: help build up down restart logs clean dev prod migrate test lint format
@@ -10,7 +10,7 @@ YELLOW := \033[1;33m
 NC := \033[0m # No Color
 
 help: ## Mostra esta ajuda
-	@echo "$(BLUE)Salão da Lu - Comandos disponíveis:$(NC)"
+	@echo "$(BLUE)Barbearia do Artur - Comandos disponíveis:$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
 
 ## Desenvolvimento
@@ -113,4 +113,4 @@ shell-backend: ## Acessa shell do container backend
 	docker-compose exec backend sh
 
 shell-db: ## Acessa shell do PostgreSQL
-	docker-compose exec postgres psql -U salao -d salao_da_lu
+	docker-compose exec postgres psql -U salao -d barbearia_do_artur

@@ -1,14 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:salao_da_lu_mobile/app/navigation/app_route.dart';
-import 'package:salao_da_lu_mobile/app/navigation/router_refresh_notifier.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/providers/auth_providers.dart';
-import 'package:salao_da_lu_mobile/features/auth/presentation/screens/onboarding_screen.dart';
-import 'package:salao_da_lu_mobile/features/auth/presentation/screens/sign_in_screen.dart';
-import 'package:salao_da_lu_mobile/features/auth/presentation/screens/sign_up_screen.dart';
-import 'package:salao_da_lu_mobile/features/appointments/presentation/screens/appointments_screen.dart';
-import 'package:salao_da_lu_mobile/features/home/presentation/screens/client_home_screen.dart';
-import 'package:salao_da_lu_mobile/features/profile/presentation/screens/profile_screen.dart';
+import 'package:barbearia_do_artur_mobile/app/navigation/app_route.dart';
+import 'package:barbearia_do_artur_mobile/app/navigation/router_refresh_notifier.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/presentation/screens/sign_up_screen.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/presentation/screens/appointments_screen.dart';
+import 'package:barbearia_do_artur_mobile/features/home/presentation/screens/client_home_screen.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/presentation/screens/profile_screen.dart';
 
 final routerRefreshNotifierProvider = Provider<RouterRefreshNotifier>((ref) {
   final notifier = RouterRefreshNotifier();
@@ -32,7 +33,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isOnboardingRoute = location == AppRoute.onboarding;
       final isAuthRoute =
-          location == AppRoute.signIn || location == AppRoute.signUp;
+          location == AppRoute.signIn ||
+          location == AppRoute.signUp ||
+          location == AppRoute.forgotPassword;
       final isProtectedRoute = location.startsWith(AppRoute.home);
 
       if (!authState.onboardingCompleted && !isOnboardingRoute) {
@@ -69,6 +72,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoute.signUp,
         builder: (context, state) => const SignUpScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: AppRoute.home,

@@ -2,7 +2,7 @@
 
 > Documento de referência histórica. O app atual já usa API real, refresh token real e logout contra o backend. Exemplos com `mock` aqui não representam o fluxo vigente de produção.
 
-## 📱 Flutter - Salão da Lu Mobile
+## 📱 Flutter - Barbearia do Artur Mobile
 
 ### Status Atual
 - ✅ Estrutura básica implementada (Feature-First, Riverpod)

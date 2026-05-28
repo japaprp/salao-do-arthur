@@ -32,8 +32,8 @@ const ServicesPage: NextPage = () => {
     <AuthGuard>
       <>
         <Head>
-          <title>Serviços - Salão da Lu</title>
-          <meta name="description" content="Gerenciar serviços do Salão da Lu" />
+          <title>Serviços - Barbearia do Artur</title>
+          <meta name="description" content="Gerenciar serviços da Barbearia do Artur" />
         </Head>
 
         <Layout title="Serviços">
@@ -43,7 +43,7 @@ const ServicesPage: NextPage = () => {
                 Serviços
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Catálogo operacional conectado ao backend do salão.
+                Corte avulso, barba navalhada, risco, sobrancelha, luzes, tranças e pacotes.
               </Typography>
             </Box>
 

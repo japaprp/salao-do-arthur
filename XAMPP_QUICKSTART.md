@@ -5,7 +5,7 @@
 1. Abra o XAMPP Control Panel.
 2. Inicie `MySQL`.
 3. Abra `http://localhost/phpmyadmin`.
-4. Crie o banco `salao_dev` com `utf8mb4`.
+4. Crie o banco `barbearia_dev` com `utf8mb4`.
 
 ## Backend
 
@@ -37,7 +37,7 @@ Esperado:
 Backend em `backend/.env`:
 
 ```env
-DATABASE_URL=mysql://root:@127.0.0.1:3306/salao_dev
+DATABASE_URL=mysql://root:@127.0.0.1:3306/barbearia_dev
 JWT_SECRET=sua_chave_muito_secreta_2024
 REFRESH_TOKEN_SECRET=outra_chave_para_refresh
 BACKEND_PORT=3000
@@ -59,7 +59,7 @@ API_PROXY_TARGET=http://127.0.0.1:3000
 Se o backend não conectar:
 
 - confirme que o `MySQL` do XAMPP está rodando
-- confirme que o banco `salao_dev` existe
+- confirme que o banco `barbearia_dev` existe
 - rode `npx prisma db push` de novo
 
 Se a porta `3000` estiver ocupada:

@@ -1,4 +1,4 @@
-# 🚀 Guia de Deploy em Cloud - Salão da Lu
+# 🚀 Guia de Deploy em Cloud - Barbearia do Artur
 
 ## Opção 1: Railway.app (⭐ Recomendada - Mais Fácil)
 

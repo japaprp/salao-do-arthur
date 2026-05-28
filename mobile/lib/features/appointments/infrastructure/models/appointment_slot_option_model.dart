@@ -1,4 +1,4 @@
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
 
 class AppointmentSlotOptionModel {
   const AppointmentSlotOptionModel({

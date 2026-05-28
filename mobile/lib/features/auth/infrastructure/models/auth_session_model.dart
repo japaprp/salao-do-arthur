@@ -1,5 +1,5 @@
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/auth_session.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/models/auth_user_model.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/models/auth_user_model.dart';
 
 class AuthSessionModel {
   const AuthSessionModel({

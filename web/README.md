@@ -1,4 +1,4 @@
-# Painel Web - Salão da Lu
+# Painel Web - Barbearia do Artur
 
 Painel administrativo em Next.js para operação do salão.
 

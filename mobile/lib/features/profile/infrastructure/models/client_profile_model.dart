@@ -1,6 +1,6 @@
-import 'package:salao_da_lu_mobile/features/profile/domain/entities/client_profile.dart';
-import 'package:salao_da_lu_mobile/features/profile/infrastructure/models/client_profile_appointment_model.dart';
-import 'package:salao_da_lu_mobile/features/profile/infrastructure/models/loyalty_activity_model.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/domain/entities/client_profile.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/infrastructure/models/client_profile_appointment_model.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/infrastructure/models/loyalty_activity_model.dart';
 
 class ClientProfileModel {
   const ClientProfileModel({
@@ -42,7 +42,7 @@ class ClientProfileModel {
     return ClientProfileModel(
       id: json['id'] as String? ?? '',
       name: user['name'] as String? ?? 'Cliente',
-      email: user['email'] as String? ?? 'cliente@salaodaluu.app',
+      email: user['email'] as String? ?? 'cliente@barbeariadoartur.app',
       memberSince: _parseDateTime(json['createdAt']),
       loyaltyPoints: (json['loyaltyPoints'] as num?)?.toInt() ?? 0,
       lifetimeValue: double.tryParse('${json['lifetimeValue'] ?? 0}') ?? 0,

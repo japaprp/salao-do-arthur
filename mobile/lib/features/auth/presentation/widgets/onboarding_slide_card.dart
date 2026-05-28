@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/onboarding_slide.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/design_tokens.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_surface_card.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/onboarding_slide.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/design_tokens.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_surface_card.dart';
 
 class OnboardingSlideCard extends StatelessWidget {
   const OnboardingSlideCard({

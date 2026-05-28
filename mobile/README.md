@@ -1,12 +1,12 @@
-# Mobile Salao da Lu
+# Mobile Barbearia do Artur
 
 Base Flutter do app cliente estruturada conforme Feature-First + Clean Architecture.
 
-## Foundation entregue
+## App entregue
 
 - ambiente Flutter/Dart validado
 - projeto Flutter regenerado com `android/`, `web/` e `windows/`
-- foundation em `app/`, `core/`, `shared/` e `features/`
+- estrutura em `app/`, `core`, `shared` e `features`
 - navigation com `go_router`
 - state management com `flutter_riverpod`
 - networking base com `dio`
@@ -15,8 +15,8 @@ Base Flutter do app cliente estruturada conforme Feature-First + Clean Architect
 - primeira feature transacional do cliente: `appointments`
 - motor inicial de slots reais para agendamento por cliente
 - nova feature de `profile/fidelidade` integrada ao backend
-- `home` autenticada criada apenas como placeholder de navegacao protegida
-- auth do cliente usando `codigo do salao` (`tenantSubdomain`) em vez de `tenantId` bruto
+- `home` autenticada com agenda, pacote mensal e atalhos do cliente
+- auth do cliente usando `codigo da Barbearia do Artur` (`tenantSubdomain`) em vez de `tenantId` bruto
 
 ## Documentacao principal
 

@@ -1,17 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:salao_da_lu_mobile/core/result/result.dart';
-import 'package:salao_da_lu_mobile/features/appointments/application/providers/appointments_dependencies.dart';
-import 'package:salao_da_lu_mobile/features/appointments/application/state/appointments_state.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_service_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/client_appointment.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/book_client_appointment_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/get_available_professionals_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/get_available_slots_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/get_my_appointments_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/get_service_options_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/providers/auth_providers.dart';
+import 'package:barbearia_do_artur_mobile/core/result/result.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/application/providers/appointments_dependencies.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/application/state/appointments_state.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_service_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/client_appointment.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/book_client_appointment_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_available_professionals_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_available_slots_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_my_appointments_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_service_options_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
 
 class AppointmentsController extends Notifier<AppointmentsState> {
   late final GetServiceOptionsUseCase _getServiceOptionsUseCase;

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="salao_da_lu_mobile"
+        android:label="Barbearia do Artur"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

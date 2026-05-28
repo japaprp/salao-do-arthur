@@ -1,21 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:salao_da_lu_mobile/core/result/result.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/providers/auth_dependencies.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/state/auth_flow_state.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/auth_session.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/register_command.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/complete_onboarding_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/get_onboarding_status_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/register_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/restore_session_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/sign_in_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/sign_out_use_case.dart';
+import 'package:barbearia_do_artur_mobile/core/result/result.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_dependencies.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/state/auth_flow_state.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/register_command.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/complete_onboarding_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/forgot_password_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/get_onboarding_status_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/register_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/restore_session_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/sign_in_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/sign_out_use_case.dart';
 
 class AuthFlowController extends Notifier<AuthFlowState> {
   late final RestoreSessionUseCase _restoreSessionUseCase;
   late final GetOnboardingStatusUseCase _getOnboardingStatusUseCase;
   late final CompleteOnboardingUseCase _completeOnboardingUseCase;
   late final SignInUseCase _signInUseCase;
+  late final ForgotPasswordUseCase _forgotPasswordUseCase;
   late final RegisterUseCase _registerUseCase;
   late final SignOutUseCase _signOutUseCase;
 
@@ -25,6 +27,7 @@ class AuthFlowController extends Notifier<AuthFlowState> {
     _getOnboardingStatusUseCase = ref.read(getOnboardingStatusUseCaseProvider);
     _completeOnboardingUseCase = ref.read(completeOnboardingUseCaseProvider);
     _signInUseCase = ref.read(signInUseCaseProvider);
+    _forgotPasswordUseCase = ref.read(forgotPasswordUseCaseProvider);
     _registerUseCase = ref.read(registerUseCaseProvider);
     _signOutUseCase = ref.read(signOutUseCaseProvider);
 
@@ -89,6 +92,26 @@ class AuthFlowController extends Notifier<AuthFlowState> {
     };
   }
 
+  Future<bool> forgotPassword({
+    required String tenantSubdomain,
+    required String email,
+  }) async {
+    state = state.copyWith(
+      isBusy: true,
+      clearFailureMessage: true,
+    );
+
+    final result = await _forgotPasswordUseCase(
+      tenantSubdomain: tenantSubdomain,
+      email: email,
+    );
+
+    return switch (result) {
+      Success() => _resolvePasswordResetRequested(),
+      FailureResult(failure: final failure) => _resolveFailure(failure.message),
+    };
+  }
+
   Future<void> signOut() async {
     await _signOutUseCase();
     state = state.copyWith(
@@ -117,5 +140,13 @@ class AuthFlowController extends Notifier<AuthFlowState> {
       failureMessage: message,
     );
     return false;
+  }
+
+  bool _resolvePasswordResetRequested() {
+    state = state.copyWith(
+      isBusy: false,
+      clearFailureMessage: true,
+    );
+    return true;
   }
 }

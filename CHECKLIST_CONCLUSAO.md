@@ -1,4 +1,4 @@
-# ✅ CHECKLIST DE CONCLUSÃO - Salão da Lu
+# ✅ CHECKLIST DE CONCLUSÃO - Barbearia do Artur
 
 ## 🎯 Objetivo
 Resolver problema do usuário não conseguir acessar a aplicação após implementação de melhorias
@@ -6,9 +6,9 @@ Resolver problema do usuário não conseguir acessar a aplicação após impleme
 ## ✅ EXECUTADO E VALIDADO
 
 ### 1. Diagnóstico
-- ✅ Identificado que banco de dados `salao_dev` não existia
+- ✅ Identificado que banco de dados `barbearia_dev` não existia
 - ✅ Identificado que provider Prisma estava em PostgreSQL (deveria ser MySQL)
-- ✅ Identificado erro: "Database `salao_dev` does not exist on the database server"
+- ✅ Identificado erro: "Database `barbearia_dev` does not exist on the database server"
 
 ### 2. Correções Implementadas
 - ✅ Alterado `prisma/schema.prisma`: `provider = "postgresql"` → `provider = "mysql"`
@@ -45,7 +45,7 @@ Resolver problema do usuário não conseguir acessar a aplicação após impleme
 - ✅ Validação de env vars no bootstrap
 
 ### 6. Banco de Dados
-- ✅ MySQL `salao_dev` criado
+- ✅ MySQL `barbearia_dev` criado
 - ✅ Schema Prisma sincronizado
 - ✅ 20+ tabelas criadas
 - ✅ Conexão ativa e funcional
@@ -65,5 +65,5 @@ Resolver problema do usuário não conseguir acessar a aplicação após impleme
 
 **Data**: 15 de Abril de 2026
 **Usuário**: Yago Fellipe Amorim
-**Projeto**: Salão da Lu - Sistema de Gerenciamento
+**Projeto**: Barbearia do Artur - Sistema de Gerenciamento
 

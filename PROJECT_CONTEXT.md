@@ -1,8 +1,8 @@
-# Projeto Salão da Lu - Contexto Técnico e Estratégico
+# Projeto Barbearia do Artur - Contexto Técnico e Estratégico
 
 ## Visão Geral
 
-Salão da Lu é um produto SaaS verticalizado de gestão para salões de beleza, com foco em clientes, staff e gestão administrativa. O projeto deve ser desenvolvido como uma plataforma enterprise pronta para comercialização, com arquitetura modular, multi-tenant, desempenho alto e segurança LGPD.
+Barbearia do Artur é um produto SaaS verticalizado de gestão para salões de beleza, com foco em clientes, staff e gestão administrativa. O projeto deve ser desenvolvido como uma plataforma enterprise pronta para comercialização, com arquitetura modular, multi-tenant, desempenho alto e segurança LGPD.
 
 ## Objetivo do Projeto
 

@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:salao_da_lu_mobile/core/errors/app_exception.dart';
-import 'package:salao_da_lu_mobile/core/errors/failure.dart';
-import 'package:salao_da_lu_mobile/core/result/result.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/auth_session.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/register_command.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/repositories/auth_repository.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/datasources/auth_local_data_source.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/datasources/auth_remote_data_source.dart';
+import 'package:barbearia_do_artur_mobile/core/errors/app_exception.dart';
+import 'package:barbearia_do_artur_mobile/core/errors/failure.dart';
+import 'package:barbearia_do_artur_mobile/core/result/result.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/register_command.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/repositories/auth_repository.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/datasources/auth_local_data_source.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/datasources/auth_remote_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
@@ -55,6 +55,22 @@ class AuthRepositoryImpl implements AuthRepository {
       final session = await _remoteDataSource.register(command);
       await _localDataSource.saveSession(session);
       return Success(session.toEntity());
+    } catch (error) {
+      return FailureResult(_mapFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> forgotPassword({
+    required String tenantSubdomain,
+    required String email,
+  }) async {
+    try {
+      await _remoteDataSource.forgotPassword(
+        tenantSubdomain: tenantSubdomain,
+        email: email,
+      );
+      return const Success(null);
     } catch (error) {
       return FailureResult(_mapFailure(error));
     }

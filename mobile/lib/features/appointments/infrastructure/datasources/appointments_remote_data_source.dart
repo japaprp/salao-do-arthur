@@ -1,10 +1,10 @@
-import 'package:salao_da_lu_mobile/core/network/api_client.dart';
-import 'package:salao_da_lu_mobile/core/network/api_endpoints.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
-import 'package:salao_da_lu_mobile/features/appointments/infrastructure/models/appointment_professional_option_model.dart';
-import 'package:salao_da_lu_mobile/features/appointments/infrastructure/models/appointment_service_option_model.dart';
-import 'package:salao_da_lu_mobile/features/appointments/infrastructure/models/appointment_slot_option_model.dart';
-import 'package:salao_da_lu_mobile/features/appointments/infrastructure/models/client_appointment_model.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_client.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_endpoints.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/infrastructure/models/appointment_professional_option_model.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/infrastructure/models/appointment_service_option_model.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/infrastructure/models/appointment_slot_option_model.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/infrastructure/models/client_appointment_model.dart';
 
 class AppointmentsRemoteDataSource {
   const AppointmentsRemoteDataSource(this._apiClient);

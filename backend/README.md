@@ -1,6 +1,6 @@
-# Backend Salão da Lu
+# Backend Barbearia do Artur
 
-API NestJS modular do Salão da Lu, preparada para multi-tenant, autenticação por salão e fluxo cliente de agendamento.
+API NestJS modular da Barbearia do Artur, preparada para agenda, clientes, serviços, lojinha, pacotes e rotina do Artur.
 
 ## Estrutura
 
@@ -21,7 +21,7 @@ API NestJS modular do Salão da Lu, preparada para multi-tenant, autenticação 
 Este projeto roda localmente sem Docker, usando MySQL do XAMPP.
 
 1. iniciar o `MySQL` no XAMPP
-2. criar o banco `salao_dev`
+2. criar o banco `barbearia_dev`
 3. aplicar o schema do Prisma
 4. popular a seed mínima
 5. subir a API local
@@ -50,8 +50,8 @@ npm run smoke:client-flow
 
 Credenciais seeded:
 
-- cliente: `cliente.demo@salaodaluu.app / Cliente123!`
-- gestora: `gestora.demo@salaodaluu.app / Gestora123!`
+- cliente: `cliente.demo@barbeariadoartur.app / Cliente123!`
+- Artur gestor: `artur@barbeariadoartur.app / Gestora123!`
 
 ## Endpoints úteis
 

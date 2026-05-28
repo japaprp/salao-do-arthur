@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:salao_da_lu_mobile/core/config/app_environment.dart';
+import 'package:barbearia_do_artur_mobile/core/config/app_environment.dart';
 
 void main() {
   test('api base urls include the backend api prefix', () {

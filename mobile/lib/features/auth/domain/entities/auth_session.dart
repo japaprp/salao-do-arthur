@@ -1,4 +1,4 @@
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/auth_user.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/auth_user.dart';
 
 class AuthSession {
   const AuthSession({

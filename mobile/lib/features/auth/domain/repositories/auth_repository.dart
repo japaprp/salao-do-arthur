@@ -1,6 +1,6 @@
-import 'package:salao_da_lu_mobile/core/result/result.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/auth_session.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/register_command.dart';
+import 'package:barbearia_do_artur_mobile/core/result/result.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/auth_session.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/register_command.dart';
 
 abstract interface class AuthRepository {
   Result<AuthSession?> restoreSession();
@@ -12,6 +12,11 @@ abstract interface class AuthRepository {
   });
 
   Future<Result<AuthSession>> register(RegisterCommand command);
+
+  Future<Result<void>> forgotPassword({
+    required String tenantSubdomain,
+    required String email,
+  });
 
   Future<void> signOut();
 }

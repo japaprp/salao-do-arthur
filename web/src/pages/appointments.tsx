@@ -12,7 +12,13 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { useAppointments } from '@/hooks/useAppointments';
+import {
+  useAppointments,
+  useCancelAppointmentWithPolicy,
+  useConfirmAppointment,
+  useMessageAppointmentClient,
+  useOfferEarlierSlot,
+} from '@/hooks/useAppointments';
 import {
   formatAppointmentDate,
   formatAppointmentStatusLabel,
@@ -26,6 +32,10 @@ import { AppointmentStatus } from '@/types';
 
 const AppointmentsPage: NextPage = () => {
   const { data: appointments, isLoading, error } = useAppointments();
+  const confirmAppointment = useConfirmAppointment();
+  const messageClient = useMessageAppointmentClient();
+  const offerEarlierSlot = useOfferEarlierSlot();
+  const cancelWithPolicy = useCancelAppointmentWithPolicy();
   const appointmentList = appointments ?? [];
   const activeAppointments = appointmentList.filter(
     (appointment) => appointment.status !== AppointmentStatus.CANCELLED,
@@ -45,8 +55,8 @@ const AppointmentsPage: NextPage = () => {
     <AuthGuard>
       <>
         <Head>
-          <title>Agendamentos - Salão da Lu</title>
-          <meta name="description" content="Gerenciar agendamentos do Salão da Lu" />
+          <title>Agendamentos - Barbearia do Artur</title>
+          <meta name="description" content="Gerenciar agendamentos da Barbearia do Artur" />
         </Head>
 
         <Layout title="Agendamentos">
@@ -57,7 +67,7 @@ const AppointmentsPage: NextPage = () => {
                   Agendamentos
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Agenda operacional alinhada ao modelo real do backend.
+                  Agenda do Artur para confirmar, editar, antecipar horário vago e aplicar política de cancelamento.
                 </Typography>
               </div>
               <Button variant="primary" startIcon={<AddIcon />}>
@@ -114,6 +124,11 @@ const AppointmentsPage: NextPage = () => {
                 </Button>
                 <Button variant="outlined">Próximos 7 dias</Button>
                 <Button variant="outlined">Todos os status</Button>
+                <Chip
+                  label="Cancelamento grátis até 1h antes; depois, taxa mínima R$ 20 ou 30%"
+                  color="warning"
+                  variant="outlined"
+                />
               </Box>
             </Card>
 
@@ -185,6 +200,63 @@ const AppointmentsPage: NextPage = () => {
                         >
                           {appointment.notes || 'Sem observações operacionais.'}
                         </Typography>
+
+                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+                          <Button
+                            variant="secondary"
+                            size="small"
+                            onClick={() => confirmAppointment.mutate(appointment.id)}
+                          >
+                            Confirmar
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() =>
+                              messageClient.mutate(appointment.id, {
+                                onSuccess: (result) => window.alert(result.message),
+                              })
+                            }
+                          >
+                            Mensagem
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() =>
+                              offerEarlierSlot.mutate(
+                                {
+                                  id: appointment.id,
+                                  proposedAt: buildEarlierSlotSuggestion(appointment.scheduledAt),
+                                },
+                                {
+                                  onSuccess: (result) => window.alert(result.message),
+                                },
+                              )
+                            }
+                          >
+                            Subir horário
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() =>
+                              cancelWithPolicy.mutate(appointment.id, {
+                                onSuccess: (result) => {
+                                  window.alert(
+                                    result.feeApplies
+                                      ? `Cancelado com taxa sugerida de ${formatCurrency(
+                                          result.cancellationFee,
+                                        )}.`
+                                      : 'Cancelado sem taxa pela política de 1 hora.',
+                                  );
+                                },
+                              })
+                            }
+                          >
+                            Cancelar
+                          </Button>
+                        </Stack>
                       </Stack>
                     </Card>
                   </Grid>
@@ -205,5 +277,11 @@ const AppointmentsPage: NextPage = () => {
     </AuthGuard>
   );
 };
+
+function buildEarlierSlotSuggestion(scheduledAt: string) {
+  const date = new Date(scheduledAt);
+  date.setMinutes(date.getMinutes() - 30);
+  return date.toISOString();
+}
 
 export default AppointmentsPage;

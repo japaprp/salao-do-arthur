@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/design_tokens.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_surface_card.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/design_tokens.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_surface_card.dart';
 
 class BeautyMembershipCard extends StatelessWidget {
   const BeautyMembershipCard({super.key});
@@ -14,12 +14,12 @@ class BeautyMembershipCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Plano Glow Signature',
+            'Pacote mensal do Artur',
             style: theme.textTheme.headlineSmall,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Pacote mensal com escova semanal, manutenção de cor e 12% OFF em produtos da boutique.',
+            '4 cortes no mês, prioridade em encaixes e 10% OFF em pomada, balm e produtos da lojinha.',
             style: theme.textTheme.bodyLarge?.copyWith(
               color: AppColors.textMuted,
             ),
@@ -30,14 +30,14 @@ class BeautyMembershipCard extends StatelessWidget {
               Expanded(
                 child: _BenefitColumn(
                   title: 'Economia',
-                  value: 'R\$ 180/mês',
+                  value: 'R\$ 160/mês',
                 ),
               ),
               SizedBox(width: AppSpacing.md),
               Expanded(
                 child: _BenefitColumn(
                   title: 'Entrega premium',
-                  value: 'Retirada + concierge',
+                  value: 'Prioridade na agenda',
                 ),
               ),
             ],

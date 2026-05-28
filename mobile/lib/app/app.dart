@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:salao_da_lu_mobile/app/navigation/app_router.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/app_theme.dart';
+import 'package:barbearia_do_artur_mobile/app/navigation/app_router.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/app_theme.dart';
 
-class SalaoDaLuApp extends ConsumerWidget {
-  const SalaoDaLuApp({super.key});
+class BarbeariaDoArturApp extends ConsumerWidget {
+  const BarbeariaDoArturApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -12,7 +12,7 @@ class SalaoDaLuApp extends ConsumerWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Salao da Lu',
+      title: 'Barbearia do Artur',
       theme: AppTheme.light,
       routerConfig: router,
     );

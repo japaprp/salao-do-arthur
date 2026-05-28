@@ -14,14 +14,14 @@ const prisma = new PrismaClient();
 
 async function main() {
   const tenant = await prisma.tenant.upsert({
-    where: { subdomain: 'salao-da-lu' },
+    where: { subdomain: 'barbearia-do-artur' },
     update: {
-      name: 'Salão da Lu Demo',
+      name: 'Barbearia do Artur Demo',
       locale: 'pt-BR',
     },
     create: {
-      name: 'Salão da Lu Demo',
-      subdomain: 'salao-da-lu',
+      name: 'Barbearia do Artur Demo',
+      subdomain: 'barbearia-do-artur',
       locale: 'pt-BR',
     },
   });
@@ -29,57 +29,57 @@ async function main() {
   await prisma.salonSettings.upsert({
     where: { tenantId: tenant.id },
     update: {
-      salonName: 'Salão da Lu Demo',
-      description: 'Experiência premium em beleza, agenda inteligente e operação moderna.',
+      salonName: 'Barbearia do Artur Demo',
+      description: 'Barbearia prática para corte, barba, navalhado, risco, sobrancelha, luzes, tranças e pacotes recorrentes.',
       phone: '+55 11 99000-0000',
       whatsapp: '+55 11 99000-0000',
-      email: 'contato@salaodaluu.app',
+      email: 'contato@barbeariadoartur.app',
       timezone: 'America/Sao_Paulo',
       currency: 'BRL',
       locale: 'pt-BR',
       appointmentLeadTimeMinutes: 60,
-      cancellationWindowHours: 24,
+      cancellationWindowHours: 1,
       reminderLeadHours: { first: 24, second: 3 },
       allowWaitlist: true,
       enableCheckout: true,
       enableLoyalty: true,
       enableReferrals: true,
       enableProductCatalog: true,
-      primaryColor: '#C79A9A',
-      secondaryColor: '#F6ECE8',
-      accentColor: '#7A4E4E',
-      instagram: '@salaodaludemo',
-      privacyPolicyUrl: 'https://salaodaluu.app/privacy',
+      primaryColor: '#111827',
+      secondaryColor: '#F3F4F6',
+      accentColor: '#C9A227',
+      instagram: '@barbeariadoartur',
+      privacyPolicyUrl: 'https://barbeariadoartur.app/privacy',
     },
     create: {
       tenantId: tenant.id,
-      salonName: 'Salão da Lu Demo',
-      description: 'Experiência premium em beleza, agenda inteligente e operação moderna.',
+      salonName: 'Barbearia do Artur Demo',
+      description: 'Barbearia prática para corte, barba, navalhado, risco, sobrancelha, luzes, tranças e pacotes recorrentes.',
       phone: '+55 11 99000-0000',
       whatsapp: '+55 11 99000-0000',
-      email: 'contato@salaodaluu.app',
+      email: 'contato@barbeariadoartur.app',
       timezone: 'America/Sao_Paulo',
       currency: 'BRL',
       locale: 'pt-BR',
       appointmentLeadTimeMinutes: 60,
-      cancellationWindowHours: 24,
+      cancellationWindowHours: 1,
       reminderLeadHours: { first: 24, second: 3 },
       allowWaitlist: true,
       enableCheckout: true,
       enableLoyalty: true,
       enableReferrals: true,
       enableProductCatalog: true,
-      primaryColor: '#C79A9A',
-      secondaryColor: '#F6ECE8',
-      accentColor: '#7A4E4E',
-      instagram: '@salaodaludemo',
-      privacyPolicyUrl: 'https://salaodaluu.app/privacy',
+      primaryColor: '#111827',
+      secondaryColor: '#F3F4F6',
+      accentColor: '#C9A227',
+      instagram: '@barbeariadoartur',
+      privacyPolicyUrl: 'https://barbeariadoartur.app/privacy',
     },
   });
 
   const managerUser = await upsertUser({
-    email: 'gestora.demo@salaodaluu.app',
-    name: 'Lu Gestora',
+    email: 'artur@barbeariadoartur.app',
+    name: 'Artur',
     password: 'Gestora123!',
     role: UserRole.MANAGER,
     tenantId: tenant.id,
@@ -87,8 +87,8 @@ async function main() {
   });
 
   const professionalUserA = await upsertUser({
-    email: 'camila.profissional@salaodaluu.app',
-    name: 'Camila Costa',
+    email: 'artur.profissional@barbeariadoartur.app',
+    name: 'Artur Barbeiro',
     password: 'Profissional123!',
     role: UserRole.PROFESSIONAL,
     tenantId: tenant.id,
@@ -96,8 +96,8 @@ async function main() {
   });
 
   const professionalUserB = await upsertUser({
-    email: 'renata.profissional@salaodaluu.app',
-    name: 'Renata Alves',
+    email: 'renan.profissional@barbeariadoartur.app',
+    name: 'Renan Auxiliar',
     password: 'Profissional123!',
     role: UserRole.PROFESSIONAL,
     tenantId: tenant.id,
@@ -105,7 +105,7 @@ async function main() {
   });
 
   const clientUser = await upsertUser({
-    email: 'cliente.demo@salaodaluu.app',
+    email: 'cliente.demo@barbeariadoartur.app',
     name: 'Maria Oliveira',
     password: 'Cliente123!',
     role: UserRole.CLIENT,
@@ -117,14 +117,14 @@ async function main() {
     where: { userId: managerUser.id },
     update: {
       tenantId: tenant.id,
-      position: 'Gestora do salão',
+      position: 'Dono e gestor da barbearia',
       canApproveFinancials: true,
       deletedAt: null,
     },
     create: {
       userId: managerUser.id,
       tenantId: tenant.id,
-      position: 'Gestora do salão',
+      position: 'Dono e gestor da barbearia',
       canApproveFinancials: true,
     },
   });
@@ -133,8 +133,8 @@ async function main() {
     where: { userId: professionalUserA.id },
     update: {
       tenantId: tenant.id,
-      specialty: 'Coloração e transformação',
-      bio: 'Especialista em mechas, correção de cor e recuperação da fibra.',
+      specialty: 'Corte, barba, navalhado e acabamento',
+      bio: 'Artur cuida da agenda principal, confirma horários, ajusta encaixes e atende cortes avulsos ou pacotes.',
       commissionPercent: 45,
       active: true,
       deletedAt: null,
@@ -142,8 +142,8 @@ async function main() {
     create: {
       userId: professionalUserA.id,
       tenantId: tenant.id,
-      specialty: 'Coloração e transformação',
-      bio: 'Especialista em mechas, correção de cor e recuperação da fibra.',
+      specialty: 'Corte, barba, navalhado e acabamento',
+      bio: 'Artur cuida da agenda principal, confirma horários, ajusta encaixes e atende cortes avulsos ou pacotes.',
       commissionPercent: 45,
       active: true,
     },
@@ -153,8 +153,8 @@ async function main() {
     where: { userId: professionalUserB.id },
     update: {
       tenantId: tenant.id,
-      specialty: 'Corte e finalização',
-      bio: 'Cortes femininos, finalização e experiência premium em styling.',
+      specialty: 'Tranças, luzes e apoio de agenda',
+      bio: 'Apoio para serviços demorados, organização de encaixes e finalização.',
       commissionPercent: 40,
       active: true,
       deletedAt: null,
@@ -162,8 +162,8 @@ async function main() {
     create: {
       userId: professionalUserB.id,
       tenantId: tenant.id,
-      specialty: 'Corte e finalização',
-      bio: 'Cortes femininos, finalização e experiência premium em styling.',
+      specialty: 'Tranças, luzes e apoio de agenda',
+      bio: 'Apoio para serviços demorados, organização de encaixes e finalização.',
       commissionPercent: 40,
       active: true,
     },
@@ -179,8 +179,8 @@ async function main() {
       marketingOptIn: true,
       favoriteProfessionalId: professionalA.id,
       preferences: {
-        beverage: 'cappuccino',
-        fragrance: 'floral suave',
+        preference: 'corte baixo com degradê',
+        wantsEarlierSlot: true,
       },
       deletedAt: null,
     },
@@ -193,58 +193,125 @@ async function main() {
       marketingOptIn: true,
       favoriteProfessionalId: professionalA.id,
       preferences: {
-        beverage: 'cappuccino',
-        fragrance: 'floral suave',
+        preference: 'corte baixo com degradê',
+        wantsEarlierSlot: true,
       },
     },
   });
 
   const categoryColor = await upsertServiceCategory({
     tenantId: tenant.id,
-    name: 'Coloração',
-    description: 'Serviços de cor, tonalização e transformação.',
-    color: '#C79A9A',
+    name: 'Luzes e Tranças',
+    description: 'Serviços especiais para visual completo e manutenção.',
+    color: '#C9A227',
     icon: 'palette',
     sortOrder: 1,
   });
 
   const categoryCut = await upsertServiceCategory({
     tenantId: tenant.id,
-    name: 'Corte e Finalização',
-    description: 'Corte, lavagem, escova e acabamento.',
-    color: '#B07D7D',
+    name: 'Corte, Barba e Acabamento',
+    description: 'Corte avulso, barba navalhada, risco, sobrancelha e combos.',
+    color: '#111827',
     icon: 'content-cut',
     sortOrder: 2,
   });
 
-  const corteGlow = await upsertService({
+  const corteAvulso = await upsertService({
     tenantId: tenant.id,
     categoryId: categoryCut.id,
-    name: 'Corte Glow',
-    description: 'Corte, lavagem e finalização premium.',
-    durationMinutes: 60,
-    price: 120,
+    name: 'Corte avulso',
+    description: 'Corte masculino com acabamento alinhado para o dia a dia.',
+    durationMinutes: 40,
+    price: 45,
   });
 
-  const coloracaoPremium = await upsertService({
+  const barbaNavalhada = await upsertService({
+    tenantId: tenant.id,
+    categoryId: categoryCut.id,
+    name: 'Barba navalhada',
+    description: 'Modelagem da barba com toalha quente, navalha e finalização.',
+    durationMinutes: 30,
+    price: 35,
+  });
+
+  const comboCabeloBarba = await upsertService({
+    tenantId: tenant.id,
+    categoryId: categoryCut.id,
+    name: 'Pacote cabelo + barba',
+    description: 'Combo prático com corte, barba navalhada e acabamento.',
+    durationMinutes: 70,
+    price: 75,
+  });
+
+  const comboCompleto = await upsertService({
+    tenantId: tenant.id,
+    categoryId: categoryCut.id,
+    name: 'Pacote completo premium',
+    description: 'Corte, barba navalhada, risco e sobrancelha em uma reserva.',
+    durationMinutes: 85,
+    price: 95,
+  });
+
+  const riscoSobrancelha = await upsertService({
+    tenantId: tenant.id,
+    categoryId: categoryCut.id,
+    name: 'Risco e sobrancelha',
+    description: 'Acabamento rápido para elevar o visual sem ocupar muito tempo.',
+    durationMinutes: 20,
+    price: 20,
+  });
+
+  const luzes = await upsertService({
     tenantId: tenant.id,
     categoryId: categoryColor.id,
-    name: 'Coloração Premium',
-    description: 'Coloração com tratamento, proteção de fibra e escova.',
-    durationMinutes: 90,
-    price: 260,
+    name: 'Luzes masculinas',
+    description: 'Luzes com avaliação rápida, proteção dos fios e acabamento.',
+    durationMinutes: 120,
+    price: 160,
   });
 
-  await upsertProfessionalService(tenant.id, professionalA.id, coloracaoPremium.id, {
-    customDurationMinutes: 90,
+  const trancas = await upsertService({
+    tenantId: tenant.id,
+    categoryId: categoryColor.id,
+    name: 'Tranças masculinas',
+    description: 'Tranças com divisão limpa, acabamento e orientação de cuidado.',
+    durationMinutes: 150,
+    price: 180,
+  });
+
+  const pacoteMensal = await upsertService({
+    tenantId: tenant.id,
+    categoryId: categoryCut.id,
+    name: 'Pacote mensal 4 cortes',
+    description: 'Pacote recorrente para cliente fixo manter visual sempre em dia.',
+    durationMinutes: 40,
+    price: 160,
+  });
+
+  await upsertProfessionalService(tenant.id, professionalA.id, corteAvulso.id, {
     sortOrder: 1,
   });
-  await upsertProfessionalService(tenant.id, professionalA.id, corteGlow.id, {
+  await upsertProfessionalService(tenant.id, professionalA.id, barbaNavalhada.id, {
     sortOrder: 2,
   });
-  await upsertProfessionalService(tenant.id, professionalB.id, corteGlow.id, {
-    customPrice: 115,
+  await upsertProfessionalService(tenant.id, professionalA.id, comboCabeloBarba.id, {
+    sortOrder: 3,
+  });
+  await upsertProfessionalService(tenant.id, professionalA.id, comboCompleto.id, {
+    sortOrder: 4,
+  });
+  await upsertProfessionalService(tenant.id, professionalA.id, riscoSobrancelha.id, {
+    sortOrder: 5,
+  });
+  await upsertProfessionalService(tenant.id, professionalA.id, pacoteMensal.id, {
+    sortOrder: 6,
+  });
+  await upsertProfessionalService(tenant.id, professionalB.id, luzes.id, {
     sortOrder: 1,
+  });
+  await upsertProfessionalService(tenant.id, professionalB.id, trancas.id, {
+    sortOrder: 2,
   });
 
   await upsertWorkingHour(tenant.id, professionalA.id, WeekDay.MONDAY, '09:00', '18:00');
@@ -263,45 +330,45 @@ async function main() {
 
   const retailCategory = await upsertProductCategory({
     tenantId: tenant.id,
-    name: 'Home Care',
-    description: 'Linha de manutenção premium para pós-atendimento.',
+    name: 'Lojinha do Artur',
+    description: 'Produtos para cabelo e barba vendidos junto do atendimento.',
     sortOrder: 1,
   });
 
-  const hairRepairMask = await upsertProduct({
+  const pomadaMatte = await upsertProduct({
     tenantId: tenant.id,
     categoryId: retailCategory.id,
-    name: 'Máscara Repair Glow',
-    sku: 'HOME-CARE-001',
-    description: 'Máscara reconstrutora para manutenção de cor e brilho.',
-    shortDescription: 'Reconstrução e brilho intenso.',
-    price: 89.9,
-    compareAtPrice: 99.9,
-    costPrice: 42.5,
+    name: 'Pomada Matte Artur',
+    sku: 'BARBA-001',
+    description: 'Pomada de efeito seco para finalizar degradê, topete e penteado natural.',
+    shortDescription: 'Fixação leve e acabamento seco.',
+    price: 39.9,
+    compareAtPrice: 44.9,
+    costPrice: 18.5,
     featured: true,
     metadata: {
-      size: '250ml',
-      category: 'home-care',
+      size: '80g',
+      category: 'finalizacao',
     },
   });
 
-  const finishingOil = await upsertProduct({
+  const balmBarba = await upsertProduct({
     tenantId: tenant.id,
     categoryId: retailCategory.id,
-    name: 'Óleo Finalizador Satin',
-    sku: 'HOME-CARE-002',
-    description: 'Óleo leve para proteção térmica e brilho.',
-    shortDescription: 'Proteção térmica e acabamento.',
-    price: 54.9,
-    costPrice: 24.9,
+    name: 'Balm para barba',
+    sku: 'BARBA-002',
+    description: 'Balm para hidratar, alinhar e perfumar a barba depois do navalhado.',
+    shortDescription: 'Hidratação e controle da barba.',
+    price: 34.9,
+    costPrice: 15.9,
     metadata: {
-      size: '60ml',
-      category: 'finish',
+      size: '100ml',
+      category: 'barba',
     },
   });
 
   await prisma.inventory.upsert({
-    where: { productId: hairRepairMask.id },
+    where: { productId: pomadaMatte.id },
     update: {
       tenantId: tenant.id,
       availableQty: 18,
@@ -310,7 +377,7 @@ async function main() {
     },
     create: {
       tenantId: tenant.id,
-      productId: hairRepairMask.id,
+      productId: pomadaMatte.id,
       availableQty: 18,
       reorderPoint: 5,
       safetyStock: 3,
@@ -318,7 +385,7 @@ async function main() {
   });
 
   await prisma.inventory.upsert({
-    where: { productId: finishingOil.id },
+    where: { productId: balmBarba.id },
     update: {
       tenantId: tenant.id,
       availableQty: 12,
@@ -327,7 +394,7 @@ async function main() {
     },
     create: {
       tenantId: tenant.id,
-      productId: finishingOil.id,
+      productId: balmBarba.id,
       availableQty: 12,
       reorderPoint: 4,
       safetyStock: 2,
@@ -336,15 +403,15 @@ async function main() {
 
   const promotion = await upsertPromotion({
     tenantId: tenant.id,
-    name: 'Semana Glow',
+    name: 'Semana do Degradê',
     type: PromotionType.SERVICE,
     scope: PromotionScope.SERVICE,
-    description: 'Desconto especial em coloração premium para ativar retorno.',
+    description: 'Desconto especial no pacote cabelo + barba para preencher horários vagos.',
     priority: 10,
     startsAt: startOfToday(),
     endsAt: endOfDaysFromNow(20),
     criteria: {
-      serviceSlug: slugify('Coloração Premium'),
+      serviceSlug: slugify('Pacote cabelo + barba'),
       minAppointmentsLast90Days: 0,
     },
     benefit: {
@@ -356,8 +423,8 @@ async function main() {
   await upsertCoupon({
     tenantId: tenant.id,
     promotionId: promotion.id,
-    code: 'GLOW15',
-    description: '15% off na Coloração Premium',
+    code: 'ARTUR15',
+    description: '15% off no pacote cabelo + barba',
     discountType: CouponDiscountType.PERCENTAGE,
     discountValue: 15,
     usageLimit: 100,
@@ -372,12 +439,12 @@ async function main() {
   await upsertBanner({
     tenantId: tenant.id,
     promotionId: promotion.id,
-    title: 'Semana Glow',
-    subtitle: 'Coloração premium com benefício exclusivo',
-    description: 'Ative o cupom GLOW15 e converta retorno com agenda inteligente.',
+    title: 'Semana do Degradê',
+    subtitle: 'Pacote cabelo + barba com benefício exclusivo',
+    description: 'Ative o cupom ARTUR15 e use a agenda para ocupar horários vagos.',
     placement: BannerPlacement.HOME,
     ctaLabel: 'Agendar agora',
-    ctaUrl: 'https://salaodaluu.app/promocoes/semana-glow',
+    ctaUrl: 'https://barbeariadoartur.app/promocoes/semana-do-degrade',
     priority: 10,
     startsAt: startOfToday(),
     endsAt: endOfDaysFromNow(20),
@@ -415,21 +482,21 @@ async function main() {
         walletId: loyaltyWallet.id,
         points: 120,
         type: 'EARNED',
-        reason: '[seed] Agendamento concluído no pacote premium',
+        reason: '[seed] Agendamento concluído no pacote cabelo + barba',
       },
       {
         tenantId: tenant.id,
         walletId: loyaltyWallet.id,
         points: -40,
         type: 'REDEEMED',
-        reason: '[seed] Resgate em ampola personalizada',
+        reason: '[seed] Resgate em pomada da lojinha',
       },
       {
         tenantId: tenant.id,
         walletId: loyaltyWallet.id,
         points: 60,
         type: 'EARNED',
-        reason: '[seed] Compra de home care',
+        reason: '[seed] Compra na lojinha do Artur',
       },
     ],
   });
@@ -452,27 +519,27 @@ async function main() {
         tenantId: tenant.id,
         clientId: client.id,
         professionalId: professionalA.id,
-        serviceId: coloracaoPremium.id,
+        serviceId: comboCabeloBarba.id,
         status: AppointmentStatus.SCHEDULED,
         scheduledAt: tomorrowTenAm,
-        durationMinutes: 90,
-        price: 260,
+        durationMinutes: 70,
+        price: 75,
         discount: 0,
-        totalAmount: 260,
-        notes: '[seed] Coloração ocupando a manhã',
+        totalAmount: 75,
+        notes: '[seed] Cliente quer ir antes se abrir horário vago. Confirmar por WhatsApp.',
       },
       {
         tenantId: tenant.id,
         clientId: client.id,
         professionalId: professionalB.id,
-        serviceId: corteGlow.id,
+        serviceId: trancas.id,
         status: AppointmentStatus.SCHEDULED,
         scheduledAt: tomorrowTwoPm,
-        durationMinutes: 60,
-        price: 115,
+        durationMinutes: 150,
+        price: 180,
         discount: 0,
-        totalAmount: 115,
-        notes: '[seed] Corte ocupando início da tarde',
+        totalAmount: 180,
+        notes: '[seed] Tranças ocupando início da tarde. Avisar se precisar reagendar.',
       },
     ],
   });
@@ -480,9 +547,9 @@ async function main() {
   console.log('Seed concluído com sucesso.');
   console.log(`Tenant: ${tenant.subdomain}`);
   console.log(`Cliente: ${clientUser.email} / Cliente123!`);
-  console.log(`Gestora: ${managerUser.email} / Gestora123!`);
+  console.log(`Artur gestor: ${managerUser.email} / Gestora123!`);
   console.log(`Profissionais: ${professionalUserA.email}, ${professionalUserB.email}`);
-  console.log('Cupom demo: GLOW15');
+  console.log('Cupom demo: ARTUR15');
 }
 
 type UpsertUserInput = {

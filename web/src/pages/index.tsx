@@ -21,10 +21,10 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Salão da Lu</title>
+        <title>Barbearia do Artur</title>
         <meta
           name="description"
-          content="Aplicativo de gestão do Salão da Lu para agenda, clientes, profissionais e serviços."
+          content="Aplicativo de gestão da Barbearia do Artur para agenda, clientes, profissionais, serviços e lojinha."
         />
       </Head>
 

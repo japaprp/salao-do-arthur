@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:salao_da_lu_mobile/core/network/api_client.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/repositories/appointments_repository.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/get_available_slots_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/book_client_appointment_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/get_available_professionals_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/get_my_appointments_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/use_cases/get_service_options_use_case.dart';
-import 'package:salao_da_lu_mobile/features/appointments/infrastructure/datasources/appointments_remote_data_source.dart';
-import 'package:salao_da_lu_mobile/features/appointments/infrastructure/repositories/appointments_repository_impl.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_client.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_available_slots_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/book_client_appointment_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_available_professionals_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_my_appointments_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_service_options_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/infrastructure/datasources/appointments_remote_data_source.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/infrastructure/repositories/appointments_repository_impl.dart';
 
 final appointmentsRemoteDataSourceProvider =
     Provider<AppointmentsRemoteDataSource>((ref) {

@@ -1,4 +1,4 @@
-import 'package:salao_da_lu_mobile/core/errors/failure.dart';
+import 'package:barbearia_do_artur_mobile/core/errors/failure.dart';
 
 sealed class Result<T> {
   const Result();

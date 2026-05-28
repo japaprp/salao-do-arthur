@@ -1,4 +1,4 @@
-# 🚀 ROADMAP FINAL - Salão da Lu Enterprise Ready
+# 🚀 ROADMAP FINAL - Barbearia do Artur Enterprise Ready
 
 ## 📊 Melhorias Implementadas (Bloco Completo)
 
@@ -204,7 +204,7 @@ cd ../web && npm run test          # Passar testes existentes
 ### 4. RLS Database
 ```sql
 -- Conectar em psql
-\c salao_da_lu
+\c barbearia_do_artur
 
 -- Verificar policies
 SELECT * FROM pg_policies LIMIT 5;
@@ -328,4 +328,4 @@ Você agora tem um projeto:
 
 **Status Final: ✅ ENTERPRISE READY para Desenvolvimento!**
 
-🚀 Bom luck com o Salão da Lu! 🚀
+🚀 Bom luck com o Barbearia do Artur! 🚀

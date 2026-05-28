@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:salao_da_lu_mobile/app/navigation/app_route.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/providers/auth_providers.dart';
-import 'package:salao_da_lu_mobile/features/home/presentation/widgets/beauty_membership_card.dart';
-import 'package:salao_da_lu_mobile/features/home/presentation/widgets/home_section_header.dart';
-import 'package:salao_da_lu_mobile/features/home/presentation/widgets/home_welcome_card.dart';
-import 'package:salao_da_lu_mobile/features/home/presentation/widgets/quick_action_tile.dart';
-import 'package:salao_da_lu_mobile/features/home/presentation/widgets/upcoming_visit_card.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/design_tokens.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_gradient_scaffold.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_logo.dart';
+import 'package:barbearia_do_artur_mobile/app/navigation/app_route.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
+import 'package:barbearia_do_artur_mobile/features/home/presentation/widgets/beauty_membership_card.dart';
+import 'package:barbearia_do_artur_mobile/features/home/presentation/widgets/home_section_header.dart';
+import 'package:barbearia_do_artur_mobile/features/home/presentation/widgets/home_welcome_card.dart';
+import 'package:barbearia_do_artur_mobile/features/home/presentation/widgets/quick_action_tile.dart';
+import 'package:barbearia_do_artur_mobile/features/home/presentation/widgets/upcoming_visit_card.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/design_tokens.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_gradient_scaffold.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_logo.dart';
 
 class ClientHomeScreen extends ConsumerWidget {
   const ClientHomeScreen({super.key});
@@ -19,7 +19,7 @@ class ClientHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(authFlowControllerProvider).session;
     final userName = session?.user.name ?? 'Cliente';
-    final userEmail = session?.user.email ?? 'cliente@salaodaluu.app';
+    final userEmail = session?.user.email ?? 'cliente@barbeariadoartur.app';
 
     return AppGradientScaffold(
       body: SingleChildScrollView(
@@ -31,7 +31,7 @@ class ClientHomeScreen extends ConsumerWidget {
               children: [
                 const Expanded(
                   child: AppLogo(
-                    subtitle: 'Experiencia premium do cliente',
+                    subtitle: 'Corte, barba, pacotes e lojinha',
                   ),
                 ),
                 IconButton(
@@ -61,7 +61,7 @@ class ClientHomeScreen extends ConsumerWidget {
                 QuickActionTile(
                   icon: Icons.calendar_month_rounded,
                   title: 'Agendar horário',
-                  description: 'Escolha serviço, profissional e melhor janela.',
+                  description: 'Corte, barba, risco, sobrancelha, luzes ou tranças.',
                   onTap: () => context.go(AppRoute.appointments),
                 ),
                 QuickActionTile(
@@ -73,19 +73,19 @@ class ClientHomeScreen extends ConsumerWidget {
                 const QuickActionTile(
                   icon: Icons.shopping_bag_outlined,
                   title: 'Comprar produtos',
-                  description: 'Leve para casa os cuidados recomendados.',
+                  description: 'Pomada, balm e cuidados indicados pelo Artur.',
                 ),
                 const QuickActionTile(
                   icon: Icons.local_offer_outlined,
                   title: 'Ver pacotes',
-                  description: 'Assinaturas e combos para recorrência premium.',
+                  description: 'Corte avulso ou pacote mensal com prioridade.',
                 ),
               ],
             ),
             const SizedBox(height: AppSpacing.xl),
             const HomeSectionHeader(
               eyebrow: 'Próxima visita',
-              title: 'Sua agenda e benefícios em um só lugar',
+              title: 'Sua agenda, taxa e benefícios em um só lugar',
             ),
             const SizedBox(height: AppSpacing.md),
             const UpcomingVisitCard(),

@@ -25,7 +25,7 @@ const loginSchema = yup.object().shape({
   tenantSubdomain: yup
     .string()
     .trim()
-    .required('Código do salão é obrigatório'),
+    .required('Código da barbearia é obrigatório'),
   email: yup
     .string()
     .email('Email inválido')
@@ -62,8 +62,8 @@ const Login: NextPage = () => {
     <AuthGuard requireAuth={false}>
       <>
         <Head>
-          <title>Login - Salão da Lu</title>
-          <meta name="description" content="Login no painel administrativo do Salão da Lu" />
+          <title>Login - Barbearia do Artur</title>
+          <meta name="description" content="Login no painel da Barbearia do Artur" />
         </Head>
 
         <Container component="main" maxWidth="sm">
@@ -87,10 +87,10 @@ const Login: NextPage = () => {
               }}
             >
               <Typography component="h1" variant="h4" fontWeight={600} gutterBottom>
-                Salão da Lu
+                Barbearia do Artur
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Entre com o código do salão, email e senha da conta administrativa
+                Entre com o código da barbearia, email e senha do Artur.
               </Typography>
 
               {error ? (
@@ -109,9 +109,9 @@ const Login: NextPage = () => {
                   required
                   fullWidth
                   id="tenantSubdomain"
-                  label="Código do salão"
+                  label="Código da barbearia"
                   autoComplete="organization"
-                  placeholder="salao-da-lu"
+                  placeholder="barbearia-do-artur"
                   {...register('tenantSubdomain')}
                   error={!!errors.tenantSubdomain}
                   helperText={errors.tenantSubdomain?.message}
@@ -125,7 +125,7 @@ const Login: NextPage = () => {
                   label="Email"
                   autoComplete="email"
                   autoFocus
-                  placeholder="gestora@salao.com"
+                  placeholder="artur@barbeariadoartur.app"
                   {...register('email')}
                   error={!!errors.email}
                   helperText={errors.email?.message}
@@ -157,13 +157,13 @@ const Login: NextPage = () => {
 
                 <Grid container>
                   <Grid item xs>
-                    <Link href="#" variant="body2">
+                    <Link component={NextLink} href="/auth/forgot-password" variant="body2">
                       Esqueceu a senha?
                     </Link>
                   </Grid>
                   <Grid item>
                     <Link component={NextLink} href="/auth/register" variant="body2">
-                      {'Não tem salão? Criar conta gestora'}
+                      {'Primeiro acesso? Criar a barbearia'}
                     </Link>
                   </Grid>
                 </Grid>

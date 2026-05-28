@@ -1,6 +1,6 @@
-import 'package:salao_da_lu_mobile/core/network/api_client.dart';
-import 'package:salao_da_lu_mobile/core/network/api_endpoints.dart';
-import 'package:salao_da_lu_mobile/features/profile/infrastructure/models/client_profile_model.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_client.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_endpoints.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/infrastructure/models/client_profile_model.dart';
 
 class ProfileRemoteDataSource {
   const ProfileRemoteDataSource(this._apiClient);

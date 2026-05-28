@@ -63,6 +63,35 @@ export interface Service {
   updatedAt: IsoDateTimeString;
 }
 
+export interface ProductInventory {
+  id: string;
+  productId: string;
+  availableQty: number;
+  reservedQty: number;
+  reorderPoint: number;
+  safetyStock: number;
+}
+
+export interface Product {
+  id: string;
+  tenantId: string;
+  categoryId?: string | null;
+  name: string;
+  slug: string;
+  sku?: string | null;
+  description?: string | null;
+  shortDescription?: string | null;
+  price: number;
+  compareAtPrice?: number | null;
+  featured: boolean;
+  active: boolean;
+  shippable: boolean;
+  trackInventory: boolean;
+  inventory?: ProductInventory | null;
+  createdAt: IsoDateTimeString;
+  updatedAt: IsoDateTimeString;
+}
+
 export interface ProfessionalServiceAssignment {
   id: string;
   tenantId: string;

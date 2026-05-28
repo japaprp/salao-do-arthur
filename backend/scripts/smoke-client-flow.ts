@@ -1,6 +1,6 @@
 const apiBaseUrl = process.env.SMOKE_API_URL ?? 'http://127.0.0.1:3100/api';
-const tenantSubdomain = process.env.SMOKE_TENANT_SUBDOMAIN ?? 'salao-da-lu';
-const clientEmail = process.env.SMOKE_CLIENT_EMAIL ?? 'cliente.demo@salaodaluu.app';
+const tenantSubdomain = process.env.SMOKE_TENANT_SUBDOMAIN ?? 'barbearia-do-artur';
+const clientEmail = process.env.SMOKE_CLIENT_EMAIL ?? 'cliente.demo@barbeariadoartur.app';
 const clientPassword = process.env.SMOKE_CLIENT_PASSWORD ?? 'Cliente123!';
 
 async function main() {

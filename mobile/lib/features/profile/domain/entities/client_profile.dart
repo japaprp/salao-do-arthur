@@ -1,5 +1,5 @@
-import 'package:salao_da_lu_mobile/features/profile/domain/entities/client_profile_appointment.dart';
-import 'package:salao_da_lu_mobile/features/profile/domain/entities/loyalty_activity.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/domain/entities/client_profile_appointment.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/domain/entities/loyalty_activity.dart';
 
 class ClientProfile {
   const ClientProfile({

@@ -95,3 +95,57 @@ export const useDeleteAppointment = () => {
     },
   });
 };
+
+export const useConfirmAppointment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) =>
+      normalizeAppointment(await api.post(`/appointments/${id}/confirm`)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['reports-overview'] });
+    },
+  });
+};
+
+export const useMessageAppointmentClient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) =>
+      api.post<{ message: string }>(`/appointments/${id}/message-client`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+};
+
+export const useOfferEarlierSlot = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, proposedAt }: { id: string; proposedAt: string }) =>
+      api.post<{ message: string }>(`/appointments/${id}/offer-earlier-slot`, {
+        proposedAt,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+};
+
+export const useCancelAppointmentWithPolicy = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) =>
+      api.post<{ feeApplies: boolean; cancellationFee: number }>(
+        `/appointments/${id}/cancel-with-policy`,
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['reports-overview'] });
+    },
+  });
+};

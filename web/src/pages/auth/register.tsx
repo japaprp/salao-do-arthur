@@ -22,7 +22,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AdminRegisterForm } from '@/types';
 
 const registerSchema = yup.object({
-  organizationName: yup.string().trim().required('Nome do salao e obrigatorio'),
+  organizationName: yup.string().trim().required('Nome da barbearia é obrigatório'),
   name: yup.string().trim().required('Nome e obrigatorio'),
   email: yup.string().trim().email('Email invalido').required('Email e obrigatorio'),
   password: yup
@@ -66,8 +66,8 @@ const RegisterPage: NextPage = () => {
     <AuthGuard requireAuth={false}>
       <>
         <Head>
-          <title>Cadastro - Salão da Lu</title>
-          <meta name="description" content="Cadastro de acesso ao Salão da Lu" />
+          <title>Cadastro - Barbearia do Artur</title>
+          <meta name="description" content="Cadastro de acesso da Barbearia do Artur" />
         </Head>
 
         <Container component="main" maxWidth="sm">
@@ -91,10 +91,10 @@ const RegisterPage: NextPage = () => {
               }}
             >
               <Typography component="h1" variant="h4" fontWeight={600} gutterBottom>
-                Criar salão
+                Criar Barbearia do Artur
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Criação inicial da conta gestora e do tenant do salão.
+                Primeiro acesso do Artur para agenda, lojinha, pacotes e clientes.
               </Typography>
 
               {error ? (
@@ -108,8 +108,8 @@ const RegisterPage: NextPage = () => {
                   <Input
                     required
                     fullWidth
-                    label="Nome do salao"
-                    placeholder="Salao da Lu"
+                    label="Nome da barbearia"
+                    placeholder="Barbearia do Artur"
                     {...register('organizationName')}
                     error={!!errors.organizationName}
                     helperText={errors.organizationName?.message}

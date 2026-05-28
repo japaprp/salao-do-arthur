@@ -61,4 +61,18 @@ export class UsersRepository {
       }),
     );
   }
+
+  async updatePassword(userId: string, tenantId: string, passwordHash: string): Promise<User> {
+    return this.prisma.withTenant(tenantId, async transaction => {
+      await transaction.user.findFirstOrThrow({
+        where: { id: userId, tenantId },
+        select: { id: true },
+      });
+
+      return transaction.user.update({
+        where: { id: userId },
+        data: { passwordHash },
+      });
+    });
+  }
 }

@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.salaodalu" "\0"
-            VALUE "FileDescription", "salao_da_lu_mobile" "\0"
+            VALUE "CompanyName", "com.barbeariadoartur" "\0"
+            VALUE "FileDescription", "barbearia_do_artur_mobile" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "salao_da_lu_mobile" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.salaodalu. All rights reserved." "\0"
-            VALUE "OriginalFilename", "salao_da_lu_mobile.exe" "\0"
-            VALUE "ProductName", "salao_da_lu_mobile" "\0"
+            VALUE "InternalName", "barbearia_do_artur_mobile" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.barbeariadoartur. All rights reserved." "\0"
+            VALUE "OriginalFilename", "barbearia_do_artur_mobile.exe" "\0"
+            VALUE "ProductName", "barbearia_do_artur_mobile" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

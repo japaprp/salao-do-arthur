@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:salao_da_lu_mobile/features/appointments/application/controllers/appointments_controller.dart';
-import 'package:salao_da_lu_mobile/features/appointments/application/providers/appointments_providers.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_professional_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_service_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
-import 'package:salao_da_lu_mobile/features/appointments/presentation/widgets/appointment_booking_summary_card.dart';
-import 'package:salao_da_lu_mobile/features/appointments/presentation/widgets/appointment_slot_chip.dart';
-import 'package:salao_da_lu_mobile/features/appointments/presentation/widgets/client_appointment_card.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/design_tokens.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_feedback_banner.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_gradient_scaffold.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_logo.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_primary_button.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_surface_card.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_text_field.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/application/controllers/appointments_controller.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/application/providers/appointments_providers.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_professional_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_service_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/presentation/widgets/appointment_booking_summary_card.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/presentation/widgets/appointment_slot_chip.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/presentation/widgets/client_appointment_card.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/design_tokens.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_feedback_banner.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_gradient_scaffold.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_logo.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_primary_button.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_surface_card.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_text_field.dart';
 
 class AppointmentsScreen extends ConsumerStatefulWidget {
   const AppointmentsScreen({super.key});
@@ -66,12 +66,12 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
             ),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              'Agende sem depender de mensagem manual.',
+              'Agende rápido com o Artur.',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'O cliente escolhe serviço, profissional e um slot realmente livre sobre endpoints protegidos por tenant.',
+              'Escolha corte avulso, pacote, barba navalhada, risco, sobrancelha, luzes ou tranças. Cancelamento sem taxa até 1 hora antes.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppColors.textMuted,
                   ),
@@ -109,7 +109,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
                       key: ValueKey(state.selectedServiceId),
                       initialValue: state.selectedServiceId,
                       decoration: const InputDecoration(
-                        labelText: 'Servico',
+                        labelText: 'Serviço',
                       ),
                       items: state.services
                           .map(
@@ -187,7 +187,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      'Horarios sugeridos',
+                      'Horários sugeridos',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -200,21 +200,21 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
                       const AppSurfaceCard(
                         padding: EdgeInsets.all(AppSpacing.md),
                         child: Text(
-                          'Escolha a data para ver os melhores horarios do dia.',
+                          'Escolha a data para ver os melhores horários do dia.',
                         ),
                       )
                     else if (selectedProfessional == null)
                       const AppSurfaceCard(
                         padding: EdgeInsets.all(AppSpacing.md),
                         child: Text(
-                          'Selecione o profissional antes de carregar os horarios.',
+                          'Selecione o profissional antes de carregar os horários.',
                         ),
                       )
                     else if (state.slots.isEmpty)
                       const AppSurfaceCard(
                         padding: EdgeInsets.all(AppSpacing.md),
                         child: Text(
-                          'Nao encontramos janelas livres para essa combinacao. Tente outro dia ou profissional.',
+                          'Não encontramos janelas livres para essa combinação. Tente outro dia ou fale com o Artur para encaixe.',
                         ),
                       )
                     else
@@ -239,8 +239,8 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
                     const SizedBox(height: AppSpacing.md),
                     AppTextField(
                       controller: _notesController,
-                      label: 'Observacoes para o salao',
-                      hintText: 'Opcional',
+                      label: 'Observações para o Artur',
+                      hintText: 'Ex: quero ir antes se abrir horário vago',
                     ),
                     const SizedBox(height: AppSpacing.md),
                     AppointmentBookingSummaryCard(

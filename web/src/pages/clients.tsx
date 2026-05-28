@@ -34,8 +34,8 @@ const ClientsPage: NextPage = () => {
     <AuthGuard>
       <>
         <Head>
-          <title>Clientes - Salão da Lu</title>
-          <meta name="description" content="Gerenciar clientes do Salão da Lu" />
+          <title>Clientes - Barbearia do Artur</title>
+          <meta name="description" content="Gerenciar clientes da Barbearia do Artur" />
         </Head>
 
         <Layout title="Clientes">

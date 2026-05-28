@@ -1,5 +1,5 @@
 [Unit]
-Description=Salao da Lu Backend
+Description=Barbearia do Artur Backend
 After=network.target
 
 [Service]

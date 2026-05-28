@@ -74,10 +74,10 @@ POSTGRES_PASSWORD=mesma-senha-do-db
 
 # Environment
 NODE_ENV=production
-DATABASE_URL=postgresql://salao:DB_PASSWORD@postgres:5432/salao_da_lu?schema=public
+DATABASE_URL=postgresql://salao:DB_PASSWORD@postgres:5432/barbearia_do_artur?schema=public
 
 # Database
-DB_NAME=salao_da_lu
+DB_NAME=barbearia_do_artur
 DB_USER=salao
 
 # Application
@@ -102,7 +102,7 @@ NEXT_PUBLIC_APP_URL=https://seu-frontend.up.railway.app
 railway logs
 
 # Conectar ao banco remoto
-railway run psql -h postgres -U salao -d salao_da_lu
+railway run psql -h postgres -U salao -d barbearia_do_artur
 
 # Reiniciar aplicação
 railway restart

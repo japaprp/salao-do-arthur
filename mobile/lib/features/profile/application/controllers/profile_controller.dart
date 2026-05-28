@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:salao_da_lu_mobile/core/result/result.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/providers/auth_providers.dart';
-import 'package:salao_da_lu_mobile/features/profile/application/providers/profile_dependencies.dart';
-import 'package:salao_da_lu_mobile/features/profile/application/state/profile_state.dart';
-import 'package:salao_da_lu_mobile/features/profile/domain/use_cases/get_client_profile_use_case.dart';
+import 'package:barbearia_do_artur_mobile/core/result/result.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/application/providers/profile_dependencies.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/application/state/profile_state.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/domain/use_cases/get_client_profile_use_case.dart';
 
 class ProfileController extends Notifier<ProfileState> {
   late final GetClientProfileUseCase _getClientProfileUseCase;

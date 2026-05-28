@@ -23,7 +23,7 @@ export const UpcomingAppointmentsPanel: React.FC<UpcomingAppointmentsPanelProps>
   return (
     <Card
       title="Próximos agendamentos"
-      subtitle="Agenda operacional sincronizada com o contrato atual"
+      subtitle="Confirmações, encaixes e horários vagos para o Artur agir rápido"
       density="compact"
       action={
         <Button variant="outlined" size="small">

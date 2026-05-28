@@ -1,8 +1,8 @@
-# API Salão da Lu - Documentação de Endpoints
+# API Barbearia do Artur - Documentação de Endpoints
 
 ## Visão Geral
 
-API RESTful para o sistema Salão da Lu, implementada em NestJS com autenticação JWT e arquitetura multi-tenant.
+API RESTful para o sistema Barbearia do Artur, implementada em NestJS com autenticação JWT e arquitetura multi-tenant.
 
 ## Autenticação
 
@@ -43,7 +43,7 @@ Registro de novo usuário.
   "password": "password123",
   "name": "João Silva",
   "role": "CLIENT",
-  "organizationName": "Salão da Lu" // opcional, cria tenant se não informado
+  "organizationName": "Barbearia do Artur" // opcional, cria tenant se não informado
 }
 ```
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/design_tokens.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/design_tokens.dart';
 
 class AppointmentSlotChip extends StatelessWidget {
   const AppointmentSlotChip({

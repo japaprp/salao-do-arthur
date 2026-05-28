@@ -1,4 +1,4 @@
-import 'package:salao_da_lu_mobile/core/constants/app_constants.dart';
+import 'package:barbearia_do_artur_mobile/core/constants/app_constants.dart';
 
 class InputValidators {
   InputValidators._();
@@ -39,6 +39,6 @@ class InputValidators {
   }
 
   static String? salonCode(String? value) {
-    return requiredField(value, label: 'Codigo do salao');
+    return requiredField(value, label: 'Código da barbearia');
   }
 }

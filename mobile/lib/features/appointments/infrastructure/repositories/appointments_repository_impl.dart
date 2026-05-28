@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart';
-import 'package:salao_da_lu_mobile/core/errors/app_exception.dart';
-import 'package:salao_da_lu_mobile/core/errors/failure.dart';
-import 'package:salao_da_lu_mobile/core/result/result.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_professional_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_service_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/client_appointment.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/repositories/appointments_repository.dart';
-import 'package:salao_da_lu_mobile/features/appointments/infrastructure/datasources/appointments_remote_data_source.dart';
+import 'package:barbearia_do_artur_mobile/core/errors/app_exception.dart';
+import 'package:barbearia_do_artur_mobile/core/errors/failure.dart';
+import 'package:barbearia_do_artur_mobile/core/result/result.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_professional_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_service_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/client_appointment.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/infrastructure/datasources/appointments_remote_data_source.dart';
 
 class AppointmentsRepositoryImpl implements AppointmentsRepository {
   const AppointmentsRepositoryImpl(this._remoteDataSource);

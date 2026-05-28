@@ -1,7 +1,7 @@
 {
-  "name": "salao-da-lu-backend",
+  "name": "barbearia-do-artur-backend",
   "version": "0.1.0",
-  "description": "API NestJS modular para o Salão da Lu",
+  "description": "API NestJS modular para o Barbearia do Artur",
   "private": true,
   "scripts": {
     "start": "nest start",

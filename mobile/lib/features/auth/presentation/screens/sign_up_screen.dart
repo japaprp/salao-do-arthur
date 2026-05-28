@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:salao_da_lu_mobile/app/navigation/app_route.dart';
-import 'package:salao_da_lu_mobile/core/utils/input_validators.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/providers/auth_providers.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/register_command.dart';
-import 'package:salao_da_lu_mobile/features/auth/presentation/widgets/auth_header.dart';
-import 'package:salao_da_lu_mobile/features/auth/presentation/widgets/auth_status_banner.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/design_tokens.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_gradient_scaffold.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_logo.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_primary_button.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_surface_card.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_text_field.dart';
+import 'package:barbearia_do_artur_mobile/app/navigation/app_route.dart';
+import 'package:barbearia_do_artur_mobile/core/utils/input_validators.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/register_command.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/presentation/widgets/auth_header.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/presentation/widgets/auth_status_banner.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/design_tokens.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_gradient_scaffold.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_logo.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_primary_button.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_surface_card.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_text_field.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -60,11 +60,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ),
             const SizedBox(height: AppSpacing.xl),
             const AuthHeader(
-              eyebrow: 'Auth / Sign up',
+              eyebrow: 'Cadastro',
               title:
-                  'Cadastre seu perfil de cliente sobre a foundation correta.',
+                  'Crie seu perfil para agendar com menos conversa e mais clareza.',
               description:
-                  'O cadastro do cliente agora usa o codigo publico do salao. O backend resolve o tenant e cria tambem o perfil Client para a proxima fase de agendamento.',
+                  'Você informa o código da barbearia uma vez e depois acompanha horários, pacotes, taxa de cancelamento e produtos indicados pelo Artur.',
             ),
             const SizedBox(height: AppSpacing.xl),
             AppSurfaceCard(
@@ -87,7 +87,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     const SizedBox(height: AppSpacing.md),
                     AppTextField(
                       controller: _tenantSubdomainController,
-                      label: 'Codigo do salao',
+                      label: 'Código da barbearia',
                       validator: InputValidators.salonCode,
                       textInputAction: TextInputAction.next,
                     ),

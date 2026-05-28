@@ -1,4 +1,4 @@
-# 🎉 Status da Aplicação - Salão da Lu
+# 🎉 Status da Aplicação - Barbearia do Artur
 
 ## ✅ Status: COMPLETAMENTE FUNCIONAL
 
@@ -19,7 +19,7 @@
 **O usuário não conseguia acessar a aplicação**
 
 ### Causa Raiz
-- ❌ Banco de dados MySQL `salao_dev` não existia
+- ❌ Banco de dados MySQL `barbearia_dev` não existia
 - ❌ Provider Prisma estava configurado para PostgreSQL
 - ❌ Schema não estava sincronizado com o banco
 
@@ -91,7 +91,7 @@
 ## 📊 Banco de Dados
 
 **Provider**: MySQL (XAMPP)
-**Database**: `salao_dev`
+**Database**: `barbearia_dev`
 **Host**: `localhost:3306`
 **Status**: ✅ Sincronizado com schema Prisma
 

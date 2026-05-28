@@ -1,6 +1,6 @@
-import 'package:salao_da_lu_mobile/core/result/result.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/entities/appointment_professional_option.dart';
-import 'package:salao_da_lu_mobile/features/appointments/domain/repositories/appointments_repository.dart';
+import 'package:barbearia_do_artur_mobile/core/result/result.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_professional_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/repositories/appointments_repository.dart';
 
 class GetAvailableProfessionalsUseCase {
   const GetAvailableProfessionalsUseCase(this._repository);

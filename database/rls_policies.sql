@@ -1,4 +1,4 @@
--- Row Level Security policies for the multi-tenant Salão da Lu schema.
+-- Row Level Security policies for the multi-tenant Barbearia do Artur schema.
 -- Usage:
 -- 1. apply the base schema first
 -- 2. run this file as a privileged role

@@ -6,6 +6,8 @@ import {
   Professional,
   ProfessionalPerformanceMetric,
   ProfessionalServiceAssignment,
+  Product,
+  ProductInventory,
   ReportsOverview,
   ReportsSummary,
   Service,
@@ -108,7 +110,7 @@ export const normalizeUser = (value: unknown): User => {
     id: toStringValue(raw.id),
     email: toStringValue(raw.email),
     phone: toNullableStringValue(raw.phone),
-    name: toStringValue(raw.name, 'Usuário do salão'),
+    name: toStringValue(raw.name, 'Usuário da barbearia'),
     role: toEnumValue(raw.role, Object.values(UserRole), UserRole.MANAGER),
     tenantId: toStringValue(raw.tenantId),
     createdAt: toIsoDateTimeValue(raw.createdAt),
@@ -176,6 +178,46 @@ export const normalizeService = (value: unknown): Service => {
     bufferAfterMinutes: toNumberValue(raw.bufferAfterMinutes),
     parallelAllowed: toBooleanValue(raw.parallelAllowed),
     active: toBooleanValue(raw.active, true),
+    createdAt: toIsoDateTimeValue(raw.createdAt),
+    updatedAt: toIsoDateTimeValue(raw.updatedAt),
+  };
+};
+
+export const normalizeProductInventory = (value: unknown): ProductInventory => {
+  const raw = isRecord(value) ? value : {};
+
+  return {
+    id: toStringValue(raw.id),
+    productId: toStringValue(raw.productId),
+    availableQty: toNumberValue(raw.availableQty),
+    reservedQty: toNumberValue(raw.reservedQty),
+    reorderPoint: toNumberValue(raw.reorderPoint),
+    safetyStock: toNumberValue(raw.safetyStock),
+  };
+};
+
+export const normalizeProduct = (value: unknown): Product => {
+  const raw = isRecord(value) ? value : {};
+
+  return {
+    id: toStringValue(raw.id),
+    tenantId: toStringValue(raw.tenantId),
+    categoryId: toNullableStringValue(raw.categoryId),
+    name: toStringValue(raw.name),
+    slug: toStringValue(raw.slug),
+    sku: toNullableStringValue(raw.sku),
+    description: toNullableStringValue(raw.description),
+    shortDescription: toNullableStringValue(raw.shortDescription),
+    price: toNumberValue(raw.price),
+    compareAtPrice:
+      raw.compareAtPrice == null || raw.compareAtPrice === ''
+        ? null
+        : toNumberValue(raw.compareAtPrice),
+    featured: toBooleanValue(raw.featured),
+    active: toBooleanValue(raw.active, true),
+    shippable: toBooleanValue(raw.shippable, true),
+    trackInventory: toBooleanValue(raw.trackInventory, true),
+    inventory: isRecord(raw.inventory) ? normalizeProductInventory(raw.inventory) : null,
     createdAt: toIsoDateTimeValue(raw.createdAt),
     updatedAt: toIsoDateTimeValue(raw.updatedAt),
   };

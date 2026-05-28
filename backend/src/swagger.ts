@@ -3,8 +3,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export const setupSwagger = (app: INestApplication): void => {
   const config = new DocumentBuilder()
-    .setTitle('Salão da Lu API')
-    .setDescription('API completa para gestão de salão de beleza')
+    .setTitle('Barbearia do Artur API')
+    .setDescription('API da Barbearia do Artur para agenda, clientes, serviços, lojinha, pacotes e rotina operacional do Artur.')
     .setVersion('1.0')
     .addTag('auth', 'Autenticação e autorização')
     .addTag('professionals', 'Gestão de profissionais')

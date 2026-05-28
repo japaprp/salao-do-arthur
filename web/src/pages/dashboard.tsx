@@ -34,8 +34,8 @@ const DashboardPage: NextPage = () => {
     <AuthGuard>
       <>
         <Head>
-          <title>Dashboard - Salão da Lu</title>
-          <meta name="description" content="Dashboard administrativo do Salão da Lu" />
+          <title>Dashboard - Barbearia do Artur</title>
+          <meta name="description" content="Dashboard administrativo da Barbearia do Artur" />
         </Head>
 
         <Layout title="Dashboard">
@@ -46,7 +46,7 @@ const DashboardPage: NextPage = () => {
                   Dashboard
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Bem-vindo, {user?.name}! Aqui está o panorama operacional mais próximo da API real.
+                  Bem-vindo, {user?.name}! Agenda, loja e operação do Artur em uma visão rápida.
                 </Typography>
               </div>
               <Button variant="primary" startIcon={<AddIcon />}>
@@ -123,11 +123,14 @@ const DashboardPage: NextPage = () => {
                         <Button variant="primary" fullWidth startIcon={<AddIcon />}>
                           Novo Agendamento
                         </Button>
+                        <Button variant="secondary" fullWidth startIcon={<CalendarIcon />}>
+                          Confirmar próximos
+                        </Button>
                         <Button variant="secondary" fullWidth startIcon={<PeopleIcon />}>
                           Novo Cliente
                         </Button>
                         <Button variant="outlined" fullWidth startIcon={<CalendarIcon />}>
-                          Ver Agenda Hoje
+                          Ver encaixes vagos
                         </Button>
                       </Stack>
                     </Card>

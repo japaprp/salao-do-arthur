@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:salao_da_lu_mobile/core/storage/app_storage_keys.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/models/auth_session_model.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/models/auth_user_model.dart';
+import 'package:barbearia_do_artur_mobile/core/storage/app_storage_keys.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/models/auth_session_model.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/models/auth_user_model.dart';
 
 class AuthLocalDataSource {
   const AuthLocalDataSource(this._sharedPreferences);

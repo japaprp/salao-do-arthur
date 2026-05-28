@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:salao_da_lu_mobile/core/network/api_endpoints.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_endpoints.dart';
 
 void main() {
   test('appointments available slots endpoint serializes the date-only query',

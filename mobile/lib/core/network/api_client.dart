@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:salao_da_lu_mobile/core/config/app_environment.dart';
-import 'package:salao_da_lu_mobile/core/constants/app_constants.dart';
-import 'package:salao_da_lu_mobile/core/network/api_endpoints.dart';
-import 'package:salao_da_lu_mobile/core/storage/app_storage_keys.dart';
-import 'package:salao_da_lu_mobile/core/storage/shared_preferences_provider.dart';
+import 'package:barbearia_do_artur_mobile/core/config/app_environment.dart';
+import 'package:barbearia_do_artur_mobile/core/constants/app_constants.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_endpoints.dart';
+import 'package:barbearia_do_artur_mobile/core/storage/app_storage_keys.dart';
+import 'package:barbearia_do_artur_mobile/core/storage/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {

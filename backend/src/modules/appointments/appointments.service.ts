@@ -11,6 +11,8 @@ import { ServicesService } from '../services/services.service';
 import { CreateAppointmentInput } from './dto/create-appointment.dto';
 import { CreateSelfAppointmentDto } from './dto/create-self-appointment.dto';
 import { GetAvailableSlotsDto } from './dto/get-available-slots.dto';
+import { MessageClientDto } from './dto/message-client.dto';
+import { OfferEarlierSlotDto } from './dto/offer-earlier-slot.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { PaginationDto, PaginatedResponse } from '../../common/dtos/pagination.dto';
 import { AppointmentStatus } from '@prisma/client';
@@ -18,6 +20,9 @@ import { AppointmentStatus } from '@prisma/client';
 const BUSINESS_DAY_START_MINUTES = 9 * 60;
 const BUSINESS_DAY_END_MINUTES = 19 * 60;
 const SLOT_STEP_MINUTES = 30;
+const CLIENT_FREE_CANCEL_WINDOW_MINUTES = 60;
+const LATE_CANCELLATION_MIN_FEE = 20;
+const LATE_CANCELLATION_PERCENT = 0.3;
 
 type BusyAppointmentWindow = {
   id: string;
@@ -29,6 +34,11 @@ type AvailableAppointmentSlot = {
   startAt: string;
   endAt: string;
   label: string;
+};
+
+type AppointmentWithRelations = {
+  client?: { user?: { name?: string | null } | null } | null;
+  service?: { name?: string | null } | null;
 };
 
 @Injectable()
@@ -285,6 +295,74 @@ export class AppointmentsService {
     return this.appointmentsRepository.updateStatus(id, tenantId, status);
   }
 
+  async confirmByOwner(id: string, tenantId: string) {
+    const appointment = await this.findByIdAndTenant(id, tenantId);
+    if (appointment.status !== AppointmentStatus.SCHEDULED) {
+      throw new BadRequestException('Apenas agendamentos marcados podem ser confirmados.');
+    }
+
+    return this.appointmentsRepository.update(id, tenantId, {
+      notes: this.appendOperationalNote(
+        appointment.notes,
+        'Confirmado pelo Artur. Cliente deve chegar 10 minutos antes.',
+      ),
+    });
+  }
+
+  async messageClient(id: string, tenantId: string, dto: MessageClientDto) {
+    const appointment = await this.findByIdAndTenant(id, tenantId);
+    const appointmentView = appointment as typeof appointment & AppointmentWithRelations;
+    const clientName = appointmentView.client?.user?.name ?? 'cliente';
+    const serviceName = appointmentView.service?.name ?? 'seu atendimento';
+    const scheduledLabel = this.formatHumanDateTime(appointment.scheduledAt);
+    const message =
+      dto.message ??
+      `Oi ${clientName}, aqui é o Artur da Barbearia do Artur. Seu horário de ${serviceName} está marcado para ${scheduledLabel}. Se precisar ajustar, me avise. Cancelamentos com menos de 1 hora podem gerar taxa.`;
+
+    const updatedAppointment = await this.appointmentsRepository.update(id, tenantId, {
+      notes: this.appendOperationalNote(appointment.notes, `Mensagem preparada: ${message}`),
+    });
+
+    return { appointment: updatedAppointment, message };
+  }
+
+  async offerEarlierSlot(id: string, tenantId: string, dto: OfferEarlierSlotDto) {
+    const appointment = await this.findByIdAndTenant(id, tenantId);
+    const appointmentView = appointment as typeof appointment & AppointmentWithRelations;
+    const proposedAt = this.normalizeScheduledAt(dto.proposedAt);
+    const isAvailable = await this.isProfessionalAvailable(
+      appointment.professionalId,
+      proposedAt,
+      appointment.durationMinutes,
+      tenantId,
+      id,
+    );
+
+    if (!isAvailable) {
+      throw new ConflictException('O horário sugerido não está livre para este profissional.');
+    }
+
+    const clientName = appointmentView.client?.user?.name ?? 'cliente';
+    const message =
+      dto.message ??
+      `Oi ${clientName}, abriu um horário mais cedo na Barbearia do Artur: ${this.formatHumanDateTime(
+        proposedAt,
+      )}. Você quer antecipar?`;
+
+    const updatedAppointment = await this.appointmentsRepository.update(id, tenantId, {
+      notes: this.appendOperationalNote(
+        appointment.notes,
+        `Horário mais cedo oferecido: ${this.formatHumanDateTime(proposedAt)}. Mensagem: ${message}`,
+      ),
+    });
+
+    return {
+      appointment: updatedAppointment,
+      proposedAt: this.formatLocalDateTime(proposedAt),
+      message,
+    };
+  }
+
   async checkin(id: string, tenantId: string) {
     const appointment = await this.findByIdAndTenant(id, tenantId);
 
@@ -332,6 +410,39 @@ export class AppointmentsService {
     }
 
     return this.appointmentsRepository.remove(id, tenantId);
+  }
+
+  async cancelWithPolicy(id: string, tenantId: string) {
+    const appointment = await this.findByIdAndTenant(id, tenantId);
+
+    if (appointment.status === AppointmentStatus.COMPLETED) {
+      throw new BadRequestException('Agendamento concluído não pode ser cancelado.');
+    }
+
+    const minutesUntilAppointment = Math.floor(
+      (appointment.scheduledAt.getTime() - Date.now()) / 60000,
+    );
+    const feeApplies = minutesUntilAppointment < CLIENT_FREE_CANCEL_WINDOW_MINUTES;
+    const cancellationFee = feeApplies
+      ? Math.max(LATE_CANCELLATION_MIN_FEE, Number(appointment.totalAmount) * LATE_CANCELLATION_PERCENT)
+      : 0;
+
+    const updatedAppointment = await this.appointmentsRepository.update(id, tenantId, {
+      status: AppointmentStatus.CANCELLED,
+      notes: this.appendOperationalNote(
+        appointment.notes,
+        feeApplies
+          ? `Cancelado com menos de 1 hora. Taxa sugerida: R$ ${cancellationFee.toFixed(2)}.`
+          : 'Cancelado dentro da política sem taxa.',
+      ),
+    });
+
+    return {
+      appointment: updatedAppointment,
+      feeApplies,
+      cancellationFee,
+      policy: 'Cliente pode cancelar sem taxa até 1 hora antes. Depois disso, aplicar taxa mínima de R$ 20 ou 30% do serviço.',
+    };
   }
 
   private validateStatusTransition(currentStatus: AppointmentStatus, newStatus: AppointmentStatus) {
@@ -490,6 +601,19 @@ export class AppointmentsService {
     });
 
     return `${formatter.format(startAt)} - ${formatter.format(endAt)}`;
+  }
+
+  private formatHumanDateTime(value: Date) {
+    return new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    }).format(value);
+  }
+
+  private appendOperationalNote(currentNotes: string | null | undefined, note: string) {
+    const timestamp = this.formatHumanDateTime(new Date());
+    const nextNote = `[op ${timestamp}] ${note}`;
+    return currentNotes ? `${currentNotes}\n${nextNote}` : nextNote;
   }
 
   private formatLocalDateTime(value: Date) {

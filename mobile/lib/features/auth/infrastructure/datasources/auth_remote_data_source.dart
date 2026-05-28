@@ -1,9 +1,9 @@
-import 'package:salao_da_lu_mobile/core/errors/app_exception.dart';
-import 'package:salao_da_lu_mobile/core/network/api_client.dart';
-import 'package:salao_da_lu_mobile/core/network/api_endpoints.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/register_command.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/models/auth_session_model.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/models/auth_user_model.dart';
+import 'package:barbearia_do_artur_mobile/core/errors/app_exception.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_client.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_endpoints.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/register_command.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/models/auth_session_model.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/models/auth_user_model.dart';
 
 class AuthRemoteDataSource {
   const AuthRemoteDataSource(this._apiClient);
@@ -64,6 +64,19 @@ class AuthRemoteDataSource {
       tenantSubdomain: command.tenantSubdomain,
       email: command.email,
       password: command.password,
+    );
+  }
+
+  Future<void> forgotPassword({
+    required String tenantSubdomain,
+    required String email,
+  }) async {
+    await _apiClient.post(
+      ApiEndpoints.authForgotPassword,
+      data: {
+        'tenantSubdomain': tenantSubdomain,
+        'email': email,
+      },
     );
   }
 

@@ -1,4 +1,4 @@
--- Modelo de dados para Salão da Lu
+-- Modelo de dados para Barbearia do Artur
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

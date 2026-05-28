@@ -124,7 +124,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {title || 'Salão da Lu'}
+            {title || 'Barbearia do Artur'}
           </Typography>
 
           <IconButton
@@ -184,7 +184,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
       >
         <DrawerHeader>
           <Typography variant="h6" sx={{ flexGrow: 1, ml: 2 }}>
-            Salão da Lu
+            Barbearia do Artur
           </Typography>
           {!isMobile && (
             <IconButton onClick={() => setOpen(false)}>

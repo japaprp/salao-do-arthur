@@ -33,6 +33,14 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  PASSWORD_RESET_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  WEB_APP_URL?: string;
+
+  @IsOptional()
+  @IsString()
   PORT: string = '3100';
 
   @IsOptional()

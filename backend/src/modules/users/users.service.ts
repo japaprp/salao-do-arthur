@@ -44,4 +44,8 @@ export class UsersService {
   }) {
     return this.usersRepository.createUser(data);
   }
+
+  async updatePassword(userId: string, tenantId: string, passwordHash: string) {
+    return this.usersRepository.updatePassword(userId, tenantId, passwordHash);
+  }
 }

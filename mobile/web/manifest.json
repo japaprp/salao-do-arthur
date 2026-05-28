@@ -1,11 +1,11 @@
 {
-    "name": "salao_da_lu_mobile",
-    "short_name": "salao_da_lu_mobile",
+    "name": "barbearia_do_artur_mobile",
+    "short_name": "barbearia_do_artur_mobile",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "App cliente do Salao da Lu.",
+    "description": "App da Barbearia do Artur para agendamento, pacotes e lojinha.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

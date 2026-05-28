@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:salao_da_lu_mobile/app/navigation/app_route.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/providers/auth_dependencies.dart';
-import 'package:salao_da_lu_mobile/features/auth/application/providers/auth_providers.dart';
-import 'package:salao_da_lu_mobile/features/auth/presentation/widgets/auth_header.dart';
-import 'package:salao_da_lu_mobile/features/auth/presentation/widgets/onboarding_slide_card.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/design_tokens.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_gradient_scaffold.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_logo.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_primary_button.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/widgets/app_secondary_button.dart';
+import 'package:barbearia_do_artur_mobile/app/navigation/app_route.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_dependencies.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/presentation/widgets/auth_header.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/presentation/widgets/onboarding_slide_card.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/design_tokens.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_gradient_scaffold.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_logo.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_primary_button.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/widgets/app_secondary_button.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -52,14 +52,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const AppLogo(
-                    subtitle: 'Cliente mobile foundation',
+                    subtitle: 'Agenda, pacotes e lojinha',
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   const AuthHeader(
-                    eyebrow: 'Roadmap fase 1',
-                    title: 'Foundation primeiro, experiencia depois.',
+                    eyebrow: 'Barbearia do Artur',
+                    title: 'Seu horario no jeito certo.',
                     description:
-                        'O app comeca validando a jornada base do cliente: onboarding, autenticacao e estrutura pronta para evoluir.',
+                        'Marque corte, barba, sobrancelha, luzes ou trancas, acompanhe pacotes e compre produtos reais da lojinha.',
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   SizedBox(
@@ -101,7 +101,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   AppPrimaryButton(
                     label:
-                        isLastPage ? 'Comecar autenticacao' : 'Proximo passo',
+                        isLastPage ? 'Entrar ou criar conta' : 'Proximo passo',
                     onPressed: () async {
                       if (!isLastPage) {
                         await _pageController.nextPage(

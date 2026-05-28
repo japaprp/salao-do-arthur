@@ -1,19 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:salao_da_lu_mobile/core/network/api_client.dart';
-import 'package:salao_da_lu_mobile/core/storage/shared_preferences_provider.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/entities/onboarding_slide.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/repositories/auth_repository.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/repositories/onboarding_repository.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/complete_onboarding_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/get_onboarding_status_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/register_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/restore_session_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/sign_in_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/domain/use_cases/sign_out_use_case.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/datasources/auth_local_data_source.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/datasources/auth_remote_data_source.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/repositories/auth_repository_impl.dart';
-import 'package:salao_da_lu_mobile/features/auth/infrastructure/repositories/onboarding_repository_impl.dart';
+import 'package:barbearia_do_artur_mobile/core/network/api_client.dart';
+import 'package:barbearia_do_artur_mobile/core/storage/shared_preferences_provider.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/onboarding_slide.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/repositories/auth_repository.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/repositories/onboarding_repository.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/complete_onboarding_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/forgot_password_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/get_onboarding_status_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/register_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/restore_session_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/sign_in_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/domain/use_cases/sign_out_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/datasources/auth_local_data_source.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/datasources/auth_remote_data_source.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/repositories/auth_repository_impl.dart';
+import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/repositories/onboarding_repository_impl.dart';
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
   return AuthLocalDataSource(ref.watch(sharedPreferencesProvider));
@@ -56,6 +57,10 @@ final signInUseCaseProvider = Provider<SignInUseCase>((ref) {
   return SignInUseCase(ref.watch(authRepositoryProvider));
 });
 
+final forgotPasswordUseCaseProvider = Provider<ForgotPasswordUseCase>((ref) {
+  return ForgotPasswordUseCase(ref.watch(authRepositoryProvider));
+});
+
 final registerUseCaseProvider = Provider<RegisterUseCase>((ref) {
   return RegisterUseCase(ref.watch(authRepositoryProvider));
 });
@@ -67,22 +72,22 @@ final signOutUseCaseProvider = Provider<SignOutUseCase>((ref) {
 final onboardingSlidesProvider = Provider<List<OnboardingSlide>>((ref) {
   return const [
     OnboardingSlide(
-      eyebrow: 'Agenda premium',
-      title: 'Reserve sem depender de troca de mensagens.',
+      eyebrow: 'Agenda do Artur',
+      title: 'Reserve sem ficar preso no WhatsApp.',
       description:
-          'Escolha horario, profissional e confirme em poucos toques com previsibilidade real.',
+          'Escolha o servico, veja horarios reais e receba confirmacao com antecedencia.',
     ),
     OnboardingSlide(
-      eyebrow: 'Boutique integrada',
-      title: 'Compre produtos e pacotes na mesma jornada.',
+      eyebrow: 'Lojinha real',
+      title: 'Leve pomada, balm e pacotes junto do corte.',
       description:
-          'O app cliente precisa vender recorrencia, tratamento e conveniencia, nao so agenda.',
+          'Produtos e combos aparecem com preco, estoque e contexto para cuidar do visual em casa.',
     ),
     OnboardingSlide(
-      eyebrow: 'Fidelidade viva',
-      title: 'Acompanhe beneficios, historico e proximos cuidados.',
+      eyebrow: 'Rotina sem aperto',
+      title: 'O Artur consegue avisar, adiantar ou remarcar.',
       description:
-          'Cada visita vira relacionamento, recompra e retorno guiado pela marca do salao.',
+          'Se abrir horario antes, se precisar ajustar ou cancelar, tudo fica registrado sem bagunca.',
     ),
   ];
 });

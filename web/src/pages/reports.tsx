@@ -43,8 +43,8 @@ const ReportsPage: NextPage = () => {
     <AuthGuard>
       <>
         <Head>
-          <title>Relatórios - Salão da Lu</title>
-          <meta name="description" content="Relatórios reais do Salão da Lu" />
+          <title>Relatórios - Barbearia do Artur</title>
+          <meta name="description" content="Relatórios reais da Barbearia do Artur" />
         </Head>
 
         <Layout title="Relatórios">

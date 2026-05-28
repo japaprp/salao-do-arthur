@@ -80,8 +80,8 @@ jobs:
       BACKEND_PORT: '3100'
       CORS_ORIGINS: http://localhost:3001,http://127.0.0.1:3001
       SMOKE_API_URL: http://127.0.0.1:3100/api
-      SMOKE_TENANT_SUBDOMAIN: salao-da-lu
-      SMOKE_CLIENT_EMAIL: cliente.demo@salaodaluu.app
+      SMOKE_TENANT_SUBDOMAIN: barbearia-do-artur
+      SMOKE_CLIENT_EMAIL: cliente.demo@barbeariadoartur.app
       SMOKE_CLIENT_PASSWORD: Cliente123!
     steps:
       - name: Checkout code

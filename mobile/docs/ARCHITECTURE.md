@@ -12,7 +12,7 @@
 - Feature-First
 - Clean Architecture
 - arquivos pequenos e responsabilidade única
-- foundation antes de feature visual ampla
+- base técnica antes de feature visual ampla
 - integração progressiva com backend real
 
 ## Estrutura Atual
@@ -117,7 +117,7 @@ Foi criado um `ApiClient` com `dio` para:
 
 ### Persistência Local
 
-Foi usado `shared_preferences` na foundation para:
+Foi usado `shared_preferences` na base local para:
 
 - flag de onboarding
 - persistência inicial de sessão
@@ -193,9 +193,9 @@ O contrato atual do mobile usa:
 Risco:
 atualizações futuras do Flutter podem falhar até liberar espaço em `C:`.
 
-### Fase 1: Foundation
+### Fase 1: Base técnica
 
-- A foundation já está pronta para crescer por feature.
+- A base técnica já está pronta para crescer por feature.
 - Ainda não há interceptors, analytics, secure storage nem flavoring.
 
 Risco:
@@ -207,5 +207,5 @@ se várias features forem adicionadas sem reforçar observabilidade e segurança
 - O backend cria o `Client` automaticamente durante o registro do cliente.
 
 Risco:
-o fluxo ainda depende do cliente conhecer o código do salão.
+o fluxo ainda depende do cliente conhecer o código da Barbearia do Artur.
 O ideal depois é ter descoberta por convite, QR code, link mágico ou seleção assistida.

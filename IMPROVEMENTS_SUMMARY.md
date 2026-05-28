@@ -1,8 +1,8 @@
-# MELHORIAS IMPLEMENTADAS - Salão da Lu
+# MELHORIAS IMPLEMENTADAS - Barbearia do Artur
 
 ## 📋 Resumo Executivo
 
-Este documento lista as melhorias implementadas no projeto Salão da Lu para torná-lo production-ready e enterprise-grade.
+Este documento lista as melhorias implementadas no projeto Barbearia do Artur para torná-lo production-ready e enterprise-grade.
 
 ---
 
@@ -45,7 +45,7 @@ Este documento lista as melhorias implementadas no projeto Salão da Lu para tor
 ### Próximas Ações:
 ```bash
 # Aplicar no banco de dados:
-psql -U postgres -d salao_da_lu < database/rls_policies.sql
+psql -U postgres -d barbearia_do_artur < database/rls_policies.sql
 
 # Backend usar TenantContextService para SET LOCAL contexto
 ```

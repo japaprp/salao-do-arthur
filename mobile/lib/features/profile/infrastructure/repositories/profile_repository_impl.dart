@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:salao_da_lu_mobile/core/errors/app_exception.dart';
-import 'package:salao_da_lu_mobile/core/errors/failure.dart';
-import 'package:salao_da_lu_mobile/core/result/result.dart';
-import 'package:salao_da_lu_mobile/features/profile/domain/entities/client_profile.dart';
-import 'package:salao_da_lu_mobile/features/profile/domain/repositories/profile_repository.dart';
-import 'package:salao_da_lu_mobile/features/profile/infrastructure/datasources/profile_remote_data_source.dart';
+import 'package:barbearia_do_artur_mobile/core/errors/app_exception.dart';
+import 'package:barbearia_do_artur_mobile/core/errors/failure.dart';
+import 'package:barbearia_do_artur_mobile/core/result/result.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/domain/entities/client_profile.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/domain/repositories/profile_repository.dart';
+import 'package:barbearia_do_artur_mobile/features/profile/infrastructure/datasources/profile_remote_data_source.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   const ProfileRepositoryImpl(this._remoteDataSource);

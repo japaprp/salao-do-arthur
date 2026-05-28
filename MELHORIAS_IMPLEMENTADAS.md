@@ -185,7 +185,7 @@ eslint: { ignoreDuringBuilds: false }
 #### **1. Criar banco de dados**
 ```bash
 # Abrir http://localhost/phpmyadmin
-# Criar novo banco: salao_dev
+# Criar novo banco: barbearia_dev
 # Charset: utf8mb4
 ```
 
@@ -195,7 +195,7 @@ cd backend
 
 # Criar arquivo .env com MySQL
 cat > .env << EOF
-DATABASE_URL=mysql://root:@localhost:3306/salao_dev
+DATABASE_URL=mysql://root:@localhost:3306/barbearia_dev
 JWT_SECRET=sua_chave_muito_secreta_aqui_2024
 REFRESH_TOKEN_SECRET=outra_chave_secreta_para_refresh
 BACKEND_PORT=3100

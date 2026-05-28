@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:salao_da_lu_mobile/shared/design_system/theme/design_tokens.dart';
+import 'package:barbearia_do_artur_mobile/shared/design_system/theme/design_tokens.dart';
 
 class AppLogo extends StatelessWidget {
   const AppLogo({
@@ -17,7 +17,7 @@ class AppLogo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'SALAO DA LU',
+          'BARBEARIA DO ARTUR',
           style: theme.textTheme.labelLarge,
         ),
         const SizedBox(height: AppSpacing.xs),

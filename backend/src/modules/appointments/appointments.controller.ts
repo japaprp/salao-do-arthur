@@ -11,6 +11,8 @@ import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { CreateSelfAppointmentDto } from './dto/create-self-appointment.dto';
 import { GetAvailableSlotsDto } from './dto/get-available-slots.dto';
+import { MessageClientDto } from './dto/message-client.dto';
+import { OfferEarlierSlotDto } from './dto/offer-earlier-slot.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
 import { PaginationDto } from '../../common/dtos/pagination.dto';
@@ -156,6 +158,46 @@ export class AppointmentsController {
       updateAppointmentStatusDto.status,
       user.tenantId,
     );
+  }
+
+  @Post(':id/confirm')
+  @ApiOperation({ summary: 'Confirmar agendamento pelo Artur' })
+  @ApiParam({ name: 'id', description: 'ID do agendamento' })
+  @ApiResponse({ status: 200, description: 'Agendamento confirmado com nota operacional' })
+  confirm(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.appointmentsService.confirmByOwner(id, user.tenantId);
+  }
+
+  @Post(':id/message-client')
+  @ApiOperation({ summary: 'Preparar mensagem rápida para o cliente' })
+  @ApiParam({ name: 'id', description: 'ID do agendamento' })
+  @ApiResponse({ status: 200, description: 'Mensagem preparada com contexto do agendamento' })
+  messageClient(
+    @Param('id') id: string,
+    @Body() messageClientDto: MessageClientDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.appointmentsService.messageClient(id, user.tenantId, messageClientDto);
+  }
+
+  @Post(':id/offer-earlier-slot')
+  @ApiOperation({ summary: 'Oferecer horário vago mais cedo ao cliente' })
+  @ApiParam({ name: 'id', description: 'ID do agendamento' })
+  @ApiResponse({ status: 200, description: 'Mensagem de antecipação preparada' })
+  offerEarlierSlot(
+    @Param('id') id: string,
+    @Body() offerEarlierSlotDto: OfferEarlierSlotDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.appointmentsService.offerEarlierSlot(id, user.tenantId, offerEarlierSlotDto);
+  }
+
+  @Post(':id/cancel-with-policy')
+  @ApiOperation({ summary: 'Cancelar aplicando política de taxa de 1 hora' })
+  @ApiParam({ name: 'id', description: 'ID do agendamento' })
+  @ApiResponse({ status: 200, description: 'Agendamento cancelado com cálculo de taxa' })
+  cancelWithPolicy(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.appointmentsService.cancelWithPolicy(id, user.tenantId);
   }
 
   @Post(':id/checkin')
