@@ -34,6 +34,10 @@ describe('AppointmentsService', () => {
     cancelAppointmentReminders: jest.fn(),
   };
 
+  const financeService = {
+    recordAppointmentCompletion: jest.fn(),
+  };
+
   let service: AppointmentsService;
 
   beforeEach(() => {
@@ -44,6 +48,7 @@ describe('AppointmentsService', () => {
       professionalsService as never,
       servicesService as never,
       notificationsService as never,
+      financeService as never,
     );
   });
 

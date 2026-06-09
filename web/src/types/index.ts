@@ -315,6 +315,40 @@ export interface ReportsOverview {
   upcomingAppointments: Appointment[];
 }
 
+export interface FinanceTransaction {
+  id: string;
+  type: string;
+  category: string;
+  amount: number;
+  status: string;
+  description?: string | null;
+  recordedAt: IsoDateTimeString;
+}
+
+export interface FinanceOverview {
+  period: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  range: {
+    start: IsoDateTimeString;
+    end: IsoDateTimeString;
+  };
+  summary: {
+    revenue: number;
+    appointmentRevenue: number;
+    orderRevenue: number;
+    manualIncome: number;
+    expenses: number;
+    commissions: number;
+    netProfit: number;
+    appointmentCount: number;
+    orderCount: number;
+    expenseCount: number;
+    commissionCount: number;
+    pendingCommissionAmount: number;
+    pendingCommissionCount: number;
+  };
+  recentTransactions: FinanceTransaction[];
+}
+
 export interface PaginationParams {
   page?: number;
   limit?: number;

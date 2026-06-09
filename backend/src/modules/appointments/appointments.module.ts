@@ -6,9 +6,10 @@ import { ClientsModule } from '../clients/clients.module';
 import { ProfessionalsModule } from '../professionals/professionals.module';
 import { ServicesModule } from '../services/services.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { FinanceModule } from '../finance/finance.module';
 
 @Module({
-  imports: [ClientsModule, ProfessionalsModule, ServicesModule, NotificationsModule],
+  imports: [ClientsModule, ProfessionalsModule, ServicesModule, NotificationsModule, FinanceModule],
   controllers: [AppointmentsController],
   providers: [AppointmentsService, AppointmentsRepository],
   exports: [AppointmentsService],

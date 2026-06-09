@@ -15,8 +15,8 @@ Regra operacional: nenhuma funcionalidade nova deve ser iniciada antes da conclu
 | 5 | Loja Online | Validada em codigo |
 | 6 | Pagamentos | Codigo pronto; aguardando sandbox Mercado Pago |
 | 7 | Fidelidade | Codigo validado |
-| 8 | Financeiro | Proxima fase |
-| 9 | Relatorios | Bloqueada pela Fase 8 |
+| 8 | Financeiro | Codigo validado |
+| 9 | Relatorios | Proxima fase |
 | 10 | Testes | Bloqueada pela Fase 9 |
 | 11 | Producao | Bloqueada pela Fase 10 |
 | 12 | Play Store | Bloqueada pela Fase 11 |
@@ -220,3 +220,30 @@ Regra operacional: nenhuma funcionalidade nova deve ser iniciada antes da conclu
 * Aplicar migrations em banco real.
 * Definir valores comerciais finais dos benefícios de cada nível com a Barbearia do Artur.
 * Validar ganho de pontos em compra sandbox Mercado Pago após concluir pendências externas da Fase 6.
+
+## Fase 8 - Financeiro
+
+### Implementado
+
+* Backend: `FinanceModule` criado com endpoint `GET /finance/overview`.
+* Backend: financeiro calcula visão diária, semanal, mensal e anual.
+* Backend: receitas consolidadas por atendimentos concluídos, pedidos pagos e entradas manuais.
+* Backend: despesas manuais via `POST /finance/transactions`.
+* Backend: lucro líquido calculado como receitas menos despesas e comissões.
+* Backend: finalização de atendimento registra receita e comissão estimada do profissional de forma idempotente.
+* Backend: lançamentos financeiros registram auditoria.
+* Web: página `/finance` criada no painel administrativo.
+* Web: dashboard financeiro com receitas, despesas, comissões, lucro, composição do caixa e movimentações recentes.
+* Web: lançamento rápido de receita/despesa manual.
+
+### Validacao de codigo
+
+* Backend `type-check`, `lint:check`, `build` e `test`: OK.
+* Web `type-check`, `lint` e `build`: OK.
+* Mobile `flutter analyze` e `flutter test`: OK.
+
+### Pendente operacional
+
+* Conferir regras reais de comissão da Barbearia do Artur.
+* Cadastrar despesas reais recorrentes.
+* Validar caixa diário em banco real com atendimentos finalizados e pedidos pagos.

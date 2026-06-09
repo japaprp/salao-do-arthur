@@ -2,6 +2,7 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import BusinessIcon from '@mui/icons-material/Business';
 import CalendarIcon from '@mui/icons-material/CalendarToday';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import FinanceIcon from '@mui/icons-material/AccountBalanceWallet';
 import InventoryIcon from '@mui/icons-material/Inventory2';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
@@ -42,6 +43,11 @@ export const navigationItems: NavigationItem[] = [
     label: 'Lojinha',
     icon: InventoryIcon,
     path: '/products',
+  },
+  {
+    label: 'Financeiro',
+    icon: FinanceIcon,
+    path: '/finance',
   },
   {
     label: 'Relatórios',

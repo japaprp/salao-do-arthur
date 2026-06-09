@@ -20,6 +20,7 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { PaginationDto, PaginatedResponse } from '../../common/dtos/pagination.dto';
 import { Appointment, AppointmentStatus } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { FinanceService } from '../finance/finance.service';
 
 const BUSINESS_DAY_START_MINUTES = 9 * 60;
 const BUSINESS_DAY_END_MINUTES = 19 * 60;
@@ -55,6 +56,7 @@ export class AppointmentsService {
     private readonly professionalsService: ProfessionalsService,
     private readonly servicesService: ServicesService,
     private readonly notificationsService: NotificationsService,
+    private readonly financeService: FinanceService,
   ) {}
 
   async create(createAppointmentDto: CreateAppointmentInput) {
@@ -508,10 +510,13 @@ export class AppointmentsService {
       throw new BadRequestException('Agendamento deve estar em andamento para finalizar.');
     }
 
-    return this.appointmentsRepository.update(id, tenantId, {
+    const completedAppointment = await this.appointmentsRepository.update(id, tenantId, {
       status: AppointmentStatus.COMPLETED,
       finishedAt: new Date(),
     });
+
+    await this.financeService.recordAppointmentCompletion(tenantId, id);
+    return completedAppointment;
   }
 
   async cancel(id: string, tenantId: string) {
