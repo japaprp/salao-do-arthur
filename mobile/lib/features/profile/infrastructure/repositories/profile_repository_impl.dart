@@ -21,6 +21,24 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
   }
 
+  @override
+  Future<Result<ClientProfile>> redeemPoints({
+    required String accessToken,
+    required int points,
+    required String reason,
+  }) async {
+    try {
+      final profile = await _remoteDataSource.redeemPoints(
+        accessToken: accessToken,
+        points: points,
+        reason: reason,
+      );
+      return Success(profile.toEntity());
+    } catch (error) {
+      return FailureResult(_mapFailure(error));
+    }
+  }
+
   Failure _mapFailure(Object error) {
     if (error is DioException) {
       final responseData = error.response?.data;

@@ -231,7 +231,16 @@ export const normalizeClient = (value: unknown): Client => {
     userId: toStringValue(raw.userId),
     tenantId: toStringValue(raw.tenantId),
     loyaltyPoints: toNumberValue(raw.loyaltyPoints),
+    loyaltyLevel: toNullableStringValue(raw.loyaltyLevel) ?? 'BRONZE',
     lifetimeValue: toNumberValue(raw.lifetimeValue),
+    loyaltyWallet: isRecord(raw.loyaltyWallet)
+      ? {
+          id: toStringValue(raw.loyaltyWallet.id),
+          pointsBalance: toNumberValue(raw.loyaltyWallet.pointsBalance),
+          cashbackBalance: toNumberValue(raw.loyaltyWallet.cashbackBalance),
+          currentLevel: toStringValue(raw.loyaltyWallet.currentLevel || raw.loyaltyLevel),
+        }
+      : null,
     favoriteProfessionalId: toNullableStringValue(raw.favoriteProfessionalId),
     preferences: isRecord(raw.preferences) ? raw.preferences : null,
     createdAt: toIsoDateTimeValue(raw.createdAt),

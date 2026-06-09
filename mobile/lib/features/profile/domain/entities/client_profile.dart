@@ -10,6 +10,8 @@ class ClientProfile {
     required this.loyaltyPoints,
     required this.lifetimeValue,
     required this.pointsBalance,
+    required this.cashbackBalance,
+    required this.loyaltyLevel,
     required this.recentAppointments,
     required this.loyaltyActivities,
     this.favoriteProfessionalName,
@@ -22,6 +24,8 @@ class ClientProfile {
   final int loyaltyPoints;
   final double lifetimeValue;
   final int pointsBalance;
+  final double cashbackBalance;
+  final String loyaltyLevel;
   final String? favoriteProfessionalName;
   final List<ClientProfileAppointment> recentAppointments;
   final List<LoyaltyActivity> loyaltyActivities;

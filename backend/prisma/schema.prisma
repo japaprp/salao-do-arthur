@@ -169,7 +169,7 @@ enum LoyaltyLevel {
   BRONZE
   SILVER
   GOLD
-  VIP
+  DIAMOND
 }
 
 enum ReferralStatus {
@@ -1351,6 +1351,7 @@ model LoyaltyTransaction {
   walletId      String
   appointmentId String?
   orderId       String?
+  externalKey   String?
   points        Int
   amount        Decimal?
   type          String
@@ -1361,6 +1362,7 @@ model LoyaltyTransaction {
   wallet        LoyaltyWallet @relation(fields: [walletId], references: [id])
 
   @@index([tenantId, createdAt])
+  @@unique([tenantId, externalKey])
 }
 
 model Referral {

@@ -39,6 +39,10 @@ describe('PaymentsService', () => {
     record: jest.fn(),
   };
 
+  const loyaltyService = {
+    awardPaidOrder: jest.fn(),
+  };
+
   let service: PaymentsService;
 
   beforeEach(() => {
@@ -47,6 +51,7 @@ describe('PaymentsService', () => {
       prisma as never,
       mercadoPagoProvider as never,
       auditService as never,
+      loyaltyService as never,
     );
   });
 
@@ -88,6 +93,7 @@ describe('PaymentsService', () => {
         }),
       }),
     );
+    expect(loyaltyService.awardPaidOrder).toHaveBeenCalledWith('tenant-1', 'order-1');
   });
 
   it('cancels rejected payments and releases reserved stock', async () => {

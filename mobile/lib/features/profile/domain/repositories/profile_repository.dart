@@ -3,4 +3,10 @@ import 'package:barbearia_do_artur_mobile/features/profile/domain/entities/clien
 
 abstract interface class ProfileRepository {
   Future<Result<ClientProfile>> getClientProfile(String accessToken);
+
+  Future<Result<ClientProfile>> redeemPoints({
+    required String accessToken,
+    required int points,
+    required String reason,
+  });
 }

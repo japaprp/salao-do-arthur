@@ -15,4 +15,21 @@ class ProfileRemoteDataSource {
 
     return ClientProfileModel.fromJson(response);
   }
+
+  Future<ClientProfileModel> redeemPoints({
+    required String accessToken,
+    required int points,
+    required String reason,
+  }) async {
+    await _apiClient.post(
+      ApiEndpoints.loyaltyRedeem,
+      accessToken: accessToken,
+      data: {
+        'points': points,
+        'reason': reason,
+      },
+    );
+
+    return getClientProfile(accessToken);
+  }
 }

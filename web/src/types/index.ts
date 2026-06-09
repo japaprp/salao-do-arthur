@@ -39,7 +39,14 @@ export interface Client {
   userId: string;
   tenantId: string;
   loyaltyPoints: number;
+  loyaltyLevel?: string;
   lifetimeValue: number;
+  loyaltyWallet?: {
+    id: string;
+    pointsBalance: number;
+    cashbackBalance: number;
+    currentLevel: string;
+  } | null;
   favoriteProfessionalId?: string | null;
   preferences?: Record<string, unknown> | null;
   createdAt: IsoDateTimeString;

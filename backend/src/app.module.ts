@@ -17,6 +17,7 @@ import { ServiceCategoriesModule } from './modules/service-categories/service-ca
 import { ProductsModule } from './modules/products/products.module';
 import { StoreModule } from './modules/store/store.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { ProductCategoriesModule } from './modules/product-categories/product-categories.module';
 import { PromotionsModule } from './modules/promotions/promotions.module';
 import { CouponsModule } from './modules/coupons/coupons.module';
@@ -49,6 +50,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
     ProductCategoriesModule,
     ProductsModule,
     PaymentsModule,
+    LoyaltyModule,
     StoreModule,
     PromotionsModule,
     CouponsModule,

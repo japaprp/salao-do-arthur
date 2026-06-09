@@ -6,14 +6,32 @@ import PeopleIcon from '@mui/icons-material/People';
 import SavingsIcon from '@mui/icons-material/Savings';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import { Box, Chip, Container, Grid, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Chip,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { StatCard } from '@/components/dashboard/StatCard';
 import Layout from '@/components/layout/Layout';
 import Card from '@/components/ui/Card';
-import { useClients } from '@/hooks/useClients';
+import {
+  useAdjustClientLoyalty,
+  useClients,
+  useRedeemClientLoyalty,
+} from '@/hooks/useClients';
 import { formatCurrency } from '@/lib/formatters/appointments';
 import { entityGridProps, metricGridProps } from '@/lib/ui/gridPresets';
+import type { Client } from '@/types';
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
   day: '2-digit',
@@ -23,12 +41,59 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
 
 const ClientsPage: NextPage = () => {
   const { data: clients = [], isLoading, error } = useClients();
+  const redeemLoyalty = useRedeemClientLoyalty();
+  const adjustLoyalty = useAdjustClientLoyalty();
+  const [loyaltyAction, setLoyaltyAction] = React.useState<'redeem' | 'adjust' | null>(null);
+  const [selectedClient, setSelectedClient] = React.useState<Client | null>(null);
+  const [points, setPoints] = React.useState('');
+  const [amount, setAmount] = React.useState('');
+  const [reason, setReason] = React.useState('');
 
   const loyaltyClients = clients.filter((client) => client.loyaltyPoints > 0).length;
   const portfolioValue = clients.reduce((sum, client) => sum + client.lifetimeValue, 0);
   const averageClientValue = clients.length ? portfolioValue / clients.length : 0;
   const errorMessage =
     error instanceof Error ? error.message : 'Não foi possível carregar os clientes.';
+  const loyaltySubmitting = redeemLoyalty.isPending || adjustLoyalty.isPending;
+
+  const openLoyaltyModal = (client: Client, action: 'redeem' | 'adjust') => {
+    setSelectedClient(client);
+    setLoyaltyAction(action);
+    setPoints(action === 'redeem' ? String(client.loyaltyWallet?.pointsBalance ?? 0) : '0');
+    setAmount('');
+    setReason('');
+  };
+
+  const closeLoyaltyModal = (force = false) => {
+    if (loyaltySubmitting && !force) return;
+    setSelectedClient(null);
+    setLoyaltyAction(null);
+  };
+
+  const submitLoyaltyAction = async () => {
+    if (!selectedClient || !loyaltyAction || !reason.trim()) return;
+
+    const parsedPoints = Number(points);
+    if (!Number.isFinite(parsedPoints)) return;
+
+    if (loyaltyAction === 'redeem') {
+      await redeemLoyalty.mutateAsync({
+        clientId: selectedClient.id,
+        points: parsedPoints,
+        reason: reason.trim(),
+      });
+    } else {
+      const parsedAmount = amount.trim() ? Number(amount) : undefined;
+      await adjustLoyalty.mutateAsync({
+        clientId: selectedClient.id,
+        points: parsedPoints,
+        amount: parsedAmount,
+        reason: reason.trim(),
+      });
+    }
+
+    closeLoyaltyModal(true);
+  };
 
   return (
     <AuthGuard>
@@ -138,7 +203,28 @@ const ClientsPage: NextPage = () => {
                         </Box>
 
                         <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-                          <Chip label={`${client.loyaltyPoints} pts`} size="small" variant="outlined" />
+                          <Chip
+                            label={formatLoyaltyLevel(
+                              client.loyaltyWallet?.currentLevel ?? client.loyaltyLevel,
+                            )}
+                            size="small"
+                            color="warning"
+                          />
+                          <Chip
+                            label={`${client.loyaltyWallet?.pointsBalance ?? 0} pts saldo`}
+                            size="small"
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={`${client.loyaltyPoints} pts total`}
+                            size="small"
+                            variant="outlined"
+                          />
+                          <Chip
+                            label={`${formatCurrency(client.loyaltyWallet?.cashbackBalance ?? 0)} cashback`}
+                            size="small"
+                            variant="outlined"
+                          />
                           <Chip
                             label={
                               client.favoriteProfessional?.user?.name ?? 'Sem favorito definido'
@@ -164,6 +250,23 @@ const ClientsPage: NextPage = () => {
                             Cadastro {dateFormatter.format(new Date(client.createdAt))}
                           </Typography>
                         </Stack>
+
+                        <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => openLoyaltyModal(client, 'redeem')}
+                          >
+                            Resgatar
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => openLoyaltyModal(client, 'adjust')}
+                          >
+                            Ajustar
+                          </Button>
+                        </Stack>
                       </Stack>
                     </Card>
                   </Grid>
@@ -178,11 +281,80 @@ const ClientsPage: NextPage = () => {
                 </Grid>
               )}
             </Grid>
+
+            <Dialog
+              open={Boolean(loyaltyAction)}
+              onClose={() => closeLoyaltyModal()}
+              fullWidth
+              maxWidth="sm"
+            >
+              <DialogTitle>
+                {loyaltyAction === 'redeem' ? 'Resgatar pontos' : 'Ajustar fidelidade'}
+              </DialogTitle>
+              <DialogContent>
+                <Stack spacing={2.5} sx={{ pt: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedClient?.user?.name ?? 'Cliente selecionado'}
+                  </Typography>
+                  <TextField
+                    label="Pontos"
+                    type="number"
+                    value={points}
+                    onChange={(event) => setPoints(event.target.value)}
+                    fullWidth
+                  />
+                  {loyaltyAction === 'adjust' && (
+                    <TextField
+                      label="Cashback manual"
+                      type="number"
+                      value={amount}
+                      onChange={(event) => setAmount(event.target.value)}
+                      fullWidth
+                    />
+                  )}
+                  <TextField
+                    label="Motivo"
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    fullWidth
+                    required
+                    multiline
+                    minRows={2}
+                  />
+                </Stack>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => closeLoyaltyModal()} disabled={loyaltySubmitting}>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={submitLoyaltyAction}
+                  disabled={!reason.trim() || loyaltySubmitting}
+                  variant="contained"
+                >
+                  Confirmar
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Container>
         </Layout>
       </>
     </AuthGuard>
   );
 };
+
+function formatLoyaltyLevel(level?: string) {
+  switch (level) {
+    case 'SILVER':
+      return 'Prata';
+    case 'GOLD':
+      return 'Ouro';
+    case 'DIAMOND':
+    case 'VIP':
+      return 'Diamante';
+    default:
+      return 'Bronze';
+  }
+}
 
 export default ClientsPage;

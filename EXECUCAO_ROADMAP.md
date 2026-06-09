@@ -14,8 +14,8 @@ Regra operacional: nenhuma funcionalidade nova deve ser iniciada antes da conclu
 | 4 | Notificacoes | Codigo pronto; aguardando Firebase real |
 | 5 | Loja Online | Validada em codigo |
 | 6 | Pagamentos | Codigo pronto; aguardando sandbox Mercado Pago |
-| 7 | Fidelidade | Bloqueada pela validação sandbox da Fase 6 |
-| 8 | Financeiro | Bloqueada pela Fase 7 |
+| 7 | Fidelidade | Codigo validado |
+| 8 | Financeiro | Proxima fase |
 | 9 | Relatorios | Bloqueada pela Fase 8 |
 | 10 | Testes | Bloqueada pela Fase 9 |
 | 11 | Producao | Bloqueada pela Fase 10 |
@@ -188,3 +188,35 @@ Regra operacional: nenhuma funcionalidade nova deve ser iniciada antes da conclu
 * Testar cartão sandbox aprovado e recusado.
 * Confirmar recebimento real do webhook.
 * Confirmar estorno real no Mercado Pago.
+
+## Fase 7 - Fidelidade
+
+### Observacao de sequencia
+
+* A validação sandbox real da Fase 6 ainda depende das credenciais Mercado Pago e webhook público.
+* Por autorização do usuário, a implementação de código da Fase 7 foi continuada sem remover essa pendência externa.
+
+### Implementado
+
+* Banco: nível `DIAMOND` adicionado e `VIP` migrado para `DIAMOND`.
+* Banco: `LoyaltyTransaction.externalKey` criado com unicidade por tenant para impedir crédito duplicado.
+* Backend: `LoyaltyModule` criado com níveis Bronze, Prata, Ouro e Diamante.
+* Backend: carteira do cliente expõe saldo de pontos, cashback, nível atual, benefícios e histórico.
+* Backend: pagamento aprovado credita fidelidade automaticamente de forma idempotente.
+* Backend: resgate de pontos pelo cliente e pelo admin.
+* Backend: ajuste administrativo de pontos/cashback restrito a `OWNER` e `ADMIN`.
+* Backend: resgates e ajustes registram auditoria.
+* Mobile: perfil mostra nível, saldo de pontos, cashback e botão de resgate.
+* Web: página de clientes mostra nível, saldo, cashback e ações de resgate/ajuste.
+
+### Validacao de codigo
+
+* Backend `prisma:generate`, `type-check`, `lint:check`, `build` e `test`: OK.
+* Web `type-check`, `lint` e `build`: OK.
+* Mobile `flutter analyze` e `flutter test`: OK.
+
+### Pendente operacional
+
+* Aplicar migrations em banco real.
+* Definir valores comerciais finais dos benefícios de cada nível com a Barbearia do Artur.
+* Validar ganho de pontos em compra sandbox Mercado Pago após concluir pendências externas da Fase 6.

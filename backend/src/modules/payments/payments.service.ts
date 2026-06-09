@@ -16,6 +16,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService, TenantPrismaClient } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
+import { LoyaltyService } from '../loyalty/loyalty.service';
 import { RefundPaymentDto } from './dto/refund-payment.dto';
 import {
   MercadoPagoPaymentDetails,
@@ -39,6 +40,7 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     private readonly mercadoPagoProvider: MercadoPagoCheckoutProvider,
     private readonly auditService: AuditService,
+    private readonly loyaltyService: LoyaltyService,
   ) {}
 
   get reservationMinutes() {
@@ -349,6 +351,8 @@ export class PaymentsService {
         });
       }
     });
+
+    await this.loyaltyService.awardPaidOrder(order.tenantId, order.id);
   }
 
   private async cancelOrderAndReleaseReservation(

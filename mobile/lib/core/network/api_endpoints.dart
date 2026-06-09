@@ -8,6 +8,8 @@ class ApiEndpoints {
   static const String authLogout = '/auth/logout';
   static const String authProfile = '/auth/profile';
   static const String clientsMe = '/clients/me';
+  static const String loyaltyMe = '/loyalty/me';
+  static const String loyaltyRedeem = '/loyalty/redeem';
   static const String servicesActive = '/services/active';
   static const String appointmentsMine = '/appointments/mine';
   static const String appointmentsBook = '/appointments/book';
