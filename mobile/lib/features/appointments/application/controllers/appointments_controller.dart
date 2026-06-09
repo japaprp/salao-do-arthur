@@ -7,10 +7,12 @@ import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/client_appointment.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/book_client_appointment_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/cancel_client_appointment_use_case.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_available_professionals_use_case.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_available_slots_use_case.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_my_appointments_use_case.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/get_service_options_use_case.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/use_cases/reschedule_client_appointment_use_case.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
 
 class AppointmentsController extends Notifier<AppointmentsState> {
@@ -19,6 +21,9 @@ class AppointmentsController extends Notifier<AppointmentsState> {
   late final GetAvailableSlotsUseCase _getAvailableSlotsUseCase;
   late final GetMyAppointmentsUseCase _getMyAppointmentsUseCase;
   late final BookClientAppointmentUseCase _bookClientAppointmentUseCase;
+  late final CancelClientAppointmentUseCase _cancelClientAppointmentUseCase;
+  late final RescheduleClientAppointmentUseCase
+      _rescheduleClientAppointmentUseCase;
 
   @override
   AppointmentsState build() {
@@ -30,6 +35,10 @@ class AppointmentsController extends Notifier<AppointmentsState> {
     _getMyAppointmentsUseCase = ref.read(getMyAppointmentsUseCaseProvider);
     _bookClientAppointmentUseCase =
         ref.read(bookClientAppointmentUseCaseProvider);
+    _cancelClientAppointmentUseCase =
+        ref.read(cancelClientAppointmentUseCaseProvider);
+    _rescheduleClientAppointmentUseCase =
+        ref.read(rescheduleClientAppointmentUseCaseProvider);
 
     return const AppointmentsState();
   }
@@ -211,6 +220,72 @@ class AppointmentsController extends Notifier<AppointmentsState> {
     }
   }
 
+  Future<bool> cancelAppointment(String appointmentId) async {
+    final accessToken = _readAccessToken();
+    if (accessToken == null) {
+      state = state.copyWith(
+        failureMessage: 'Sessao expirada. Faça login novamente.',
+      );
+      return false;
+    }
+
+    state = state.copyWith(
+      isSubmitting: true,
+      clearFailureMessage: true,
+      clearSuccessMessage: true,
+    );
+
+    final result = await _cancelClientAppointmentUseCase(
+      accessToken: accessToken,
+      appointmentId: appointmentId,
+    );
+
+    return switch (result) {
+      Success(value: final appointment) => _replaceAppointment(
+          appointment,
+          'Agendamento cancelado com sucesso.',
+        ),
+      FailureResult(failure: final failure) => _resolveActionFailure(
+          failure.message,
+        ),
+    };
+  }
+
+  Future<bool> rescheduleAppointment({
+    required String appointmentId,
+    required DateTime scheduledAt,
+  }) async {
+    final accessToken = _readAccessToken();
+    if (accessToken == null) {
+      state = state.copyWith(
+        failureMessage: 'Sessao expirada. Faça login novamente.',
+      );
+      return false;
+    }
+
+    state = state.copyWith(
+      isSubmitting: true,
+      clearFailureMessage: true,
+      clearSuccessMessage: true,
+    );
+
+    final result = await _rescheduleClientAppointmentUseCase(
+      accessToken: accessToken,
+      appointmentId: appointmentId,
+      scheduledAt: scheduledAt,
+    );
+
+    return switch (result) {
+      Success(value: final appointment) => _replaceAppointment(
+          appointment,
+          'Agendamento reagendado com sucesso.',
+        ),
+      FailureResult(failure: final failure) => _resolveActionFailure(
+          failure.message,
+        ),
+    };
+  }
+
   void clearMessages() {
     state = state.copyWith(
       clearFailureMessage: true,
@@ -239,5 +314,26 @@ class AppointmentsController extends Notifier<AppointmentsState> {
     final sorted = [...items];
     sorted.sort((left, right) => left.startAt.compareTo(right.startAt));
     return sorted;
+  }
+
+  bool _replaceAppointment(ClientAppointment appointment, String message) {
+    state = state.copyWith(
+      isSubmitting: false,
+      appointments: _sortAppointments([
+        ...state.appointments.where((item) => item.id != appointment.id),
+        appointment,
+      ]),
+      successMessage: message,
+      clearFailureMessage: true,
+    );
+    return true;
+  }
+
+  bool _resolveActionFailure(String message) {
+    state = state.copyWith(
+      isSubmitting: false,
+      failureMessage: message,
+    );
+    return false;
   }
 }

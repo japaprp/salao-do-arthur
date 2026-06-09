@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AppointmentsRepository } from './repositories/appointments.repository';
 import { ClientsService } from '../clients/clients.service';
@@ -10,12 +11,15 @@ import { ProfessionalsService } from '../professionals/professionals.service';
 import { ServicesService } from '../services/services.service';
 import { CreateAppointmentInput } from './dto/create-appointment.dto';
 import { CreateSelfAppointmentDto } from './dto/create-self-appointment.dto';
+import { CreateTimeOffDto } from './dto/create-time-off.dto';
 import { GetAvailableSlotsDto } from './dto/get-available-slots.dto';
 import { MessageClientDto } from './dto/message-client.dto';
 import { OfferEarlierSlotDto } from './dto/offer-earlier-slot.dto';
+import { RescheduleSelfAppointmentDto } from './dto/reschedule-self-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { PaginationDto, PaginatedResponse } from '../../common/dtos/pagination.dto';
-import { AppointmentStatus } from '@prisma/client';
+import { Appointment, AppointmentStatus } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const BUSINESS_DAY_START_MINUTES = 9 * 60;
 const BUSINESS_DAY_END_MINUTES = 19 * 60;
@@ -41,6 +45,8 @@ type AppointmentWithRelations = {
   service?: { name?: string | null } | null;
 };
 
+type AppointmentUpdatePayload = Parameters<AppointmentsRepository['update']>[2];
+
 @Injectable()
 export class AppointmentsService {
   constructor(
@@ -48,6 +54,7 @@ export class AppointmentsService {
     private readonly clientsService: ClientsService,
     private readonly professionalsService: ProfessionalsService,
     private readonly servicesService: ServicesService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createAppointmentDto: CreateAppointmentInput) {
@@ -88,12 +95,20 @@ export class AppointmentsService {
     const price = createAppointmentDto.price ?? servicePrice;
     const totalAmount = price - (createAppointmentDto.discount ?? 0);
 
-    return this.appointmentsRepository.create({
+    const appointment = await this.appointmentsRepository.create({
       ...createAppointmentDto,
       scheduledAt,
       price,
       totalAmount,
     });
+    await this.notifyAppointmentClient(
+      appointment.id,
+      createAppointmentDto.tenantId,
+      'Agendamento criado',
+      'Seu agendamento foi criado na Barbearia do Artur.',
+    );
+    await this.scheduleAppointmentReminders(appointment.id, createAppointmentDto.tenantId);
+    return appointment;
   }
 
   async findAllByTenant(tenantId: string) {
@@ -140,7 +155,7 @@ export class AppointmentsService {
   async findAllByTenantPaginated(
     tenantId: string,
     pagination: PaginationDto,
-  ): Promise<PaginatedResponse<any>> {
+  ): Promise<PaginatedResponse<Appointment>> {
     const [data, total] = await Promise.all([
       this.appointmentsRepository.findAllByTenantPaginated(
         tenantId,
@@ -163,7 +178,7 @@ export class AppointmentsService {
     clientId: string,
     tenantId: string,
     pagination: PaginationDto,
-  ): Promise<PaginatedResponse<any>> {
+  ): Promise<PaginatedResponse<Appointment>> {
     // Verificar se cliente existe no tenant
     await this.clientsService.findByIdAndTenant(clientId, tenantId);
 
@@ -229,7 +244,7 @@ export class AppointmentsService {
       throw new ConflictException('Horário não disponível para este profissional.');
     }
 
-    return this.appointmentsRepository.create({
+    const appointment = await this.appointmentsRepository.create({
       tenantId,
       clientId: client.id,
       professionalId: createSelfAppointmentDto.professionalId,
@@ -240,6 +255,82 @@ export class AppointmentsService {
       totalAmount: price,
       notes: createSelfAppointmentDto.notes,
     });
+    await this.notifyAppointmentClient(
+      appointment.id,
+      tenantId,
+      'Agendamento criado',
+      'Seu horário foi reservado na Barbearia do Artur.',
+    );
+    await this.scheduleAppointmentReminders(appointment.id, tenantId);
+    return appointment;
+  }
+
+  async rescheduleMine(
+    userId: string,
+    tenantId: string,
+    appointmentId: string,
+    dto: RescheduleSelfAppointmentDto,
+  ) {
+    const client = await this.clientsService.findByUserIdAndTenant(userId, tenantId);
+    const appointment = await this.findByIdAndTenant(appointmentId, tenantId);
+    if (appointment.clientId !== client.id) {
+      throw new ForbiddenException('Agendamento não pertence ao cliente autenticado.');
+    }
+
+    if (appointment.status === AppointmentStatus.COMPLETED) {
+      throw new BadRequestException('Agendamento concluído não pode ser reagendado.');
+    }
+
+    if (appointment.status === AppointmentStatus.CANCELLED) {
+      throw new BadRequestException('Agendamento cancelado não pode ser reagendado.');
+    }
+
+    return this.update(
+      appointmentId,
+      {
+        scheduledAt: dto.scheduledAt,
+      },
+      tenantId,
+    );
+  }
+
+  async cancelMine(userId: string, tenantId: string, appointmentId: string) {
+    const client = await this.clientsService.findByUserIdAndTenant(userId, tenantId);
+    const appointment = await this.findByIdAndTenant(appointmentId, tenantId);
+    if (appointment.clientId !== client.id) {
+      throw new ForbiddenException('Agendamento não pertence ao cliente autenticado.');
+    }
+
+    return this.cancelWithPolicy(appointmentId, tenantId);
+  }
+
+  async createTimeOff(tenantId: string, dto: CreateTimeOffDto) {
+    const startAt = this.normalizeScheduledAt(dto.startAt);
+    const endAt = this.normalizeScheduledAt(dto.endAt);
+    if (endAt <= startAt) {
+      throw new BadRequestException('Fim do bloqueio deve ser depois do início.');
+    }
+
+    if (dto.professionalId) {
+      await this.professionalsService.findByIdAndTenant(dto.professionalId, tenantId);
+    }
+
+    return this.appointmentsRepository.createTimeOff({
+      tenantId,
+      professionalId: dto.professionalId,
+      title: dto.title,
+      reason: dto.reason,
+      startAt,
+      endAt,
+    });
+  }
+
+  async findTimeOffsByTenant(tenantId: string) {
+    return this.appointmentsRepository.findTimeOffsByTenant(tenantId);
+  }
+
+  async removeTimeOff(id: string, tenantId: string) {
+    return this.appointmentsRepository.removeTimeOff(id, tenantId);
   }
 
   async update(id: string, updateAppointmentDto: UpdateAppointmentDto, tenantId: string) {
@@ -270,8 +361,11 @@ export class AppointmentsService {
     }
 
     // Recalcular valores se preço ou desconto foram alterados
-    const repositoryPayload = {
-      ...updateAppointmentDto,
+    const { scheduledAt: _scheduledAt, ...updateFields } = updateAppointmentDto;
+    void _scheduledAt;
+
+    const repositoryPayload: AppointmentUpdatePayload = {
+      ...updateFields,
       ...(normalizedScheduledAt != null ? { scheduledAt: normalizedScheduledAt } : {}),
     };
     if (updateAppointmentDto.price !== undefined || updateAppointmentDto.discount !== undefined) {
@@ -284,7 +378,18 @@ export class AppointmentsService {
       });
     }
 
-    return this.appointmentsRepository.update(id, tenantId, repositoryPayload);
+    const updatedAppointment = await this.appointmentsRepository.update(id, tenantId, repositoryPayload);
+    if (normalizedScheduledAt != null) {
+      await this.notifyAppointmentClient(
+        id,
+        tenantId,
+        'Agendamento reagendado',
+        'Seu horário na Barbearia do Artur foi atualizado.',
+      );
+      await this.scheduleAppointmentReminders(id, tenantId);
+    }
+
+    return updatedAppointment;
   }
 
   async updateStatus(id: string, status: AppointmentStatus, tenantId: string) {
@@ -301,12 +406,19 @@ export class AppointmentsService {
       throw new BadRequestException('Apenas agendamentos marcados podem ser confirmados.');
     }
 
-    return this.appointmentsRepository.update(id, tenantId, {
+    const updatedAppointment = await this.appointmentsRepository.update(id, tenantId, {
       notes: this.appendOperationalNote(
         appointment.notes,
         'Confirmado pelo Artur. Cliente deve chegar 10 minutos antes.',
       ),
     });
+    await this.notifyAppointmentClient(
+      id,
+      tenantId,
+      'Agendamento confirmado',
+      'Seu horário foi confirmado pela Barbearia do Artur.',
+    );
+    return updatedAppointment;
   }
 
   async messageClient(id: string, tenantId: string, dto: MessageClientDto) {
@@ -409,6 +521,7 @@ export class AppointmentsService {
       throw new BadRequestException('Agendamento concluído não pode ser cancelado.');
     }
 
+    await this.cancelAppointmentReminders(id, tenantId);
     return this.appointmentsRepository.remove(id, tenantId);
   }
 
@@ -436,6 +549,13 @@ export class AppointmentsService {
           : 'Cancelado dentro da política sem taxa.',
       ),
     });
+    await this.cancelAppointmentReminders(id, tenantId);
+    await this.notifyAppointmentClient(
+      id,
+      tenantId,
+      'Agendamento cancelado',
+      'Seu agendamento foi cancelado na Barbearia do Artur.',
+    );
 
     return {
       appointment: updatedAppointment,
@@ -515,20 +635,36 @@ export class AppointmentsService {
     excludeAppointmentId?: string,
   ): Promise<BusyAppointmentWindow[]> {
     const { startOfDay, endOfDay } = this.getDayWindow(referenceDate);
-    const appointments = await this.appointmentsRepository.findByProfessionalAndDateRange(
-      professionalId,
-      startOfDay,
-      endOfDay,
-      tenantId,
-    );
+    const [appointments, timeOffs] = await Promise.all([
+      this.appointmentsRepository.findByProfessionalAndDateRange(
+        professionalId,
+        startOfDay,
+        endOfDay,
+        tenantId,
+      ),
+      this.appointmentsRepository.findTimeOffsByProfessionalAndDateRange(
+        professionalId,
+        startOfDay,
+        endOfDay,
+        tenantId,
+      ),
+    ]);
 
-    return appointments
+    const appointmentWindows = appointments
       .filter(appointment => appointment.id !== excludeAppointmentId)
       .map(appointment => ({
         id: appointment.id,
         scheduledAt: appointment.scheduledAt,
         durationMinutes: appointment.durationMinutes,
       }));
+
+    const timeOffWindows = timeOffs.map(timeOff => ({
+      id: timeOff.id,
+      scheduledAt: timeOff.startAt,
+      durationMinutes: Math.ceil((timeOff.endAt.getTime() - timeOff.startAt.getTime()) / 60000),
+    }));
+
+    return [...appointmentWindows, ...timeOffWindows];
   }
 
   private buildAvailableSlots(
@@ -624,5 +760,54 @@ export class AppointmentsService {
     const minute = `${value.getMinutes()}`.padStart(2, '0');
 
     return `${year}-${month}-${day}T${hour}:${minute}:00`;
+  }
+
+  private async notifyAppointmentClient(
+    appointmentId: string,
+    tenantId: string,
+    title: string,
+    body: string,
+  ): Promise<void> {
+    const appointment = await this.findByIdAndTenant(appointmentId, tenantId);
+    const client = await this.clientsService.findByIdAndTenant(appointment.clientId, tenantId);
+    await this.notificationsService.notifyUser({
+      tenantId,
+      userId: client.userId,
+      title,
+      body,
+      payload: {
+        appointmentId,
+        type: 'appointment',
+      },
+    });
+  }
+
+  private async scheduleAppointmentReminders(appointmentId: string, tenantId: string): Promise<void> {
+    const appointment = await this.findByIdAndTenant(appointmentId, tenantId);
+    if (
+      appointment.status === AppointmentStatus.CANCELLED ||
+      appointment.status === AppointmentStatus.COMPLETED
+    ) {
+      return;
+    }
+
+    const client = await this.clientsService.findByIdAndTenant(appointment.clientId, tenantId);
+    await this.notificationsService.scheduleAppointmentReminders({
+      tenantId,
+      userId: client.userId,
+      appointmentId,
+      scheduledAt: appointment.scheduledAt,
+    });
+  }
+
+  private async cancelAppointmentReminders(appointmentId: string, tenantId: string): Promise<void> {
+    const appointment = await this.findByIdAndTenant(appointmentId, tenantId);
+    const client = await this.clientsService.findByIdAndTenant(appointment.clientId, tenantId);
+    await this.notificationsService.cancelAppointmentReminders({
+      tenantId,
+      userId: client.userId,
+      appointmentId,
+      scheduledAt: appointment.scheduledAt,
+    });
   }
 }

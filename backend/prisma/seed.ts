@@ -81,7 +81,7 @@ async function main() {
     email: 'artur@barbeariadoartur.app',
     name: 'Artur',
     password: 'Gestora123!',
-    role: UserRole.MANAGER,
+    role: UserRole.OWNER,
     tenantId: tenant.id,
     phone: '5511990000001',
   });

@@ -11,6 +11,32 @@ class ApiEndpoints {
   static const String servicesActive = '/services/active';
   static const String appointmentsMine = '/appointments/mine';
   static const String appointmentsBook = '/appointments/book';
+  static const String storeProducts = '/store/products';
+  static const String storeCart = '/store/cart';
+  static const String storeCartItems = '/store/cart/items';
+  static const String storeCheckout = '/store/checkout';
+  static const String storeOrders = '/store/orders';
+  static const String storeFavorites = '/store/favorites';
+
+  static String appointmentsMineCancel(String appointmentId) {
+    return '/appointments/mine/$appointmentId/cancel';
+  }
+
+  static String appointmentsMineReschedule(String appointmentId) {
+    return '/appointments/mine/$appointmentId/reschedule';
+  }
+
+  static String storeCartItem(String itemId) {
+    return '/store/cart/items/$itemId';
+  }
+
+  static String storeFavoriteProduct(String productId) {
+    return '/store/favorites/$productId';
+  }
+
+  static String paymentOrderStatus(String orderId) {
+    return '/payments/orders/$orderId/status';
+  }
 
   static String professionalsAvailable(String serviceId) {
     return '/professionals/available/$serviceId';

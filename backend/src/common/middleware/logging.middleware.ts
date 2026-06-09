@@ -1,6 +1,10 @@
-import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import * as winston from 'winston';
+
+type RequestWithId = Request & {
+  id?: string;
+};
 
 @Injectable()
 export class LoggingMiddleware implements NestMiddleware {
@@ -27,7 +31,9 @@ export class LoggingMiddleware implements NestMiddleware {
           format: winston.format.combine(
             winston.format.colorize(),
             winston.format.printf(({ level, message, timestamp, ...meta }) => {
-              return `${timestamp} [${level}]: ${message} ${Object.keys(meta).length ? JSON.stringify(meta, null, 2) : ''}`;
+              const timestampText = typeof timestamp === 'string' ? timestamp : new Date().toISOString();
+              const messageText = typeof message === 'string' ? message : JSON.stringify(message);
+              return `${timestampText} [${level}]: ${messageText} ${Object.keys(meta).length ? JSON.stringify(meta, null, 2) : ''}`;
             }),
           ),
         }),
@@ -37,7 +43,7 @@ export class LoggingMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     const start = Date.now();
-    const requestId = (req as any).id || Math.random().toString(36).substr(2, 9);
+    const requestId = (req as RequestWithId).id ?? Math.random().toString(36).slice(2, 11);
 
     res.on('finish', () => {
       const duration = Date.now() - start;
@@ -52,9 +58,9 @@ export class LoggingMiddleware implements NestMiddleware {
       };
 
       if (res.statusCode >= 400) {
-        this.logger.warn(`HTTP Request`, logMeta);
+        this.logger.warn('HTTP Request', logMeta);
       } else {
-        this.logger.info(`HTTP Request`, logMeta);
+        this.logger.info('HTTP Request', logMeta);
       }
     });
 

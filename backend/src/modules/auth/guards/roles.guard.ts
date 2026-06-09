@@ -1,6 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
+import { Request } from 'express';
+import { AuthenticatedUser } from '../types/authenticated-user.type';
 
 export const ROLES_KEY = 'roles';
 
@@ -16,7 +18,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>();
     const user = request.user;
 
     if (!user) {

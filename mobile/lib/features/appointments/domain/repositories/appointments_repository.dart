@@ -29,4 +29,15 @@ abstract interface class AppointmentsRepository {
     required String accessToken,
     required CreateClientAppointmentCommand command,
   });
+
+  Future<Result<ClientAppointment>> cancelAppointment({
+    required String accessToken,
+    required String appointmentId,
+  });
+
+  Future<Result<ClientAppointment>> rescheduleAppointment({
+    required String accessToken,
+    required String appointmentId,
+    required DateTime scheduledAt,
+  });
 }

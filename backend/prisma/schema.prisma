@@ -9,6 +9,7 @@ datasource db {
 }
 
 enum UserRole {
+  OWNER
   ADMIN
   MANAGER
   PROFESSIONAL
@@ -251,6 +252,7 @@ model Tenant {
   productImages         ProductImage[]
   inventory             Inventory[]
   stockMovements        StockMovement[]
+  productFavorites      ProductFavorite[]
   carts                 Cart[]
   cartItems             CartItem[]
   orders                Order[]
@@ -259,6 +261,7 @@ model Tenant {
   refunds               Refund[]
   notifications         Notification[]
   notificationTemplates NotificationTemplate[]
+  deviceTokens          DeviceToken[]
   galleryCategories     GalleryCategory[]
   galleryItems          GalleryItem[]
   reviews               Review[]
@@ -298,6 +301,7 @@ model User {
   roleAssignments         UserRoleAssignment[]
   directPermissions       UserPermission[]
   notifications           Notification[]
+  deviceTokens            DeviceToken[]
   auditLogs               AuditLog[]
   activityLogs            ActivityLog[]
   uploadedAssets          FileAsset[]                @relation("FileAssetUploadedBy")
@@ -494,6 +498,7 @@ model Client {
   favoriteProfessional   Professional?    @relation("FavoriteProfessional", fields: [favoriteProfessionalId], references: [id])
   appointments           Appointment[]
   waitlistEntries        Waitlist[]
+  productFavorites       ProductFavorite[]
   carts                  Cart[]
   orders                 Order[]
   loyaltyWallet          LoyaltyWallet?
@@ -934,6 +939,7 @@ model Product {
   category         ProductCategory? @relation(fields: [categoryId], references: [id])
   images           ProductImage[]
   inventory        Inventory?
+  favorites        ProductFavorite[]
   cartItems        CartItem[]
   orderItems       OrderItem[]
   galleryItems     GalleryItem[]
@@ -1000,6 +1006,22 @@ model StockMovement {
   createdBy       User?             @relation(fields: [createdByUserId], references: [id])
 
   @@index([tenantId, type, createdAt])
+}
+
+model ProductFavorite {
+  id        String   @id @default(uuid())
+  tenantId  String
+  clientId  String
+  productId String
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  client    Client   @relation(fields: [clientId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([tenantId, clientId, productId])
+  @@index([tenantId, clientId, deletedAt])
+  @@index([tenantId, productId])
 }
 
 model Cart {
@@ -1131,7 +1153,24 @@ model Payment {
   appointment       Appointment?  @relation(fields: [appointmentId], references: [id])
   refunds           Refund[]
 
+  @@unique([provider, providerReference])
   @@index([tenantId, status, createdAt])
+}
+
+model PaymentWebhookEvent {
+  id          String   @id @default(uuid())
+  provider    String
+  eventId     String
+  resourceId  String?
+  eventType   String
+  action      String?
+  payload     Json?
+  processedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@unique([provider, eventId])
+  @@index([provider, resourceId])
+  @@index([processedAt, createdAt])
 }
 
 model Refund {
@@ -1192,6 +1231,24 @@ model Notification {
 
   @@index([tenantId, status, scheduledAt])
   @@index([userId, readAt])
+}
+
+model DeviceToken {
+  id         String    @id @default(uuid())
+  tenantId   String
+  userId     String
+  token      String    @unique @db.VarChar(512)
+  platform   String
+  active     Boolean   @default(true)
+  lastSeenAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId, active])
+  @@index([deletedAt])
 }
 
 model GalleryCategory {

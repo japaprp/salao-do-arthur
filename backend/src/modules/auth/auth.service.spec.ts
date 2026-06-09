@@ -42,6 +42,10 @@ describe('AuthService', () => {
     },
   };
 
+  const auditService = {
+    record: jest.fn(),
+  };
+
   const configValues: Record<string, string> = {
     NODE_ENV: 'development',
     JWT_EXPIRES_IN: '1h',
@@ -65,6 +69,7 @@ describe('AuthService', () => {
       jwtService as never,
       configService,
       prismaService as never,
+      auditService as never,
     );
   });
 
@@ -126,11 +131,13 @@ describe('AuthService', () => {
     });
     expect(tenantsService.findBySubdomain).toHaveBeenCalledWith('barbearia-do-artur');
     expect(usersService.findByEmailAndTenant).toHaveBeenCalledWith('cliente@barbeariadoartur.app', 'tenant-1');
+    const refreshTokenPayloadMatcher = expect.objectContaining({
+      userId: 'user-1',
+      token: 'signed-refresh-token',
+    }) as { userId: string; token: string };
+
     expect(prismaService.refreshToken.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        userId: 'user-1',
-        token: 'signed-refresh-token',
-      }),
+      data: refreshTokenPayloadMatcher,
     });
   });
 
@@ -229,7 +236,7 @@ describe('AuthService', () => {
     });
   });
 
-  it('registers a manager for a newly created tenant and authenticates the onboarding flow', async () => {
+  it('registers an owner for a newly created tenant and authenticates the onboarding flow', async () => {
     tenantsService.createTenant.mockResolvedValue({ id: 'tenant-new' });
     const transaction = {
       user: {
@@ -238,7 +245,7 @@ describe('AuthService', () => {
           email: 'artur@barbeariadoartur.app',
           passwordHash: 'hashed-password',
           name: 'Artur',
-          role: UserRole.MANAGER,
+          role: UserRole.OWNER,
           tenantId: 'tenant-new',
           phone: null,
           isActive: true,
@@ -293,7 +300,7 @@ describe('AuthService', () => {
         phone: undefined,
         passwordHash: 'hashed-password',
         name: 'Artur',
-        role: UserRole.MANAGER,
+        role: UserRole.OWNER,
         tenantId: 'tenant-new',
       },
     });
@@ -314,7 +321,7 @@ describe('AuthService', () => {
         id: 'user-1',
         email: 'artur@barbeariadoartur.app',
         name: 'Artur',
-        role: UserRole.MANAGER,
+        role: UserRole.OWNER,
         tenantId: 'tenant-new',
         phone: null,
         isActive: true,
@@ -486,13 +493,15 @@ describe('AuthService', () => {
       'tenant-1',
       'new-hashed-password',
     );
+    const revokedAtMatcher = expect.any(Date) as Date;
+
     expect(prismaService.refreshToken.updateMany).toHaveBeenCalledWith({
       where: {
         userId: 'user-1',
         revokedAt: null,
       },
       data: {
-        revokedAt: expect.any(Date),
+        revokedAt: revokedAtMatcher,
       },
     });
     expect(result).toEqual({

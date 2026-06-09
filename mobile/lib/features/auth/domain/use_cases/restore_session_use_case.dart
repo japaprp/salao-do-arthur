@@ -7,7 +7,7 @@ class RestoreSessionUseCase {
 
   final AuthRepository _repository;
 
-  Result<AuthSession?> call() {
+  Future<Result<AuthSession?>> call() {
     return _repository.restoreSession();
   }
 }

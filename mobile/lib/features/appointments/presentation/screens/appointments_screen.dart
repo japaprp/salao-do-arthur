@@ -6,6 +6,7 @@ import 'package:barbearia_do_artur_mobile/features/appointments/application/prov
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_professional_option.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_service_option.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/appointment_slot_option.dart';
+import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/client_appointment.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/domain/entities/create_client_appointment_command.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/presentation/widgets/appointment_booking_summary_card.dart';
 import 'package:barbearia_do_artur_mobile/features/appointments/presentation/widgets/appointment_slot_chip.dart';
@@ -285,6 +286,14 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
                         padding: const EdgeInsets.only(bottom: AppSpacing.md),
                         child: ClientAppointmentCard(
                           appointment: appointment,
+                          onCancel: () => _cancelAppointment(
+                            controller: controller,
+                            appointmentId: appointment.id,
+                          ),
+                          onReschedule: () => _rescheduleAppointment(
+                            controller: controller,
+                            appointment: appointment,
+                          ),
                         ),
                       ),
                     )
@@ -409,6 +418,50 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
       serviceId: selectedService.id,
       professionalId: _selectedProfessionalId!,
       date: _selectedDate!,
+    );
+  }
+
+  Future<void> _cancelAppointment({
+    required AppointmentsController controller,
+    required String appointmentId,
+  }) async {
+    await controller.cancelAppointment(appointmentId);
+  }
+
+  Future<void> _rescheduleAppointment({
+    required AppointmentsController controller,
+    required ClientAppointment appointment,
+  }) async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: appointment.scheduledAt,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 90)),
+      locale: const Locale('pt', 'BR'),
+    );
+    if (pickedDate == null || !mounted) {
+      return;
+    }
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(appointment.scheduledAt),
+    );
+    if (pickedTime == null) {
+      return;
+    }
+
+    final scheduledAt = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+
+    await controller.rescheduleAppointment(
+      appointmentId: appointment.id,
+      scheduledAt: scheduledAt,
     );
   }
 }

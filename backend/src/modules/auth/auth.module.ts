@@ -8,6 +8,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { UsersModule } from '../users/users.module';
 import { TenantsModule } from '../tenants/tenants.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TenantsModule } from '../tenants/tenants.module';
     }),
     UsersModule,
     TenantsModule,
+    AuditModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, RefreshTokenStrategy],

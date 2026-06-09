@@ -1,10 +1,20 @@
-import { registerDecorator, ValidationOptions, ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
+import {
+  registerDecorator,
+  ValidationArguments,
+  ValidationOptions,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
 
 // Validar que data é no futuro
 @ValidatorConstraint({ name: 'isFutureDate', async: false })
 export class IsFutureDateConstraint implements ValidatorConstraintInterface {
-  validate(value: any, args: ValidationArguments) {
+  validate(value: unknown) {
     if (!value) return false;
+    if (!(typeof value === 'string' || typeof value === 'number' || value instanceof Date)) {
+      return false;
+    }
+
     const date = new Date(value);
     return date > new Date();
   }
@@ -15,10 +25,10 @@ export class IsFutureDateConstraint implements ValidatorConstraintInterface {
 }
 
 export function IsFutureDate(validationOptions?: ValidationOptions) {
-  return function (target: Object, propertyName: string) {
+  return function (target: object, propertyName: string) {
     registerDecorator({
       target: target.constructor,
-      propertyName: propertyName,
+      propertyName,
       options: validationOptions,
       constraints: [],
       validator: IsFutureDateConstraint,
@@ -29,8 +39,9 @@ export function IsFutureDate(validationOptions?: ValidationOptions) {
 // Validar UUID
 @ValidatorConstraint({ name: 'isUuid', async: false })
 export class IsUuidConstraint implements ValidatorConstraintInterface {
-  validate(value: any) {
+  validate(value: unknown) {
     if (!value) return false;
+    if (typeof value !== 'string') return false;
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     return uuidPattern.test(value);
   }
@@ -41,10 +52,10 @@ export class IsUuidConstraint implements ValidatorConstraintInterface {
 }
 
 export function IsValidUuid(validationOptions?: ValidationOptions) {
-  return function (target: Object, propertyName: string) {
+  return function (target: object, propertyName: string) {
     registerDecorator({
       target: target.constructor,
-      propertyName: propertyName,
+      propertyName,
       options: validationOptions,
       constraints: [],
       validator: IsUuidConstraint,

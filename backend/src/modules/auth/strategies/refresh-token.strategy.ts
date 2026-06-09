@@ -4,13 +4,22 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { REFRESH_TOKEN_COOKIE_NAME } from '../auth.constants';
+import { AuthenticatedUser } from '../types/authenticated-user.type';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => request?.cookies?.[REFRESH_TOKEN_COOKIE_NAME] ?? null,
+        (request: Request) => {
+          const cookies: unknown = request.cookies;
+          if (!cookies || typeof cookies !== 'object') {
+            return null;
+          }
+
+          const refreshToken = (cookies as Record<string, unknown>)[REFRESH_TOKEN_COOKIE_NAME];
+          return typeof refreshToken === 'string' ? refreshToken : null;
+        },
         ExtractJwt.fromBodyField('refreshToken'),
       ]),
       ignoreExpiration: false,
@@ -18,7 +27,7 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refres
     });
   }
 
-  validate(payload: any) {
+  validate(payload: AuthenticatedUser): AuthenticatedUser {
     return payload;
   }
 }

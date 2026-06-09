@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:barbearia_do_artur_mobile/core/notifications/notification_providers.dart';
 import 'package:barbearia_do_artur_mobile/core/result/result.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_dependencies.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/application/state/auth_flow_state.dart';
@@ -32,17 +33,28 @@ class AuthFlowController extends Notifier<AuthFlowState> {
     _signOutUseCase = ref.read(signOutUseCaseProvider);
 
     final onboardingCompleted = _getOnboardingStatusUseCase();
-    final restoredSession = _restoreSessionUseCase();
+    Future<void>.microtask(_restoreSession);
 
-    return switch (restoredSession) {
-      Success(value: final session) => AuthFlowState(
-          onboardingCompleted: onboardingCompleted,
-          isBusy: false,
+    return AuthFlowState(
+      onboardingCompleted: onboardingCompleted,
+      isBusy: false,
+    );
+  }
+
+  Future<void> _restoreSession() async {
+    final restoredSession = await _restoreSessionUseCase();
+    if (restoredSession case Success(value: final session?)) {
+      Future<void>.microtask(
+        () => ref.read(fcmRegistrationServiceProvider).registerForSession(session),
+      );
+    }
+
+    state = switch (restoredSession) {
+      Success(value: final session) => state.copyWith(
           session: session,
+          clearFailureMessage: true,
         ),
-      FailureResult(failure: final failure) => AuthFlowState(
-          onboardingCompleted: onboardingCompleted,
-          isBusy: false,
+      FailureResult(failure: final failure) => state.copyWith(
           failureMessage: failure.message,
         ),
     };
@@ -130,6 +142,9 @@ class AuthFlowController extends Notifier<AuthFlowState> {
       isBusy: false,
       session: session,
       clearFailureMessage: true,
+    );
+    Future<void>.microtask(
+      () => ref.read(fcmRegistrationServiceProvider).registerForSession(session),
     );
     return true;
   }

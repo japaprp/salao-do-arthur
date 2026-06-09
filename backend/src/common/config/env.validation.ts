@@ -50,6 +50,34 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   LOG_LEVEL: string = 'info';
+
+  @IsOptional()
+  @IsString()
+  FIREBASE_SERVICE_ACCOUNT_JSON?: string;
+
+  @IsOptional()
+  @IsString()
+  GOOGLE_APPLICATION_CREDENTIALS?: string;
+
+  @IsOptional()
+  @IsString()
+  MERCADO_PAGO_ACCESS_TOKEN?: string;
+
+  @IsOptional()
+  @IsString()
+  MERCADO_PAGO_WEBHOOK_SECRET?: string;
+
+  @IsOptional()
+  @IsString()
+  MERCADO_PAGO_WEBHOOK_URL?: string;
+
+  @IsOptional()
+  @IsString()
+  MERCADO_PAGO_SANDBOX?: string;
+
+  @IsOptional()
+  @IsString()
+  MOBILE_PAYMENT_RETURN_URL?: string;
 }
 
 export function validate(config: Record<string, unknown>) {

@@ -10,9 +10,11 @@ import {
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { CreateSelfAppointmentDto } from './dto/create-self-appointment.dto';
+import { CreateTimeOffDto } from './dto/create-time-off.dto';
 import { GetAvailableSlotsDto } from './dto/get-available-slots.dto';
 import { MessageClientDto } from './dto/message-client.dto';
 import { OfferEarlierSlotDto } from './dto/offer-earlier-slot.dto';
+import { RescheduleSelfAppointmentDto } from './dto/reschedule-self-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
 import { PaginationDto } from '../../common/dtos/pagination.dto';
@@ -158,6 +160,55 @@ export class AppointmentsController {
       updateAppointmentStatusDto.status,
       user.tenantId,
     );
+  }
+
+  @Post('time-offs')
+  @ApiOperation({ summary: 'Criar bloqueio ou folga na agenda' })
+  @ApiResponse({ status: 201, description: 'Bloqueio criado com sucesso' })
+  createTimeOff(@Body() createTimeOffDto: CreateTimeOffDto, @CurrentUser() user: AuthenticatedUser) {
+    return this.appointmentsService.createTimeOff(user.tenantId, createTimeOffDto);
+  }
+
+  @Get('time-offs')
+  @ApiOperation({ summary: 'Listar bloqueios e folgas da agenda' })
+  @ApiResponse({ status: 200, description: 'Bloqueios retornados com sucesso' })
+  findTimeOffs(@CurrentUser() user: AuthenticatedUser) {
+    return this.appointmentsService.findTimeOffsByTenant(user.tenantId);
+  }
+
+  @Delete('time-offs/:id')
+  @ApiOperation({ summary: 'Remover bloqueio ou folga da agenda' })
+  @ApiParam({ name: 'id', description: 'ID do bloqueio' })
+  @ApiResponse({ status: 200, description: 'Bloqueio removido com sucesso' })
+  removeTimeOff(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.appointmentsService.removeTimeOff(id, user.tenantId);
+  }
+
+  @Put('mine/:id/reschedule')
+  @ApiOperation({ summary: 'Reagendar atendimento do cliente autenticado' })
+  @ApiParam({ name: 'id', description: 'ID do agendamento' })
+  @ApiResponse({ status: 200, description: 'Agendamento reagendado com sucesso' })
+  @ApiResponse({ status: 403, description: 'Agendamento não pertence ao cliente autenticado' })
+  rescheduleMine(
+    @Param('id') id: string,
+    @Body() rescheduleDto: RescheduleSelfAppointmentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.appointmentsService.rescheduleMine(
+      user.userId,
+      user.tenantId,
+      id,
+      rescheduleDto,
+    );
+  }
+
+  @Post('mine/:id/cancel')
+  @ApiOperation({ summary: 'Cancelar atendimento do cliente autenticado com política de taxa' })
+  @ApiParam({ name: 'id', description: 'ID do agendamento' })
+  @ApiResponse({ status: 200, description: 'Agendamento cancelado com política aplicada' })
+  @ApiResponse({ status: 403, description: 'Agendamento não pertence ao cliente autenticado' })
+  cancelMine(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.appointmentsService.cancelMine(user.userId, user.tenantId, id);
   }
 
   @Post(':id/confirm')

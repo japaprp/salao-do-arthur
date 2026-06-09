@@ -3,7 +3,7 @@ import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/auth_ses
 import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/register_command.dart';
 
 abstract interface class AuthRepository {
-  Result<AuthSession?> restoreSession();
+  Future<Result<AuthSession?>> restoreSession();
 
   Future<Result<AuthSession>> signIn({
     required String tenantSubdomain,

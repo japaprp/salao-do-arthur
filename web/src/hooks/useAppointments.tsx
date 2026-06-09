@@ -3,6 +3,8 @@ import {
   Appointment,
   AppointmentStatus,
   CreateAppointmentDto,
+  CreateTimeOffDto,
+  TimeOff,
   UpdateAppointmentDto,
 } from '@/types';
 import { api } from '@/lib/api/client';
@@ -125,9 +127,18 @@ export const useOfferEarlierSlot = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, proposedAt }: { id: string; proposedAt: string }) =>
+    mutationFn: async ({
+      id,
+      proposedAt,
+      message,
+    }: {
+      id: string;
+      proposedAt: string;
+      message?: string;
+    }) =>
       api.post<{ message: string }>(`/appointments/${id}/offer-earlier-slot`, {
         proposedAt,
+        message,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -146,6 +157,80 @@ export const useCancelAppointmentWithPolicy = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['reports-overview'] });
+    },
+  });
+};
+
+function useAppointmentAction(endpoint: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) =>
+      normalizeAppointment(await api.post(`/appointments/${id}/${endpoint}`)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['reports-overview'] });
+    },
+  });
+}
+
+export const useCheckinAppointment = () => useAppointmentAction('checkin');
+
+export const useStartAppointment = () => useAppointmentAction('start');
+
+export const useCompleteAppointment = () => useAppointmentAction('complete');
+
+function normalizeTimeOff(raw: unknown): TimeOff {
+  const value = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const professional =
+    value.professional && typeof value.professional === 'object'
+      ? (value.professional as TimeOff['professional'])
+      : null;
+
+  return {
+    id: String(value.id ?? ''),
+    tenantId: String(value.tenantId ?? ''),
+    professionalId: value.professionalId == null ? null : String(value.professionalId),
+    title: String(value.title ?? 'Bloqueio de agenda'),
+    reason: value.reason == null ? null : String(value.reason),
+    startAt: String(value.startAt ?? ''),
+    endAt: String(value.endAt ?? ''),
+    createdAt: String(value.createdAt ?? ''),
+    updatedAt: String(value.updatedAt ?? ''),
+    professional,
+  };
+}
+
+export const useTimeOffs = () =>
+  useQuery<TimeOff[]>({
+    queryKey: ['appointments', 'time-offs'],
+    queryFn: async () => {
+      const response = await api.get<unknown[]>('/appointments/time-offs');
+      return Array.isArray(response) ? response.map((item) => normalizeTimeOff(item)) : [];
+    },
+  });
+
+export const useCreateTimeOff = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateTimeOffDto) =>
+      normalizeTimeOff(await api.post('/appointments/time-offs', data)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', 'time-offs'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+};
+
+export const useDeleteTimeOff = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => normalizeTimeOff(await api.delete(`/appointments/time-offs/${id}`)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', 'time-offs'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
   });
 };

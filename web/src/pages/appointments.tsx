@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
-import { Box, Chip, Container, Grid, Stack, Typography } from '@mui/material';
+import { Box, Chip, Container, Grid, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CalendarIcon from '@mui/icons-material/CalendarToday';
 import MoneyIcon from '@mui/icons-material/AttachMoney';
@@ -15,10 +15,17 @@ import Card from '@/components/ui/Card';
 import {
   useAppointments,
   useCancelAppointmentWithPolicy,
+  useCheckinAppointment,
+  useCompleteAppointment,
   useConfirmAppointment,
+  useCreateTimeOff,
+  useDeleteTimeOff,
   useMessageAppointmentClient,
   useOfferEarlierSlot,
+  useStartAppointment,
+  useTimeOffs,
 } from '@/hooks/useAppointments';
+import { useProfessionals } from '@/hooks/useProfessionals';
 import {
   formatAppointmentDate,
   formatAppointmentStatusLabel,
@@ -31,12 +38,38 @@ import { entityGridProps, metricGridProps } from '@/lib/ui/gridPresets';
 import { AppointmentStatus } from '@/types';
 
 const AppointmentsPage: NextPage = () => {
+  const [timeOffForm, setTimeOffForm] = useState({
+    professionalId: '',
+    title: 'Bloqueio de agenda',
+    reason: '',
+    startAt: '',
+    endAt: '',
+  });
   const { data: appointments, isLoading, error } = useAppointments();
+  const { data: professionals } = useProfessionals();
+  const { data: timeOffs, isLoading: isLoadingTimeOffs } = useTimeOffs();
   const confirmAppointment = useConfirmAppointment();
   const messageClient = useMessageAppointmentClient();
   const offerEarlierSlot = useOfferEarlierSlot();
   const cancelWithPolicy = useCancelAppointmentWithPolicy();
+  const checkinAppointment = useCheckinAppointment();
+  const startAppointment = useStartAppointment();
+  const completeAppointment = useCompleteAppointment();
+  const createTimeOff = useCreateTimeOff();
+  const deleteTimeOff = useDeleteTimeOff();
   const appointmentList = appointments ?? [];
+  const professionalList = useMemo(() => professionals ?? [], [professionals]);
+  const timeOffList = timeOffs ?? [];
+  const professionalNameById = useMemo(
+    () =>
+      new Map(
+        professionalList.map((professional) => [
+          professional.id,
+          professional.user?.name ?? professional.specialty ?? 'Profissional',
+        ]),
+      ),
+    [professionalList],
+  );
   const activeAppointments = appointmentList.filter(
     (appointment) => appointment.status !== AppointmentStatus.CANCELLED,
   );
@@ -67,7 +100,7 @@ const AppointmentsPage: NextPage = () => {
                   Agendamentos
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
-                  Agenda do Artur para confirmar, editar, antecipar horário vago e aplicar política de cancelamento.
+                  Agenda do Artur para confirmar, editar, oferecer vaga de desistência e aplicar política de cancelamento.
                 </Typography>
               </div>
               <Button variant="primary" startIcon={<AddIcon />}>
@@ -130,6 +163,138 @@ const AppointmentsPage: NextPage = () => {
                   variant="outlined"
                 />
               </Box>
+            </Card>
+
+            <Card title="Bloqueios e folgas" density="compact" sx={{ mb: 4 }}>
+              <Stack spacing={2}>
+                <Typography variant="body2" color="text.secondary">
+                  Use para bloquear um profissional ou a agenda inteira em folgas, encaixes internos e indisponibilidades.
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Profissional"
+                      value={timeOffForm.professionalId}
+                      onChange={(event) =>
+                        setTimeOffForm((current) => ({
+                          ...current,
+                          professionalId: event.target.value,
+                        }))
+                      }
+                      SelectProps={{ native: true }}
+                    >
+                      <option value="">Agenda inteira</option>
+                      {professionalList.map((professional) => (
+                        <option key={professional.id} value={professional.id}>
+                          {professional.user?.name ?? professional.specialty ?? 'Profissional'}
+                        </option>
+                      ))}
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      label="Título"
+                      value={timeOffForm.title}
+                      onChange={(event) =>
+                        setTimeOffForm((current) => ({ ...current, title: event.target.value }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <TextField
+                      fullWidth
+                      type="datetime-local"
+                      label="Início"
+                      value={timeOffForm.startAt}
+                      onChange={(event) =>
+                        setTimeOffForm((current) => ({ ...current, startAt: event.target.value }))
+                      }
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <TextField
+                      fullWidth
+                      type="datetime-local"
+                      label="Fim"
+                      value={timeOffForm.endAt}
+                      onChange={(event) =>
+                        setTimeOffForm((current) => ({ ...current, endAt: event.target.value }))
+                      }
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <Button
+                      variant="primary"
+                      fullWidth
+                      disabled={!canSubmitTimeOff(timeOffForm) || createTimeOff.isLoading}
+                      onClick={() =>
+                        createTimeOff.mutate(
+                          {
+                            professionalId: timeOffForm.professionalId || undefined,
+                            title: timeOffForm.title.trim(),
+                            reason: timeOffForm.reason.trim() || undefined,
+                            startAt: new Date(timeOffForm.startAt).toISOString(),
+                            endAt: new Date(timeOffForm.endAt).toISOString(),
+                          },
+                          {
+                            onSuccess: () =>
+                              setTimeOffForm({
+                                professionalId: '',
+                                title: 'Bloqueio de agenda',
+                                reason: '',
+                                startAt: '',
+                                endAt: '',
+                              }),
+                          },
+                        )
+                      }
+                    >
+                      Bloquear
+                    </Button>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Motivo"
+                      value={timeOffForm.reason}
+                      onChange={(event) =>
+                        setTimeOffForm((current) => ({ ...current, reason: event.target.value }))
+                      }
+                    />
+                  </Grid>
+                </Grid>
+
+                {isLoadingTimeOffs ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Carregando bloqueios...
+                  </Typography>
+                ) : timeOffList.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Nenhum bloqueio ativo na agenda.
+                  </Typography>
+                ) : (
+                  <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+                    {timeOffList.slice(0, 8).map((timeOff) => (
+                      <Chip
+                        key={timeOff.id}
+                        label={`${timeOff.title} • ${
+                          timeOff.professionalId
+                            ? professionalNameById.get(timeOff.professionalId) ?? 'Profissional'
+                            : 'Agenda inteira'
+                        } • ${formatDateTimeLabel(timeOff.startAt)}`}
+                        onDelete={() => deleteTimeOff.mutate(timeOff.id)}
+                        color="default"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
             </Card>
 
             <Grid container spacing={2.5}>
@@ -206,8 +371,33 @@ const AppointmentsPage: NextPage = () => {
                             variant="secondary"
                             size="small"
                             onClick={() => confirmAppointment.mutate(appointment.id)}
+                            disabled={appointment.status !== AppointmentStatus.SCHEDULED}
                           >
                             Confirmar
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => checkinAppointment.mutate(appointment.id)}
+                            disabled={appointment.status !== AppointmentStatus.SCHEDULED}
+                          >
+                            Check-in
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => startAppointment.mutate(appointment.id)}
+                            disabled={appointment.status !== AppointmentStatus.CHECKED_IN}
+                          >
+                            Iniciar
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => completeAppointment.mutate(appointment.id)}
+                            disabled={appointment.status !== AppointmentStatus.IN_PROGRESS}
+                          >
+                            Finalizar
                           </Button>
                           <Button
                             variant="outlined"
@@ -228,6 +418,10 @@ const AppointmentsPage: NextPage = () => {
                                 {
                                   id: appointment.id,
                                   proposedAt: buildEarlierSlotSuggestion(appointment.scheduledAt),
+                                  message: buildDropoutAvailabilityMessage(
+                                    getAppointmentClientName(appointment),
+                                    buildEarlierSlotSuggestion(appointment.scheduledAt),
+                                  ),
                                 },
                                 {
                                   onSuccess: (result) => window.alert(result.message),
@@ -235,7 +429,7 @@ const AppointmentsPage: NextPage = () => {
                               )
                             }
                           >
-                            Subir horário
+                            Vaga de desistência
                           </Button>
                           <Button
                             variant="outlined"
@@ -282,6 +476,34 @@ function buildEarlierSlotSuggestion(scheduledAt: string) {
   const date = new Date(scheduledAt);
   date.setMinutes(date.getMinutes() - 30);
   return date.toISOString();
+}
+
+function buildDropoutAvailabilityMessage(clientName: string, proposedAt: string) {
+  const label = new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(proposedAt));
+
+  return `Oi ${clientName}, surgiu uma desistência na Barbearia do Artur e abriu um horário para ${label}. Você tem disponibilidade para antecipar seu atendimento?`;
+}
+
+function canSubmitTimeOff(form: {
+  title: string;
+  startAt: string;
+  endAt: string;
+}) {
+  if (!form.title.trim() || !form.startAt || !form.endAt) {
+    return false;
+  }
+
+  return new Date(form.endAt).getTime() > new Date(form.startAt).getTime();
+}
+
+function formatDateTimeLabel(value: string) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(value));
 }
 
 export default AppointmentsPage;

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:barbearia_do_artur_mobile/core/network/api_client.dart';
+import 'package:barbearia_do_artur_mobile/core/storage/secure_storage_provider.dart';
 import 'package:barbearia_do_artur_mobile/core/storage/shared_preferences_provider.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/onboarding_slide.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/domain/repositories/auth_repository.dart';
@@ -17,7 +18,10 @@ import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/repositor
 import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/repositories/onboarding_repository_impl.dart';
 
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
-  return AuthLocalDataSource(ref.watch(sharedPreferencesProvider));
+  return AuthLocalDataSource(
+    sharedPreferences: ref.watch(sharedPreferencesProvider),
+    secureStorage: ref.watch(secureStorageProvider),
+  );
 });
 
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {

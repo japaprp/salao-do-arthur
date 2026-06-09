@@ -4,7 +4,9 @@ import 'package:barbearia_do_artur_mobile/core/config/app_environment.dart';
 import 'package:barbearia_do_artur_mobile/core/constants/app_constants.dart';
 import 'package:barbearia_do_artur_mobile/core/network/api_endpoints.dart';
 import 'package:barbearia_do_artur_mobile/core/storage/app_storage_keys.dart';
+import 'package:barbearia_do_artur_mobile/core/storage/secure_storage_provider.dart';
 import 'package:barbearia_do_artur_mobile/core/storage/shared_preferences_provider.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -22,14 +24,16 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(
     dio,
     ref.watch(sharedPreferencesProvider),
+    ref.watch(secureStorageProvider),
   );
 });
 
 class ApiClient {
-  ApiClient(this._dio, this._sharedPreferences);
+  ApiClient(this._dio, this._sharedPreferences, this._secureStorage);
 
   final Dio _dio;
   final SharedPreferences _sharedPreferences;
+  final FlutterSecureStorage _secureStorage;
 
   Future<Map<String, dynamic>> get(
     String path, {
@@ -90,17 +94,55 @@ class ApiClient {
     return response.data ?? <String, dynamic>{};
   }
 
+  Future<Map<String, dynamic>> put(
+    String path, {
+    Map<String, dynamic>? data,
+    String? accessToken,
+  }) async {
+    final response = await _sendWithRefresh<Map<String, dynamic>>(
+      path: path,
+      accessToken: accessToken,
+      request: (resolvedToken) => _dio.put<Map<String, dynamic>>(
+        path,
+        data: data,
+        options: Options(
+          headers: _authorizationHeaders(path, resolvedToken),
+        ),
+      ),
+    );
+
+    return response.data ?? <String, dynamic>{};
+  }
+
+  Future<Map<String, dynamic>> delete(
+    String path, {
+    String? accessToken,
+  }) async {
+    final response = await _sendWithRefresh<Map<String, dynamic>>(
+      path: path,
+      accessToken: accessToken,
+      request: (resolvedToken) => _dio.delete<Map<String, dynamic>>(
+        path,
+        options: Options(
+          headers: _authorizationHeaders(path, resolvedToken),
+        ),
+      ),
+    );
+
+    return response.data ?? <String, dynamic>{};
+  }
+
   Future<Response<T>> _sendWithRefresh<T>({
     required String path,
     required Future<Response<T>> Function(String? accessToken) request,
     String? accessToken,
   }) async {
-    final resolvedToken = _resolveAccessToken(path, accessToken);
+    final resolvedToken = await _resolveAccessToken(path, accessToken);
 
     try {
       return await request(resolvedToken);
     } on DioException catch (error) {
-      if (!_shouldRefresh(path, error)) {
+      if (!await _shouldRefresh(path, error)) {
         rethrow;
       }
 
@@ -113,12 +155,13 @@ class ApiClient {
     }
   }
 
-  String? _resolveAccessToken(String path, String? accessToken) {
+  Future<String?> _resolveAccessToken(String path, String? accessToken) async {
     if (_isAnonymousPath(path)) {
       return accessToken;
     }
 
-    return _sharedPreferences.getString(AppStorageKeys.accessToken) ??
+    return await _secureStorage.read(key: AppStorageKeys.accessToken) ??
+        _sharedPreferences.getString(AppStorageKeys.accessToken) ??
         accessToken;
   }
 
@@ -145,15 +188,21 @@ class ApiClient {
         path == ApiEndpoints.authRefresh;
   }
 
-  bool _shouldRefresh(String path, DioException error) {
+  Future<bool> _shouldRefresh(String path, DioException error) async {
+    final refreshToken = await _secureStorage.read(
+          key: AppStorageKeys.refreshToken,
+        ) ??
+        _sharedPreferences.getString(AppStorageKeys.refreshToken);
+
     return path != ApiEndpoints.authRefresh &&
         error.response?.statusCode == 401 &&
-        (_sharedPreferences.getString(AppStorageKeys.refreshToken)?.isNotEmpty ??
-            false);
+        (refreshToken?.isNotEmpty ?? false);
   }
 
   Future<String?> _refreshAccessToken() async {
-    final refreshToken =
+    final refreshToken = await _secureStorage.read(
+          key: AppStorageKeys.refreshToken,
+        ) ??
         _sharedPreferences.getString(AppStorageKeys.refreshToken);
     if (refreshToken == null || refreshToken.isEmpty) {
       return null;
@@ -177,21 +226,21 @@ class ApiClient {
         return null;
       }
 
-      await _sharedPreferences.setString(
-        AppStorageKeys.accessToken,
-        accessToken,
+      await _secureStorage.write(
+        key: AppStorageKeys.accessToken,
+        value: accessToken,
       );
-      await _sharedPreferences.setString(
-        AppStorageKeys.refreshToken,
-        nextRefreshToken,
+      await _secureStorage.write(
+        key: AppStorageKeys.refreshToken,
+        value: nextRefreshToken,
       );
-      await _sharedPreferences.setString(
-        AppStorageKeys.tokenType,
-        tokenType,
+      await _secureStorage.write(
+        key: AppStorageKeys.tokenType,
+        value: tokenType,
       );
-      await _sharedPreferences.setString(
-        AppStorageKeys.expiresIn,
-        expiresIn,
+      await _secureStorage.write(
+        key: AppStorageKeys.expiresIn,
+        value: expiresIn,
       );
 
       return accessToken;

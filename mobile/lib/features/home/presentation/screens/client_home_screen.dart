@@ -70,10 +70,11 @@ class ClientHomeScreen extends ConsumerWidget {
                   description: 'Acompanhe pontos, histórico e próxima visita.',
                   onTap: () => context.go(AppRoute.profile),
                 ),
-                const QuickActionTile(
+                QuickActionTile(
                   icon: Icons.shopping_bag_outlined,
                   title: 'Comprar produtos',
                   description: 'Pomada, balm e cuidados indicados pelo Artur.',
+                  onTap: () => context.go(AppRoute.store),
                 ),
                 const QuickActionTile(
                   icon: Icons.local_offer_outlined,

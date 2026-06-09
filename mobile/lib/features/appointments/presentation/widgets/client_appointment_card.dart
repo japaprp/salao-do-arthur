@@ -8,9 +8,13 @@ class ClientAppointmentCard extends StatelessWidget {
   const ClientAppointmentCard({
     super.key,
     required this.appointment,
+    this.onCancel,
+    this.onReschedule,
   });
 
   final ClientAppointment appointment;
+  final VoidCallback? onCancel;
+  final VoidCallback? onReschedule;
 
   @override
   Widget build(BuildContext context) {
@@ -51,12 +55,33 @@ class ClientAppointmentCard extends StatelessWidget {
               appointment.notes!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textMuted,
-                  ),
+              ),
+            ),
+          ],
+          if (_canClientManage(appointment.status)) ...[
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                OutlinedButton(
+                  onPressed: onReschedule,
+                  child: const Text('Reagendar'),
+                ),
+                OutlinedButton(
+                  onPressed: onCancel,
+                  child: const Text('Cancelar'),
+                ),
+              ],
             ),
           ],
         ],
       ),
     );
+  }
+
+  bool _canClientManage(String status) {
+    return status == 'SCHEDULED' || status == 'CHECKED_IN';
   }
 }
 

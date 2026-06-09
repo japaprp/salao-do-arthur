@@ -19,9 +19,9 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDataSource _localDataSource;
 
   @override
-  Result<AuthSession?> restoreSession() {
+  Future<Result<AuthSession?>> restoreSession() async {
     try {
-      final session = _localDataSource.readSession();
+      final session = await _localDataSource.readSession();
       return Success(session?.toEntity());
     } catch (error) {
       return const FailureResult(
@@ -78,7 +78,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
-    final session = _localDataSource.readSession();
+    final session = await _localDataSource.readSession();
 
     try {
       if (session != null) {

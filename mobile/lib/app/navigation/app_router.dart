@@ -10,6 +10,7 @@ import 'package:barbearia_do_artur_mobile/features/auth/presentation/screens/sig
 import 'package:barbearia_do_artur_mobile/features/appointments/presentation/screens/appointments_screen.dart';
 import 'package:barbearia_do_artur_mobile/features/home/presentation/screens/client_home_screen.dart';
 import 'package:barbearia_do_artur_mobile/features/profile/presentation/screens/profile_screen.dart';
+import 'package:barbearia_do_artur_mobile/features/store/presentation/screens/store_screen.dart';
 
 final routerRefreshNotifierProvider = Provider<RouterRefreshNotifier>((ref) {
   final notifier = RouterRefreshNotifier();
@@ -84,6 +85,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoute.appointments,
         builder: (context, state) => const AppointmentsScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.store,
+        builder: (context, state) => const StoreScreen(),
       ),
       GoRoute(
         path: AppRoute.profile,

@@ -20,7 +20,7 @@ export class UpdateAppointmentDto {
 
   @IsOptional()
   @IsDateString()
-  scheduledAt?: Date;
+  scheduledAt?: string;
 
   @IsOptional()
   @IsNumber()

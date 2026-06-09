@@ -9,6 +9,6 @@ export class RefreshTokenDto {
 export class RefreshTokenResponseDto {
   accessToken!: string;
   refreshToken!: string;
-  tokenType: 'Bearer' = 'Bearer';
+  tokenType = 'Bearer' as const;
   expiresIn!: string | number;
 }

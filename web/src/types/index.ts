@@ -92,6 +92,37 @@ export interface Product {
   updatedAt: IsoDateTimeString;
 }
 
+export interface StoreOrderItem {
+  id: string;
+  productName: string;
+  sku?: string | null;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+}
+
+export interface StorePayment {
+  id: string;
+  provider: string;
+  method: string;
+  status: string;
+  amount: number;
+}
+
+export interface StoreOrder {
+  id: string;
+  number: string;
+  status: string;
+  totalAmount: number;
+  subtotalAmount: number;
+  deliveryMethod: string;
+  placedAt?: IsoDateTimeString | null;
+  createdAt: IsoDateTimeString;
+  client?: Client | null;
+  items: StoreOrderItem[];
+  payments: StorePayment[];
+}
+
 export interface ProfessionalServiceAssignment {
   id: string;
   tenantId: string;
@@ -129,7 +160,29 @@ export interface Appointment {
   service?: Service;
 }
 
+export interface TimeOff {
+  id: string;
+  tenantId: string;
+  professionalId?: string | null;
+  title: string;
+  reason?: string | null;
+  startAt: IsoDateTimeString;
+  endAt: IsoDateTimeString;
+  createdAt: IsoDateTimeString;
+  updatedAt: IsoDateTimeString;
+  professional?: Professional | null;
+}
+
+export interface CreateTimeOffDto {
+  professionalId?: string;
+  title: string;
+  reason?: string;
+  startAt: IsoDateTimeString;
+  endAt: IsoDateTimeString;
+}
+
 export enum UserRole {
+  OWNER = 'OWNER',
   ADMIN = 'ADMIN',
   MANAGER = 'MANAGER',
   PROFESSIONAL = 'PROFESSIONAL',

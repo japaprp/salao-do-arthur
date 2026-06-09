@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { Appointment, AppointmentStatus } from '@prisma/client';
+import { Appointment, AppointmentStatus, TimeOff } from '@prisma/client';
 import { CreateAppointmentInput } from '../dto/create-appointment.dto';
 
 type CreateAppointmentPayload = CreateAppointmentInput & {
@@ -23,6 +23,15 @@ type UpdateAppointmentPayload = Partial<{
   startedAt: Date;
   finishedAt: Date;
 }>;
+
+type CreateTimeOffPayload = {
+  tenantId: string;
+  professionalId?: string;
+  title: string;
+  reason?: string;
+  startAt: Date;
+  endAt: Date;
+};
 
 const appointmentInclude = {
   client: { include: { user: true } },
@@ -260,6 +269,59 @@ export class AppointmentsRepository {
   async countByClientAndTenant(clientId: string, tenantId: string): Promise<number> {
     return this.prisma.withTenant(tenantId, transaction =>
       transaction.appointment.count({ where: { clientId, tenantId } }),
+    );
+  }
+
+  async createTimeOff(payload: CreateTimeOffPayload): Promise<TimeOff> {
+    return this.prisma.withTenant(payload.tenantId, transaction =>
+      transaction.timeOff.create({
+        data: {
+          tenantId: payload.tenantId,
+          professionalId: payload.professionalId,
+          title: payload.title,
+          reason: payload.reason,
+          startAt: payload.startAt,
+          endAt: payload.endAt,
+        },
+      }),
+    );
+  }
+
+  async findTimeOffsByProfessionalAndDateRange(
+    professionalId: string,
+    startDate: Date,
+    endDate: Date,
+    tenantId: string,
+  ): Promise<TimeOff[]> {
+    return this.prisma.withTenant(tenantId, transaction =>
+      transaction.timeOff.findMany({
+        where: {
+          tenantId,
+          OR: [{ professionalId }, { professionalId: null }],
+          startAt: { lt: endDate },
+          endAt: { gt: startDate },
+          deletedAt: null,
+        },
+        orderBy: { startAt: 'asc' },
+      }),
+    );
+  }
+
+  async findTimeOffsByTenant(tenantId: string): Promise<TimeOff[]> {
+    return this.prisma.withTenant(tenantId, transaction =>
+      transaction.timeOff.findMany({
+        where: { tenantId, deletedAt: null },
+        orderBy: { startAt: 'desc' },
+      }),
+    );
+  }
+
+  async removeTimeOff(id: string, tenantId: string): Promise<TimeOff> {
+    return this.prisma.withTenant(tenantId, transaction =>
+      transaction.timeOff.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      }),
     );
   }
 }

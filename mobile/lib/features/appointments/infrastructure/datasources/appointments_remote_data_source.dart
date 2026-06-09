@@ -87,4 +87,36 @@ class AppointmentsRemoteDataSource {
 
     return ClientAppointmentModel.fromJson(response);
   }
+
+  Future<ClientAppointmentModel> cancelAppointment({
+    required String accessToken,
+    required String appointmentId,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.appointmentsMineCancel(appointmentId),
+      accessToken: accessToken,
+    );
+    final appointmentJson =
+        response['appointment'] is Map<String, dynamic>
+            ? response['appointment'] as Map<String, dynamic>
+            : response;
+
+    return ClientAppointmentModel.fromJson(appointmentJson);
+  }
+
+  Future<ClientAppointmentModel> rescheduleAppointment({
+    required String accessToken,
+    required String appointmentId,
+    required DateTime scheduledAt,
+  }) async {
+    final response = await _apiClient.put(
+      ApiEndpoints.appointmentsMineReschedule(appointmentId),
+      accessToken: accessToken,
+      data: {
+        'scheduledAt': scheduledAt.toUtc().toIso8601String(),
+      },
+    );
+
+    return ClientAppointmentModel.fromJson(response);
+  }
 }

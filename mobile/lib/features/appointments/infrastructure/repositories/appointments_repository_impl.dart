@@ -123,4 +123,38 @@ class AppointmentsRepositoryImpl implements AppointmentsRepository {
       message: 'Falha inesperada durante o fluxo de agendamento.',
     );
   }
+
+  @override
+  Future<Result<ClientAppointment>> cancelAppointment({
+    required String accessToken,
+    required String appointmentId,
+  }) async {
+    try {
+      final appointment = await _remoteDataSource.cancelAppointment(
+        accessToken: accessToken,
+        appointmentId: appointmentId,
+      );
+      return Success(appointment.toEntity());
+    } catch (error) {
+      return FailureResult(_mapFailure(error));
+    }
+  }
+
+  @override
+  Future<Result<ClientAppointment>> rescheduleAppointment({
+    required String accessToken,
+    required String appointmentId,
+    required DateTime scheduledAt,
+  }) async {
+    try {
+      final appointment = await _remoteDataSource.rescheduleAppointment(
+        accessToken: accessToken,
+        appointmentId: appointmentId,
+        scheduledAt: scheduledAt,
+      );
+      return Success(appointment.toEntity());
+    } catch (error) {
+      return FailureResult(_mapFailure(error));
+    }
+  }
 }

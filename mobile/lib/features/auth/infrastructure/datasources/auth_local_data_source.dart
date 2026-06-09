@@ -1,20 +1,32 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:barbearia_do_artur_mobile/core/storage/app_storage_keys.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/models/auth_session_model.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/infrastructure/models/auth_user_model.dart';
 
 class AuthLocalDataSource {
-  const AuthLocalDataSource(this._sharedPreferences);
+  const AuthLocalDataSource({
+    required SharedPreferences sharedPreferences,
+    required FlutterSecureStorage secureStorage,
+  })  : _sharedPreferences = sharedPreferences,
+        _secureStorage = secureStorage;
 
   final SharedPreferences _sharedPreferences;
+  final FlutterSecureStorage _secureStorage;
 
-  AuthSessionModel? readSession() {
-    final accessToken =
-        _sharedPreferences.getString(AppStorageKeys.accessToken);
-    final refreshToken =
-        _sharedPreferences.getString(AppStorageKeys.refreshToken);
-    final tokenType = _sharedPreferences.getString(AppStorageKeys.tokenType);
-    final expiresIn = _sharedPreferences.getString(AppStorageKeys.expiresIn);
+  Future<AuthSessionModel?> readSession() async {
+    final accessToken = await _secureStorage.read(
+      key: AppStorageKeys.accessToken,
+    );
+    final refreshToken = await _secureStorage.read(
+      key: AppStorageKeys.refreshToken,
+    );
+    final tokenType = await _secureStorage.read(
+      key: AppStorageKeys.tokenType,
+    );
+    final expiresIn = await _secureStorage.read(
+      key: AppStorageKeys.expiresIn,
+    );
     final email = _sharedPreferences.getString(AppStorageKeys.userEmail);
     final userId = _sharedPreferences.getString(AppStorageKeys.userId);
     final role = _sharedPreferences.getString(AppStorageKeys.userRole);
@@ -50,21 +62,21 @@ class AuthLocalDataSource {
 
   Future<void> saveSession(AuthSessionModel session) async {
     final userStorage = session.user.toStorage();
-    await _sharedPreferences.setString(
-      AppStorageKeys.accessToken,
-      session.accessToken,
+    await _secureStorage.write(
+      key: AppStorageKeys.accessToken,
+      value: session.accessToken,
     );
-    await _sharedPreferences.setString(
-      AppStorageKeys.refreshToken,
-      session.refreshToken,
+    await _secureStorage.write(
+      key: AppStorageKeys.refreshToken,
+      value: session.refreshToken,
     );
-    await _sharedPreferences.setString(
-      AppStorageKeys.tokenType,
-      session.tokenType,
+    await _secureStorage.write(
+      key: AppStorageKeys.tokenType,
+      value: session.tokenType,
     );
-    await _sharedPreferences.setString(
-      AppStorageKeys.expiresIn,
-      session.expiresIn,
+    await _secureStorage.write(
+      key: AppStorageKeys.expiresIn,
+      value: session.expiresIn,
     );
     await _sharedPreferences.setString(
       AppStorageKeys.userId,
@@ -89,10 +101,10 @@ class AuthLocalDataSource {
   }
 
   Future<void> clearSession() async {
-    await _sharedPreferences.remove(AppStorageKeys.accessToken);
-    await _sharedPreferences.remove(AppStorageKeys.refreshToken);
-    await _sharedPreferences.remove(AppStorageKeys.tokenType);
-    await _sharedPreferences.remove(AppStorageKeys.expiresIn);
+    await _secureStorage.delete(key: AppStorageKeys.accessToken);
+    await _secureStorage.delete(key: AppStorageKeys.refreshToken);
+    await _secureStorage.delete(key: AppStorageKeys.tokenType);
+    await _secureStorage.delete(key: AppStorageKeys.expiresIn);
     await _sharedPreferences.remove(AppStorageKeys.userId);
     await _sharedPreferences.remove(AppStorageKeys.userEmail);
     await _sharedPreferences.remove(AppStorageKeys.userRole);

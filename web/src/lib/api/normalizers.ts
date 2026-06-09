@@ -111,7 +111,7 @@ export const normalizeUser = (value: unknown): User => {
     email: toStringValue(raw.email),
     phone: toNullableStringValue(raw.phone),
     name: toStringValue(raw.name, 'Usuário da barbearia'),
-    role: toEnumValue(raw.role, Object.values(UserRole), UserRole.MANAGER),
+    role: toEnumValue(raw.role, Object.values(UserRole), UserRole.OWNER),
     tenantId: toStringValue(raw.tenantId),
     createdAt: toIsoDateTimeValue(raw.createdAt),
     updatedAt: toIsoDateTimeValue(raw.updatedAt),

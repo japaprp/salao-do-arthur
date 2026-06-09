@@ -14,6 +14,7 @@ import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { Prisma, User, UserRole } from '@prisma/client';
 import { PrismaService, TenantPrismaClient } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 
 type AuthResponse = {
   accessToken: string;
@@ -34,6 +35,13 @@ type PasswordResetPayload = {
   passwordHashDigest: string;
 };
 
+type RefreshTokenPayload = {
+  sub: string;
+  email?: string;
+  role?: string;
+  tenantId?: string;
+};
+
 @Injectable()
 export class AuthService {
   private readonly jwtExpiresIn: string | number;
@@ -45,6 +53,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
   ) {
     this.jwtExpiresIn = this.configService.get<string | number>('JWT_EXPIRES_IN', '1h');
     this.refreshTokenExpiresIn = this.configService.get<string | number>('REFRESH_TOKEN_EXPIRES_IN', '7d');
@@ -68,7 +77,9 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas.');
     }
 
-    return this.createAuthResponse(user);
+    const authResponse = await this.createAuthResponse(user);
+    await this.recordAuthAudit(user.tenantId, user.id, 'AUTH_LOGIN');
+    return authResponse;
   }
 
   async getProfile(authenticatedUser: AuthenticatedUser): Promise<SafeUser> {
@@ -82,12 +93,15 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<SafeUser> {
     const user = await this.createUser(registerDto, UserRole.CLIENT);
+    await this.recordAuthAudit(user.tenantId, user.id, 'AUTH_REGISTER_CLIENT');
     return this.toSafeUser(user);
   }
 
   async registerAdmin(registerAdminDto: RegisterAdminDto): Promise<AuthResponse> {
-    const user = await this.createUser(registerAdminDto, UserRole.MANAGER);
-    return this.createAuthResponse(user);
+    const user = await this.createUser(registerAdminDto, UserRole.OWNER);
+    const authResponse = await this.createAuthResponse(user);
+    await this.recordAuthAudit(user.tenantId, user.id, 'AUTH_REGISTER_OWNER');
+    return authResponse;
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
@@ -112,6 +126,7 @@ export class AuthService {
 
     const resetToken = this.createPasswordResetToken(user);
     const resetUrl = `${this.getWebAppUrl()}/auth/reset-password?token=${encodeURIComponent(resetToken)}`;
+    await this.recordAuthAudit(user.tenantId, user.id, 'AUTH_PASSWORD_RESET_REQUESTED');
 
     if (this.configService.get<string>('NODE_ENV') !== 'production') {
       response.resetToken = resetToken;
@@ -148,6 +163,7 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(resetPasswordDto.password, 12);
     await this.usersService.updatePassword(user.id, user.tenantId, passwordHash);
+    await this.recordAuthAudit(user.tenantId, user.id, 'AUTH_PASSWORD_RESET_COMPLETED');
     await this.logout(user.id);
 
     return {
@@ -186,7 +202,7 @@ export class AuthService {
             });
           }
 
-          if (role === UserRole.MANAGER || role === UserRole.ADMIN) {
+          if (role === UserRole.OWNER || role === UserRole.MANAGER || role === UserRole.ADMIN) {
             await transaction.adminProfile.create({
               data: {
                 userId: createdUser.id,
@@ -383,7 +399,7 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token ausente.');
     }
 
-    const payload = this.jwtService.verify(refreshTokenDto.refreshToken, {
+    const payload = this.jwtService.verify<RefreshTokenPayload>(refreshTokenDto.refreshToken, {
       secret: this.configService.get<string>('REFRESH_TOKEN_SECRET', 'change_this_refresh_secret'),
     });
     const userId = payload.sub;
@@ -427,6 +443,7 @@ export class AuthService {
     });
 
     const newRefreshToken = await this.generateRefreshToken(userId);
+    await this.recordAuthAudit(user.tenantId, user.id, 'AUTH_REFRESH_TOKEN_ROTATED');
 
     return {
       accessToken: newAccessToken,
@@ -446,6 +463,22 @@ export class AuthService {
       data: {
         revokedAt: new Date(),
       },
+    });
+
+    const user = await this.usersService.findById(userId);
+    if (user) {
+      await this.recordAuthAudit(user.tenantId, user.id, 'AUTH_LOGOUT');
+    }
+  }
+
+  private async recordAuthAudit(tenantId: string, userId: string, action: string): Promise<void> {
+    await this.auditService.record({
+      tenantId,
+      userId,
+      action,
+      entity: 'AuthSession',
+      entityId: userId,
+      severity: 'INFO',
     });
   }
 }

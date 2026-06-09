@@ -5,9 +5,10 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { setupSwagger } from './swagger';
 import * as path from 'path';
+import { config as loadEnv } from 'dotenv';
 import { buildCorsOptions, securityHeadersMiddleware } from './common/config/http-security.config';
 
-require('dotenv').config({
+loadEnv({
   path: path.resolve(process.cwd(), '.env'),
 });
 
