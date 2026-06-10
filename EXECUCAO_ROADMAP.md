@@ -17,7 +17,7 @@ Regra operacional: nenhuma funcionalidade nova deve ser iniciada antes da conclu
 | 7 | Fidelidade | Codigo validado |
 | 8 | Financeiro | Codigo validado |
 | 9 | Relatorios | Codigo validado |
-| 10 | Testes | Proxima fase |
+| 10 | Testes | Parcial; cobertura abaixo da meta |
 | 11 | Producao | Bloqueada pela Fase 10 |
 | 12 | Play Store | Bloqueada pela Fase 11 |
 
@@ -271,3 +271,26 @@ Regra operacional: nenhuma funcionalidade nova deve ser iniciada antes da conclu
 
 * Validar exportações com dados reais de produção/homologação.
 * Confirmar formato visual final do PDF com a Barbearia do Artur.
+
+## Fase 10 - Testes
+
+### Implementado
+
+* Web: Jest configurado com `next/jest`.
+* Web: scripts `test` e `test:cov` adicionados.
+* Web: testes de contrato para normalização de clientes, fidelidade e relatórios.
+* E2E: checklist oficial versionado em `TESTES_E2E_FASE_10.md` para cadastro, login, agendamento, compra e pagamento.
+
+### Validacao executada
+
+* Backend `test:cov`: testes OK, cobertura global atual 19,48%.
+* Web `test:cov`: testes OK, cobertura global atual 9,82%.
+* Mobile `flutter test --coverage`: testes OK.
+
+### Pendente para concluir a fase
+
+* Backend precisa subir cobertura para 80%.
+* Web precisa subir cobertura para 70%.
+* Mobile precisa validar percentual de cobertura em LCOV e subir para 70%.
+* Automatizar E2E real quando houver banco de homologação, Mercado Pago sandbox e Firebase configurados.
+* A Fase 11 continua bloqueada pela regra oficial de não avançar antes da validação da fase anterior.

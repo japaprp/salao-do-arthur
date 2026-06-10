@@ -9,6 +9,8 @@
     "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "test": "jest --runInBand",
+    "test:cov": "jest --coverage --runInBand",
     "type-check": "tsc --noEmit",
     "analyze": "ANALYZE=true next build"
   },
@@ -30,11 +32,17 @@
     "yup": "^1.2.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "eslint": "^8.40.0",
     "eslint-config-next": "^13.4.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "typescript": "^5.0.0"
   }
 }
