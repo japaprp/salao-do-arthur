@@ -8,9 +8,11 @@ import {
   ProfessionalServiceAssignment,
   Product,
   ProductInventory,
+  RecurringClientMetric,
   ReportsOverview,
   ReportsSummary,
   Service,
+  TopProductMetric,
   TopServiceMetric,
   User,
   UserRole,
@@ -298,6 +300,7 @@ export const normalizeReportsSummary = (value: unknown): ReportsSummary => {
     totalRevenue: toNumberValue(raw.totalRevenue),
     monthlyRevenue: toNumberValue(raw.monthlyRevenue),
     averageTicket: toNumberValue(raw.averageTicket),
+    returnRate: toNumberValue(raw.returnRate),
   };
 };
 
@@ -337,6 +340,28 @@ export const normalizeProfessionalPerformanceMetric = (
   };
 };
 
+export const normalizeTopProductMetric = (value: unknown): TopProductMetric => {
+  const raw = isRecord(value) ? value : {};
+
+  return {
+    productId: toStringValue(raw.productId),
+    name: toStringValue(raw.name, 'Produto'),
+    quantity: toNumberValue(raw.quantity),
+    revenue: toNumberValue(raw.revenue),
+  };
+};
+
+export const normalizeRecurringClientMetric = (value: unknown): RecurringClientMetric => {
+  const raw = isRecord(value) ? value : {};
+
+  return {
+    clientId: toStringValue(raw.clientId),
+    name: toStringValue(raw.name, 'Cliente'),
+    appointments: toNumberValue(raw.appointments),
+    revenue: toNumberValue(raw.revenue),
+  };
+};
+
 export const normalizeReportsOverview = (value: unknown): ReportsOverview => {
   const raw = isRecord(value) ? value : {};
 
@@ -352,6 +377,12 @@ export const normalizeReportsOverview = (value: unknown): ReportsOverview => {
       ? raw.professionalPerformance
           .filter(isRecord)
           .map(metric => normalizeProfessionalPerformanceMetric(metric))
+      : [],
+    topProducts: Array.isArray(raw.topProducts)
+      ? raw.topProducts.filter(isRecord).map(metric => normalizeTopProductMetric(metric))
+      : [],
+    recurringClients: Array.isArray(raw.recurringClients)
+      ? raw.recurringClients.filter(isRecord).map(metric => normalizeRecurringClientMetric(metric))
       : [],
     topService: isRecord(raw.topService) ? normalizeTopServiceMetric(raw.topService) : null,
     upcomingAppointments: Array.isArray(raw.upcomingAppointments)

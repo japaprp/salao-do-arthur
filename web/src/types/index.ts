@@ -282,6 +282,7 @@ export interface ReportsSummary {
   totalRevenue: number;
   monthlyRevenue: number;
   averageTicket: number;
+  returnRate: number;
 }
 
 export interface MonthlyMetricPoint {
@@ -306,11 +307,27 @@ export interface ProfessionalPerformanceMetric {
   revenue: number;
 }
 
+export interface TopProductMetric {
+  productId: string;
+  name: string;
+  quantity: number;
+  revenue: number;
+}
+
+export interface RecurringClientMetric {
+  clientId: string;
+  name: string;
+  appointments: number;
+  revenue: number;
+}
+
 export interface ReportsOverview {
   summary: ReportsSummary;
   monthlyData: MonthlyMetricPoint[];
   topServices: TopServiceMetric[];
   professionalPerformance: ProfessionalPerformanceMetric[];
+  topProducts: TopProductMetric[];
+  recurringClients: RecurringClientMetric[];
   topService: TopServiceMetric | null;
   upcomingAppointments: Appointment[];
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
 import CalendarIcon from '@mui/icons-material/CalendarToday';
+import DownloadIcon from '@mui/icons-material/Download';
 import MoneyIcon from '@mui/icons-material/AttachMoney';
 import PeopleIcon from '@mui/icons-material/People';
 import TrendingIcon from '@mui/icons-material/TrendingUp';
@@ -9,6 +10,7 @@ import {
   alpha,
   Alert,
   Box,
+  Button,
   Chip,
   Container,
   Grid,
@@ -20,7 +22,7 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import Layout from '@/components/layout/Layout';
 import Card from '@/components/ui/Card';
 import Loading from '@/components/ui/Loading';
-import { useReportsOverview } from '@/hooks/useReportsOverview';
+import { downloadReportsExport, useReportsOverview } from '@/hooks/useReportsOverview';
 import { formatCurrency } from '@/lib/formatters/appointments';
 import {
   entityGridProps,
@@ -34,6 +36,8 @@ const ReportsPage: NextPage = () => {
   const summary = reportsOverview?.summary;
   const monthlyData = reportsOverview?.monthlyData ?? [];
   const topServices = reportsOverview?.topServices ?? [];
+  const topProducts = reportsOverview?.topProducts ?? [];
+  const recurringClients = reportsOverview?.recurringClients ?? [];
   const professionalPerformance = reportsOverview?.professionalPerformance ?? [];
   const topService = reportsOverview?.topService;
   const errorMessage =
@@ -49,13 +53,39 @@ const ReportsPage: NextPage = () => {
 
         <Layout title="Relatórios">
           <Container maxWidth="xl">
-            <Box mb={4}>
-              <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
-                Relatórios
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Visão gerencial baseada exclusivamente nas métricas consolidadas do backend.
-              </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 2,
+                flexWrap: 'wrap',
+                mb: 4,
+              }}
+            >
+              <Box>
+                <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
+                  Relatórios
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Métricas consolidadas de serviços, produtos, clientes e retorno.
+                </Typography>
+              </Box>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => void downloadReportsExport('excel')}
+                >
+                  Excel
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => void downloadReportsExport('pdf')}
+                >
+                  PDF
+                </Button>
+              </Stack>
             </Box>
 
             {error ? (
@@ -96,9 +126,9 @@ const ReportsPage: NextPage = () => {
               </Grid>
               <Grid item {...metricGridProps}>
                 <StatCard
-                  title="Novos clientes"
-                  subtitle="Entradas do mês"
-                  value={`${summary?.newClients ?? 0}`}
+                  title="Taxa de retorno"
+                  subtitle="Clientes com 2+ visitas"
+                  value={`${summary?.returnRate ?? 0}%`}
                   icon={<PeopleIcon color="warning" />}
                   valueColor="warning.main"
                   footnote={`Base total atual: ${summary?.totalClients ?? 0} clientes.`}
@@ -217,6 +247,94 @@ const ReportsPage: NextPage = () => {
                         Sem concluídos recentes para ranquear serviços.
                       </Typography>
                     )}
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Card
+                    title="Produtos mais vendidos"
+                    subtitle="Pedidos pagos nos últimos 90 dias"
+                    density="compact"
+                    sx={{ mb: 2.5 }}
+                  >
+                    <Grid container spacing={2}>
+                      {topProducts.length > 0 ? (
+                        topProducts.map((product) => (
+                          <Grid item {...entityGridProps} key={product.productId}>
+                            <Box
+                              sx={{
+                                p: 2,
+                                height: '100%',
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: 'background.default',
+                              }}
+                            >
+                              <Typography variant="subtitle1" fontWeight={700}>
+                                {product.name}
+                              </Typography>
+                              <Typography variant="h6" fontWeight={800} color="success.main">
+                                {formatCurrency(product.revenue)}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {product.quantity} unidades vendidas
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        ))
+                      ) : (
+                        <Grid item xs={12}>
+                          <Typography variant="body2" color="text.secondary">
+                            Ainda não há pedidos pagos suficientes para ranquear produtos.
+                          </Typography>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Card>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Card
+                    title="Clientes recorrentes"
+                    subtitle="Clientes com retorno nos últimos 90 dias"
+                    density="compact"
+                    sx={{ mb: 2.5 }}
+                  >
+                    <Grid container spacing={2}>
+                      {recurringClients.length > 0 ? (
+                        recurringClients.map((client) => (
+                          <Grid item {...entityGridProps} key={client.clientId}>
+                            <Box
+                              sx={{
+                                p: 2,
+                                height: '100%',
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: 'background.default',
+                              }}
+                            >
+                              <Typography variant="subtitle1" fontWeight={700}>
+                                {client.name}
+                              </Typography>
+                              <Typography variant="h6" fontWeight={800} color="primary.main">
+                                {client.appointments} visitas
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {formatCurrency(client.revenue)} em receita
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        ))
+                      ) : (
+                        <Grid item xs={12}>
+                          <Typography variant="body2" color="text.secondary">
+                            Ainda não há clientes com duas ou mais visitas recentes.
+                          </Typography>
+                        </Grid>
+                      )}
+                    </Grid>
                   </Card>
                 </Grid>
 

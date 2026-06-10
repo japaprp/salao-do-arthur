@@ -16,8 +16,8 @@ Regra operacional: nenhuma funcionalidade nova deve ser iniciada antes da conclu
 | 6 | Pagamentos | Codigo pronto; aguardando sandbox Mercado Pago |
 | 7 | Fidelidade | Codigo validado |
 | 8 | Financeiro | Codigo validado |
-| 9 | Relatorios | Proxima fase |
-| 10 | Testes | Bloqueada pela Fase 9 |
+| 9 | Relatorios | Codigo validado |
+| 10 | Testes | Proxima fase |
 | 11 | Producao | Bloqueada pela Fase 10 |
 | 12 | Play Store | Bloqueada pela Fase 11 |
 
@@ -247,3 +247,27 @@ Regra operacional: nenhuma funcionalidade nova deve ser iniciada antes da conclu
 * Conferir regras reais de comissão da Barbearia do Artur.
 * Cadastrar despesas reais recorrentes.
 * Validar caixa diário em banco real com atendimentos finalizados e pedidos pagos.
+
+## Fase 9 - Relatorios
+
+### Implementado
+
+* Backend: relatório consolidado agora inclui produtos mais vendidos.
+* Backend: relatório consolidado agora inclui clientes recorrentes.
+* Backend: taxa de retorno calculada por clientes com duas ou mais visitas recentes.
+* Backend: exportação `GET /reports/export?format=excel`.
+* Backend: exportação `GET /reports/export?format=pdf`.
+* Web: página de relatórios exibe produtos mais vendidos.
+* Web: página de relatórios exibe clientes recorrentes.
+* Web: página de relatórios exibe taxa de retorno.
+* Web: botões de download PDF e Excel adicionados.
+
+### Validacao de codigo
+
+* Backend `type-check`, `lint:check`, `build` e `test`: OK.
+* Web `type-check`, `lint` e `build`: OK.
+
+### Pendente operacional
+
+* Validar exportações com dados reais de produção/homologação.
+* Confirmar formato visual final do PDF com a Barbearia do Artur.

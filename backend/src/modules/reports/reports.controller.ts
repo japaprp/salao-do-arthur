@@ -1,5 +1,6 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
@@ -17,5 +18,21 @@ export class ReportsController {
   @ApiResponse({ status: 200, description: 'Visão consolidada retornada com sucesso' })
   getOverview(@CurrentUser() user: AuthenticatedUser) {
     return this.reportsService.getOverview(user.tenantId);
+  }
+
+  @Get('export')
+  @ApiOperation({ summary: 'Exporta relatório em PDF ou Excel' })
+  async exportOverview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('format') format: 'pdf' | 'excel' = 'excel',
+    @Res() response: Response,
+  ) {
+    const exportFile = await this.reportsService.exportOverview(
+      user.tenantId,
+      format === 'pdf' ? 'pdf' : 'excel',
+    );
+    response.setHeader('Content-Type', exportFile.contentType);
+    response.setHeader('Content-Disposition', `attachment; filename="${exportFile.filename}"`);
+    response.send(exportFile.body);
   }
 }

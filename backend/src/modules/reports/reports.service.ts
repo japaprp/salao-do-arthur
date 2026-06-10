@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppointmentStatus, Prisma } from '@prisma/client';
+import { AppointmentStatus, OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const ACTIVE_APPOINTMENT_STATUSES = [
@@ -48,6 +48,20 @@ type ProfessionalPerformanceMetric = {
   revenue: number;
 };
 
+type TopProductMetric = {
+  productId: string;
+  name: string;
+  quantity: number;
+  revenue: number;
+};
+
+type RecurringClientMetric = {
+  clientId: string;
+  name: string;
+  appointments: number;
+  revenue: number;
+};
+
 type ReportsOverview = {
   summary: {
     activeAppointments: number;
@@ -59,10 +73,13 @@ type ReportsOverview = {
     totalRevenue: number;
     monthlyRevenue: number;
     averageTicket: number;
+    returnRate: number;
   };
   monthlyData: MonthlyMetricPoint[];
   topServices: TopServiceMetric[];
   professionalPerformance: ProfessionalPerformanceMetric[];
+  topProducts: TopProductMetric[];
+  recurringClients: RecurringClientMetric[];
   topService: TopServiceMetric | null;
   upcomingAppointments: AppointmentCard[];
 };
@@ -91,6 +108,7 @@ export class ReportsService {
         upcomingAppointments,
         monthlySeriesAppointments,
         rankingAppointments,
+        rankingOrderItems,
       ] = await Promise.all([
         transaction.appointment.count({
           where: {
@@ -203,12 +221,41 @@ export class ReportsService {
             },
           },
           include: {
+            client: {
+              include: {
+                user: true,
+              },
+            },
             service: true,
             professional: {
               include: {
                 user: true,
               },
             },
+          },
+        }),
+        transaction.orderItem.findMany({
+          where: {
+            tenantId,
+            order: {
+              status: {
+                in: [
+                  OrderStatus.PAID,
+                  OrderStatus.PREPARING,
+                  OrderStatus.READY_FOR_PICKUP,
+                  OrderStatus.SHIPPED,
+                  OrderStatus.DELIVERED,
+                ],
+              },
+              paidAt: {
+                gte: rankingStart,
+                lte: now,
+              },
+              deletedAt: null,
+            },
+          },
+          include: {
+            order: true,
           },
         }),
       ]);
@@ -221,6 +268,9 @@ export class ReportsService {
       const monthlyData = buildMonthlyData(monthlySeriesAppointments, monthlySeriesStart, 4);
       const topServices = buildTopServices(rankingAppointments);
       const professionalPerformance = buildProfessionalPerformance(rankingAppointments);
+      const topProducts = buildTopProducts(rankingOrderItems);
+      const recurringClients = buildRecurringClients(rankingAppointments);
+      const returnRate = buildReturnRate(rankingAppointments);
 
       return {
         summary: {
@@ -233,14 +283,42 @@ export class ReportsService {
           totalRevenue,
           monthlyRevenue,
           averageTicket,
+          returnRate,
         },
         monthlyData,
         topServices,
         professionalPerformance,
+        topProducts,
+        recurringClients,
         topService: topServices[0] ?? null,
         upcomingAppointments,
       };
     });
+  }
+
+  async exportOverview(tenantId: string, format: 'excel' | 'pdf') {
+    const overview = await this.getOverview(tenantId);
+
+    if (format === 'pdf') {
+      return {
+        contentType: 'application/pdf',
+        filename: 'relatorio-barbearia-do-artur.pdf',
+        body: buildSimplePdf([
+          'Relatorio - Barbearia do Artur',
+          `Receita total: ${formatMoney(overview.summary.totalRevenue)}`,
+          `Receita do mes: ${formatMoney(overview.summary.monthlyRevenue)}`,
+          `Ticket medio: ${formatMoney(overview.summary.averageTicket)}`,
+          `Taxa de retorno: ${overview.summary.returnRate}%`,
+          `Servico lider: ${overview.topService?.name ?? 'Sem dados'}`,
+        ]),
+      };
+    }
+
+    return {
+      contentType: 'application/vnd.ms-excel; charset=utf-8',
+      filename: 'relatorio-barbearia-do-artur.xls',
+      body: buildExcelTable(overview),
+    };
   }
 }
 
@@ -348,6 +426,137 @@ function buildProfessionalPerformance(
   return Array.from(totalsByProfessional.values())
     .sort((left, right) => right.revenue - left.revenue || right.appointments - left.appointments)
     .slice(0, 4);
+}
+
+function buildTopProducts(
+  items: Array<{
+    productId: string | null;
+    productName: string;
+    quantity: number;
+    totalAmount: Prisma.Decimal | number | string;
+  }>,
+): TopProductMetric[] {
+  const totalsByProduct = new Map<string, TopProductMetric>();
+
+  for (const item of items) {
+    const productId = item.productId ?? item.productName;
+    const currentMetric = totalsByProduct.get(productId) ?? {
+      productId,
+      name: item.productName,
+      quantity: 0,
+      revenue: 0,
+    };
+
+    currentMetric.quantity += item.quantity;
+    currentMetric.revenue += decimalToNumber(item.totalAmount);
+    totalsByProduct.set(productId, currentMetric);
+  }
+
+  return Array.from(totalsByProduct.values())
+    .sort((left, right) => right.quantity - left.quantity || right.revenue - left.revenue)
+    .slice(0, 5);
+}
+
+function buildRecurringClients(
+  appointments: Array<{
+    clientId: string;
+    totalAmount: Prisma.Decimal | number | string;
+    client?: { user?: { name: string } | null } | null;
+  }>,
+): RecurringClientMetric[] {
+  const totalsByClient = new Map<string, RecurringClientMetric>();
+
+  for (const appointment of appointments) {
+    const currentMetric = totalsByClient.get(appointment.clientId) ?? {
+      clientId: appointment.clientId,
+      name: appointment.client?.user?.name ?? 'Cliente',
+      appointments: 0,
+      revenue: 0,
+    };
+
+    currentMetric.appointments += 1;
+    currentMetric.revenue += decimalToNumber(appointment.totalAmount);
+    totalsByClient.set(appointment.clientId, currentMetric);
+  }
+
+  return Array.from(totalsByClient.values())
+    .filter(client => client.appointments >= 2)
+    .sort((left, right) => right.appointments - left.appointments || right.revenue - left.revenue)
+    .slice(0, 5);
+}
+
+function buildReturnRate(appointments: Array<{ clientId: string }>): number {
+  const visitsByClient = new Map<string, number>();
+
+  for (const appointment of appointments) {
+    visitsByClient.set(appointment.clientId, (visitsByClient.get(appointment.clientId) ?? 0) + 1);
+  }
+
+  const totalReturningBase = visitsByClient.size;
+  if (totalReturningBase === 0) {
+    return 0;
+  }
+
+  const returningClients = Array.from(visitsByClient.values()).filter(total => total >= 2).length;
+  return Math.round((returningClients / totalReturningBase) * 100);
+}
+
+function buildExcelTable(overview: ReportsOverview): string {
+  const rows = [
+    ['Metrica', 'Valor'],
+    ['Receita total', overview.summary.totalRevenue],
+    ['Receita mensal', overview.summary.monthlyRevenue],
+    ['Ticket medio', overview.summary.averageTicket],
+    ['Taxa de retorno', `${overview.summary.returnRate}%`],
+    [],
+    ['Servicos mais vendidos', 'Atendimentos', 'Receita'],
+    ...overview.topServices.map(service => [service.name, service.count, service.revenue]),
+    [],
+    ['Produtos mais vendidos', 'Quantidade', 'Receita'],
+    ...overview.topProducts.map(product => [product.name, product.quantity, product.revenue]),
+    [],
+    ['Clientes recorrentes', 'Atendimentos', 'Receita'],
+    ...overview.recurringClients.map(client => [client.name, client.appointments, client.revenue]),
+  ];
+
+  return rows.map(row => row.map(value => String(value ?? '')).join('\t')).join('\n');
+}
+
+function buildSimplePdf(lines: string[]): Buffer {
+  const content = lines
+    .map((line, index) => `BT /F1 12 Tf 50 ${760 - index * 22} Td (${escapePdfText(line)}) Tj ET`)
+    .join('\n');
+  const objects = [
+    '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
+    '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
+    '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj',
+    '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj',
+    `5 0 obj << /Length ${Buffer.byteLength(content)} >> stream\n${content}\nendstream endobj`,
+  ];
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+
+  for (const object of objects) {
+    offsets.push(Buffer.byteLength(pdf));
+    pdf += `${object}\n`;
+  }
+
+  const xrefOffset = Buffer.byteLength(pdf);
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  pdf += offsets
+    .slice(1)
+    .map(offset => `${String(offset).padStart(10, '0')} 00000 n \n`)
+    .join('');
+  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return Buffer.from(pdf);
+}
+
+function escapePdfText(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+function formatMoney(value: number): string {
+  return `R$ ${value.toFixed(2)}`;
 }
 
 function decimalToNumber(value: Prisma.Decimal | number | string | null | undefined): number {
