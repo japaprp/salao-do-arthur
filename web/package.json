@@ -44,5 +44,8 @@
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "typescript": "^5.0.0"
+  },
+  "optionalDependencies": {
+    "@next/swc-win32-x64-msvc": "^13.4.0"
   }
 }

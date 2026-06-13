@@ -28,14 +28,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  // AuthGuard handles page protection in the browser. Keeping middleware disabled
+  // avoids Edge runtime hangs in local Windows ARM development.
+  matcher: ['/__disabled_middleware__'],
 };
