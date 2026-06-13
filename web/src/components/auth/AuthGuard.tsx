@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '@/hooks/useAuth';
+import { getHomePathForUser, useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/ui/Loading';
 import { Box } from '@mui/material';
 
@@ -15,7 +15,7 @@ export const AuthGuard = ({
   requireAuth = true,
   redirectTo = '/auth/login'
 }: AuthGuardProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -23,10 +23,10 @@ export const AuthGuard = ({
       if (requireAuth && !isAuthenticated) {
         router.push(redirectTo);
       } else if (!requireAuth && isAuthenticated) {
-        router.push('/dashboard');
+        router.push(getHomePathForUser(user));
       }
     }
-  }, [isAuthenticated, isLoading, requireAuth, redirectTo, router]);
+  }, [isAuthenticated, isLoading, requireAuth, redirectTo, router, user]);
 
   if (!requireAuth) {
     return <>{children}</>;

@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
-import { AdminRegisterForm, AuthResponse, User } from '@/types';
+import { AdminRegisterForm, AuthResponse, User, UserRole } from '@/types';
 import {
   clearAuthSession,
   persistAuthSession,
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(authenticatedUser);
       persistAuthSession(authenticatedUser, response.accessToken);
 
-      await router.push('/dashboard');
+      await router.push(getHomePathForUser(authenticatedUser));
     } catch (error: unknown) {
       clearAuthSession();
       setUser(null);
@@ -143,6 +143,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export function getHomePathForUser(user: User | null): string {
+  return user?.role === UserRole.CLIENT ? '/client' : '/dashboard';
+}
 
 function resolveAuthErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
