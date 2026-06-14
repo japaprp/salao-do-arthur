@@ -3,9 +3,6 @@ const standaloneEnabled =
   process.env.NEXT_STANDALONE === 'true' || process.env.NODE_ENV === 'production';
 
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   generateBuildId: async () => buildId,
   ...(standaloneEnabled && {
     output: 'standalone',

@@ -44,20 +44,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const bootstrapAuth = async () => {
       const storedUser = readStoredUser();
+      const storedToken = readStoredToken();
 
       if (storedUser) {
         setUser(storedUser);
       }
 
+      if (!storedToken) {
+        clearAuthSession();
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const profile = normalizeUser(await api.get('/auth/profile'));
-        const latestAccessToken = readStoredToken();
-        if (!latestAccessToken) {
-          throw new Error('Sessão não restaurada.');
-        }
-
         setUser(profile);
-        persistAuthSession(profile, latestAccessToken);
+        persistAuthSession(profile, storedToken);
       } catch {
         clearAuthSession();
         setUser(null);
