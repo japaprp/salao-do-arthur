@@ -1,4 +1,25 @@
 services:
+  - type: pserv
+    name: salao-do-arthur-mysql
+    runtime: image
+    plan: starter
+    region: oregon
+    image:
+      url: mysql:8.4
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_DATABASE
+        value: barbearia_do_artur_prod
+      - key: MYSQL_USER
+        value: salao_prod
+      - key: MYSQL_PASSWORD
+        generateValue: true
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+
   - type: web
     name: salao-do-arthur-api
     runtime: node
@@ -7,8 +28,9 @@ services:
     branch: main
     rootDir: backend
     autoDeploy: true
-    buildCommand: npm ci && npm run prisma:generate && npm run build
-    startCommand: npm run prisma:migrate:deploy && npm run start:prod
+    buildCommand: export DATABASE_URL="mysql://placeholder:placeholder@127.0.0.1:3306/placeholder" && npm ci && npm run prisma:generate && npm run build
+    startCommand: export DATABASE_URL="mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:3306/${MYSQL_DATABASE}" && npm run prisma:migrate:deploy && npm run start:prod
+    initialDeployHook: export DATABASE_URL="mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@${MYSQL_HOST}:3306/${MYSQL_DATABASE}" && npm run prisma:seed
     healthCheckPath: /api/health/ready
     envVars:
       - key: NODE_ENV
@@ -29,14 +51,26 @@ services:
         value: "false"
       - key: LOG_LEVEL
         value: info
-      - key: DATABASE_URL
-        sync: false
+      - key: MYSQL_HOST
+        fromService:
+          name: salao-do-arthur-mysql
+          type: pserv
+          property: host
+      - key: MYSQL_DATABASE
+        value: barbearia_do_artur_prod
+      - key: MYSQL_USER
+        value: salao_prod
+      - key: MYSQL_PASSWORD
+        fromService:
+          name: salao-do-arthur-mysql
+          type: pserv
+          envVarKey: MYSQL_PASSWORD
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: REFRESH_TOKEN_SECRET
-        sync: false
+        generateValue: true
       - key: PASSWORD_RESET_SECRET
-        sync: false
+        generateValue: true
       - key: MERCADO_PAGO_ACCESS_TOKEN
         sync: false
       - key: MERCADO_PAGO_WEBHOOK_SECRET

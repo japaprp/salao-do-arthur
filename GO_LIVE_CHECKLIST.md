@@ -9,6 +9,7 @@ Repositorio correto:
 - Backend NestJS com Prisma/MySQL, auth, RBAC, agenda, lojinha e Mercado Pago preparado.
 - Web Next.js pronta para GitHub Pages via `.github/workflows/pages.yml`.
 - API pronta para Render via `render.yaml`.
+- MySQL privado com disco pronto no `render.yaml`.
 - Login do Artur sem codigo de barbearia.
 - Tenant padrao: `barbearia-do-artur`.
 
@@ -47,16 +48,31 @@ No Render, criar Blueprint usando:
 https://github.com/japaprp/salao-do-arthur
 ```
 
-Variaveis obrigatorias no Render:
+O Blueprint cria:
 
 ```text
-DATABASE_URL=mysql://USUARIO:SENHA@HOST:3306/BANCO
-JWT_SECRET=gerar_valor_longo_e_aleatorio
-REFRESH_TOKEN_SECRET=gerar_outro_valor_longo_e_aleatorio
-PASSWORD_RESET_SECRET=gerar_outro_valor_longo_e_aleatorio
+salao-do-arthur-api
+salao-do-arthur-mysql
 ```
 
-Render nao cria MySQL gerenciado nesse Blueprint. Use um MySQL externo, como Aiven, Railway MySQL, VPS, PlanetScale compativel ou outro provedor MySQL.
+O MySQL roda como private service Docker com disco persistente.
+Isso evita depender de outro provedor de banco, mas exige plano Render com private service/disk.
+
+Segredos gerados automaticamente pelo Render:
+
+```text
+MYSQL_PASSWORD
+MYSQL_ROOT_PASSWORD
+JWT_SECRET
+REFRESH_TOKEN_SECRET
+PASSWORD_RESET_SECRET
+```
+
+O primeiro deploy executa seed inicial para criar o Artur:
+
+```text
+artur@barbeariadoartur.app / Gestora123!
+```
 
 ## Mercado Pago
 
@@ -81,9 +97,9 @@ https://URL_PUBLICA_DA_API/api/payments/webhooks/mercado-pago
 
 ## Sequencia correta para ficar real
 
-1. Criar MySQL de producao.
-2. Criar API no Render pelo `render.yaml`.
-3. Preencher secrets no Render.
+1. Abrir o Blueprint do Render usando o repo `https://github.com/japaprp/salao-do-arthur`.
+2. Revisar os dois serviços: `salao-do-arthur-api` e `salao-do-arthur-mysql`.
+3. Aplicar o Blueprint no Render.
 4. Esperar `/api/health/ready` responder 200.
 5. Configurar `NEXT_PUBLIC_API_URL` no GitHub repo.
 6. Ativar GitHub Pages como GitHub Actions.
