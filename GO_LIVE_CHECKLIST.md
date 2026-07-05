@@ -76,7 +76,8 @@ artur@barbeariadoartur.app / Gestora123!
 
 ## Mercado Pago
 
-Pode ficar vazio enquanto a conta real nao estiver pronta:
+No `render.yaml` essas variaveis entram vazias para nao bloquear o primeiro deploy.
+Pode ficar assim enquanto a conta real nao estiver pronta:
 
 ```text
 MERCADO_PAGO_ACCESS_TOKEN=
