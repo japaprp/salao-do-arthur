@@ -206,7 +206,6 @@ export enum AppointmentStatus {
 }
 
 export interface LoginForm {
-  tenantSubdomain: string;
   email: string;
   password: string;
 }

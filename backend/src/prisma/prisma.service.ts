@@ -6,7 +6,11 @@ export type TenantPrismaClient = Prisma.TransactionClient;
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
-    await this.$connect();
+    await withTimeout(
+      this.$connect(),
+      Number(process.env.PRISMA_CONNECT_TIMEOUT_MS ?? 15000),
+      'Timeout ao conectar no banco via Prisma.',
+    );
   }
 
   async onModuleDestroy() {
@@ -21,4 +25,18 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     return this.$transaction(async transaction => operation(transaction));
   }
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  });
 }

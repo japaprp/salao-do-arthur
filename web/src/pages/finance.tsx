@@ -68,7 +68,7 @@ const FinancePage: NextPage = () => {
   };
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin>
       <>
         <Head>
           <title>Financeiro - Barbearia do Artur</title>

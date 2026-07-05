@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { CreatePromotionDto } from './dto/create-promotion.dto';
 import { UpdatePromotionDto } from './dto/update-promotion.dto';
@@ -21,6 +22,7 @@ export class PromotionsController {
   constructor(private readonly promotionsService: PromotionsService) {}
 
   @Post()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Criar promoção' })
   @ApiResponse({ status: 201, description: 'Promoção criada com sucesso' })
   create(
@@ -31,6 +33,7 @@ export class PromotionsController {
   }
 
   @Get()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Listar promoções' })
   @ApiResponse({ status: 200, description: 'Promoções retornadas com sucesso' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -45,6 +48,7 @@ export class PromotionsController {
   }
 
   @Get(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Buscar promoção por ID' })
   @ApiParam({ name: 'id', description: 'ID da promoção' })
   @ApiResponse({ status: 200, description: 'Promoção encontrada' })
@@ -53,6 +57,7 @@ export class PromotionsController {
   }
 
   @Put(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Atualizar promoção' })
   @ApiParam({ name: 'id', description: 'ID da promoção' })
   @ApiResponse({ status: 200, description: 'Promoção atualizada com sucesso' })
@@ -65,6 +70,7 @@ export class PromotionsController {
   }
 
   @Delete(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Desativar promoção' })
   @ApiParam({ name: 'id', description: 'ID da promoção' })
   @ApiResponse({ status: 200, description: 'Promoção desativada com sucesso' })

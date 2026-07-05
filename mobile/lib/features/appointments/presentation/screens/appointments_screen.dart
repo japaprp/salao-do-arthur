@@ -56,6 +56,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
       state.selectedServiceId,
     );
     final selectedProfessional = _findSelectedProfessional(state.professionals);
+    final bookingStep = _bookingStep(selectedService);
 
     return AppGradientScaffold(
       body: SingleChildScrollView(
@@ -63,16 +64,16 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const AppLogo(
-              subtitle: 'Agendamento self-service do cliente',
+              subtitle: 'Cliente agenda e Artur confirma',
             ),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              'Agende rápido com o Artur.',
+              'Agende em poucos toques.',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'Escolha corte avulso, pacote, barba navalhada, risco, sobrancelha, luzes ou tranças. Cancelamento sem taxa até 1 hora antes.',
+              'Escolha serviço, profissional, data e horário. O Artur pode confirmar como está ou ajustar se precisar.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: AppColors.textMuted,
                   ),
@@ -97,6 +98,8 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
                     'Monte sua reserva',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  const SizedBox(height: AppSpacing.md),
+                  _BookingStepHeader(currentStep: bookingStep),
                   const SizedBox(height: AppSpacing.md),
                   if (state.isLoading && state.services.isEmpty)
                     const Center(
@@ -345,6 +348,22 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
     return service != null && professional != null && _selectedSlot != null;
   }
 
+  int _bookingStep(AppointmentServiceOption? service) {
+    if (service == null) {
+      return 0;
+    }
+
+    if (_selectedProfessionalId == null) {
+      return 1;
+    }
+
+    if (_selectedDate == null) {
+      return 2;
+    }
+
+    return 3;
+  }
+
   Future<void> _submitBooking({
     required AppointmentsController controller,
     required AppointmentServiceOption selectedService,
@@ -462,6 +481,77 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
     await controller.rescheduleAppointment(
       appointmentId: appointment.id,
       scheduledAt: scheduledAt,
+    );
+  }
+}
+
+class _BookingStepHeader extends StatelessWidget {
+  const _BookingStepHeader({
+    required this.currentStep,
+  });
+
+  final int currentStep;
+
+  static const _labels = ['Serviço', 'Profissional', 'Data', 'Horário'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        for (var index = 0; index < _labels.length; index++)
+          _BookingStepChip(
+            index: index,
+            label: _labels[index],
+            isActive: index == currentStep,
+            isDone: index < currentStep,
+          ),
+      ],
+    );
+  }
+}
+
+class _BookingStepChip extends StatelessWidget {
+  const _BookingStepChip({
+    required this.index,
+    required this.label,
+    required this.isActive,
+    required this.isDone,
+  });
+
+  final int index;
+  final String label;
+  final bool isActive;
+  final bool isDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = isDone
+        ? AppColors.success
+        : isActive
+            ? AppColors.primary
+            : AppColors.surfaceAlt;
+    final foregroundColor =
+        isDone || isActive ? AppColors.surface : AppColors.textMuted;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: isDone || isActive ? backgroundColor : AppColors.border),
+      ),
+      child: Text(
+        '${index + 1}. $label',
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: foregroundColor,
+              fontWeight: FontWeight.w700,
+            ),
+      ),
     );
   }
 }

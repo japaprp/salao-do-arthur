@@ -5,6 +5,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Roles, STAFF_ROLES } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 
 @ApiTags('clients')
@@ -15,6 +16,7 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
+  @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Criar novo cliente' })
   @ApiResponse({ status: 201, description: 'Cliente criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
@@ -26,6 +28,7 @@ export class ClientsController {
   }
 
   @Get()
+  @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Listar todos os clientes' })
   @ApiResponse({ status: 200, description: 'Lista de clientes retornada' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -41,6 +44,7 @@ export class ClientsController {
   }
 
   @Get(':id')
+  @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Buscar cliente por ID' })
   @ApiParam({ name: 'id', description: 'ID do cliente' })
   @ApiResponse({ status: 200, description: 'Cliente encontrado' })
@@ -50,6 +54,7 @@ export class ClientsController {
   }
 
   @Put(':id')
+  @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Atualizar cliente' })
   @ApiParam({ name: 'id', description: 'ID do cliente' })
   @ApiResponse({ status: 200, description: 'Cliente atualizado com sucesso' })
@@ -63,6 +68,7 @@ export class ClientsController {
   }
 
   @Delete(':id')
+  @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Remover cliente' })
   @ApiParam({ name: 'id', description: 'ID do cliente' })
   @ApiResponse({ status: 200, description: 'Cliente removido com sucesso' })

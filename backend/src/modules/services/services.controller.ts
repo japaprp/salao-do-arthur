@@ -5,6 +5,7 @@ import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 
 @ApiTags('services')
@@ -15,6 +16,7 @@ export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
   @Post()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Criar novo serviço' })
   @ApiResponse({ status: 201, description: 'Serviço criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
@@ -26,6 +28,7 @@ export class ServicesController {
   }
 
   @Get()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Listar todos os serviços' })
   @ApiResponse({ status: 200, description: 'Lista de serviços retornada' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -40,6 +43,7 @@ export class ServicesController {
   }
 
   @Get(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Buscar serviço por ID' })
   @ApiParam({ name: 'id', description: 'ID do serviço' })
   @ApiResponse({ status: 200, description: 'Serviço encontrado' })
@@ -49,6 +53,7 @@ export class ServicesController {
   }
 
   @Put(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Atualizar serviço' })
   @ApiParam({ name: 'id', description: 'ID do serviço' })
   @ApiResponse({ status: 200, description: 'Serviço atualizado com sucesso' })
@@ -62,6 +67,7 @@ export class ServicesController {
   }
 
   @Delete(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Remover serviço' })
   @ApiParam({ name: 'id', description: 'ID do serviço' })
   @ApiResponse({ status: 200, description: 'Serviço removido com sucesso' })

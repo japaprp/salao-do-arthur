@@ -3,12 +3,14 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { ReportsService } from './reports.service';
 
 @ApiTags('reports')
 @Controller('reports')
 @UseGuards(JwtAuthGuard)
+@Roles(...MANAGEMENT_ROLES)
 @ApiBearerAuth('JWT-auth')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}

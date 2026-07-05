@@ -31,7 +31,7 @@ const DashboardPage: NextPage = () => {
     error instanceof Error ? error.message : 'Não foi possível carregar o dashboard.';
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin>
       <>
         <Head>
           <title>Dashboard - Barbearia do Artur</title>

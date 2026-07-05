@@ -9,6 +9,7 @@ import {
 import { BannerPlacement } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { CreateBannerDto } from './dto/create-banner.dto';
 import { UpdateBannerDto } from './dto/update-banner.dto';
@@ -22,6 +23,7 @@ export class BannersController {
   constructor(private readonly bannersService: BannersService) {}
 
   @Post()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Criar banner' })
   @ApiResponse({ status: 201, description: 'Banner criado com sucesso' })
   create(@Body() createBannerDto: CreateBannerDto, @CurrentUser() user: AuthenticatedUser) {
@@ -29,6 +31,7 @@ export class BannersController {
   }
 
   @Get()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Listar banners' })
   @ApiResponse({ status: 200, description: 'Banners retornados com sucesso' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -54,6 +57,7 @@ export class BannersController {
   }
 
   @Get(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Buscar banner por ID' })
   @ApiParam({ name: 'id', description: 'ID do banner' })
   @ApiResponse({ status: 200, description: 'Banner encontrado' })
@@ -62,6 +66,7 @@ export class BannersController {
   }
 
   @Put(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Atualizar banner' })
   @ApiParam({ name: 'id', description: 'ID do banner' })
   @ApiResponse({ status: 200, description: 'Banner atualizado com sucesso' })
@@ -74,6 +79,7 @@ export class BannersController {
   }
 
   @Delete(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Desativar banner' })
   @ApiParam({ name: 'id', description: 'ID do banner' })
   @ApiResponse({ status: 200, description: 'Banner desativado com sucesso' })

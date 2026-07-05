@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:barbearia_do_artur_mobile/app/navigation/app_route.dart';
+import 'package:barbearia_do_artur_mobile/core/constants/app_constants.dart';
 import 'package:barbearia_do_artur_mobile/core/utils/input_validators.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/presentation/widgets/auth_header.dart';
@@ -25,20 +26,17 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _tenantSubdomainController;
   late final TextEditingController _emailController;
   bool _requestSent = false;
 
   @override
   void initState() {
     super.initState();
-    _tenantSubdomainController = TextEditingController();
     _emailController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _tenantSubdomainController.dispose();
     _emailController.dispose();
     super.dispose();
   }
@@ -60,7 +58,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               eyebrow: 'Esqueci minha senha',
               title: 'Recupere o acesso sem travar seu horário.',
               description:
-                  'Informe o código da Barbearia do Artur e seu email. Se existir cadastro, enviamos um link temporário para trocar a senha.',
+                  'Informe seu email. Se existir cadastro, enviamos um link temporário para trocar a senha.',
             ),
             const SizedBox(height: AppSpacing.xl),
             AppSurfaceCard(
@@ -81,13 +79,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                     ],
-                    AppTextField(
-                      controller: _tenantSubdomainController,
-                      label: 'Código da barbearia',
-                      validator: InputValidators.salonCode,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
                     AppTextField(
                       controller: _emailController,
                       label: 'Email cadastrado',
@@ -122,10 +113,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       return;
     }
 
-    final sent = await ref.read(authFlowControllerProvider.notifier).forgotPassword(
-          tenantSubdomain: _tenantSubdomainController.text.trim(),
-          email: _emailController.text.trim(),
-        );
+    final sent =
+        await ref.read(authFlowControllerProvider.notifier).forgotPassword(
+              tenantSubdomain: AppConstants.defaultTenantSubdomain,
+              email: _emailController.text.trim(),
+            );
 
     if (!mounted || !sent) {
       return;

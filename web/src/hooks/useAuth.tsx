@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
-import { AdminRegisterForm, AuthResponse, User, UserRole } from '@/types';
+import { AdminRegisterForm, AuthResponse, User } from '@/types';
 import {
   clearAuthSession,
   persistAuthSession,
@@ -10,10 +10,12 @@ import {
 } from '@/lib/auth/auth-storage';
 import { api } from '@/lib/api/client';
 import { normalizeUser } from '@/lib/api/normalizers';
+import { getHomePathForUserRole } from '@/lib/auth/roles';
+import { DEFAULT_TENANT_SUBDOMAIN } from '@/lib/auth/tenant';
 
 interface AuthContextType {
   user: User | null;
-  login: (tenantSubdomain: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   register: (
     input: Pick<AdminRegisterForm, 'organizationName' | 'name' | 'email' | 'password'>,
   ) => Promise<void>;
@@ -72,12 +74,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     void bootstrapAuth();
   }, []);
 
-  const login = async (tenantSubdomain: string, email: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
 
     try {
       const response = await api.post<AuthResponse>('/auth/login', {
-        tenantSubdomain,
+        tenantSubdomain: DEFAULT_TENANT_SUBDOMAIN,
         email,
         password,
       });
@@ -148,7 +150,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 };
 
 export function getHomePathForUser(user: User | null): string {
-  return user?.role === UserRole.CLIENT ? '/client' : '/dashboard';
+  return getHomePathForUserRole(user?.role);
 }
 
 function resolveAuthErrorMessage(error: unknown): string {

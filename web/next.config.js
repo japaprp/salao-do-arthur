@@ -8,17 +8,17 @@ const nextConfig = {
     output: 'standalone',
   }),
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
     unoptimized: process.env.NODE_ENV === 'development',
   },
-  // ✅ TypeScript: Verificar erros em produção
+  // TypeScript: verificar erros em produção.
   typescript: {
-    ignoreBuildErrors: false, // CRÍTICO: Sempre verificar em build
-  },
-  // ✅ ESLint: Sempre executar durante build
-  eslint: {
-    ignoreDuringBuilds: false, // CRÍTICO: Sempre verificar em build
-    dirs: ['src'], // Apenas verificar src
+    ignoreBuildErrors: false,
   },
 };
 

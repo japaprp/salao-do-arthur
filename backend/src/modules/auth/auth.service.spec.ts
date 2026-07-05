@@ -378,7 +378,9 @@ describe('AuthService', () => {
     });
   });
 
-  it('rejects registration when tenant resolution data is missing', async () => {
+  it('rejects registration when the default Artur tenant cannot be found', async () => {
+    tenantsService.findBySubdomain.mockResolvedValue(null);
+
     await expect(
       service.register({
         email: 'cliente@barbeariadoartur.app',
@@ -386,6 +388,7 @@ describe('AuthService', () => {
         name: 'Cliente Premium',
       }),
     ).rejects.toBeInstanceOf(ConflictException);
+    expect(tenantsService.findBySubdomain).toHaveBeenCalledWith('barbearia-do-artur');
   });
 
   it('rejects registration when the email already exists', async () => {

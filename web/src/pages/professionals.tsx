@@ -166,7 +166,7 @@ const ProfessionalsPage: NextPage = () => {
   };
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin>
       <>
         <Head>
           <title>Profissionais - Barbearia do Artur</title>

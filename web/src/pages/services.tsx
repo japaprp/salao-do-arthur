@@ -29,7 +29,7 @@ const ServicesPage: NextPage = () => {
     error instanceof Error ? error.message : 'Não foi possível carregar os serviços.';
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin>
       <>
         <Head>
           <title>Serviços - Barbearia do Artur</title>

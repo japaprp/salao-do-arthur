@@ -77,7 +77,7 @@ const ProductsPage: NextPage = () => {
   };
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin>
       <>
         <Head>
           <title>Lojinha - Barbearia do Artur</title>

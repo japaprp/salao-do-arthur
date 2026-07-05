@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
@@ -21,6 +22,7 @@ export class ServiceCategoriesController {
   constructor(private readonly serviceCategoriesService: ServiceCategoriesService) {}
 
   @Post()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Criar categoria de serviço' })
   @ApiResponse({ status: 201, description: 'Categoria criada com sucesso' })
   create(
@@ -31,6 +33,7 @@ export class ServiceCategoriesController {
   }
 
   @Get()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Listar categorias de serviço' })
   @ApiResponse({ status: 200, description: 'Categorias retornadas com sucesso' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -45,6 +48,7 @@ export class ServiceCategoriesController {
   }
 
   @Get(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Buscar categoria de serviço por ID' })
   @ApiParam({ name: 'id', description: 'ID da categoria de serviço' })
   @ApiResponse({ status: 200, description: 'Categoria encontrada' })
@@ -53,6 +57,7 @@ export class ServiceCategoriesController {
   }
 
   @Put(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Atualizar categoria de serviço' })
   @ApiParam({ name: 'id', description: 'ID da categoria de serviço' })
   @ApiResponse({ status: 200, description: 'Categoria atualizada com sucesso' })
@@ -65,6 +70,7 @@ export class ServiceCategoriesController {
   }
 
   @Delete(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Desativar categoria de serviço' })
   @ApiParam({ name: 'id', description: 'ID da categoria de serviço' })
   @ApiResponse({ status: 200, description: 'Categoria desativada com sucesso' })

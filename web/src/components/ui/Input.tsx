@@ -35,41 +35,52 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
   },
 }));
 
-export const Input: React.FC<InputProps> = ({
-  variant = 'outlined',
-  startIcon,
-  endIcon,
-  onEndIconClick,
-  ...props
-}) => {
-  const inputProps: any = {};
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  (
+    {
+      variant = 'outlined',
+      startIcon,
+      endIcon,
+      onEndIconClick,
+      InputProps: materialInputProps,
+      ...props
+    },
+    ref,
+  ) => {
+    const inputProps: NonNullable<TextFieldProps['InputProps']> = {
+      ...materialInputProps,
+    };
 
-  if (startIcon || endIcon) {
-    inputProps.startAdornment = startIcon ? (
-      <InputAdornment position="start">{startIcon}</InputAdornment>
-    ) : undefined;
+    if (startIcon) {
+      inputProps.startAdornment = <InputAdornment position="start">{startIcon}</InputAdornment>;
+    }
 
-    inputProps.endAdornment = endIcon ? (
-      <InputAdornment position="end">
-        {onEndIconClick ? (
-          <IconButton onClick={onEndIconClick} size="small">
-            {endIcon}
-          </IconButton>
-        ) : (
-          endIcon
-        )}
-      </InputAdornment>
-    ) : undefined;
-  }
+    if (endIcon) {
+      inputProps.endAdornment = (
+        <InputAdornment position="end">
+          {onEndIconClick ? (
+            <IconButton onClick={onEndIconClick} size="small">
+              {endIcon}
+            </IconButton>
+          ) : (
+            endIcon
+          )}
+        </InputAdornment>
+      );
+    }
 
-  return (
-    <StyledTextField
-      variant={variant}
-      fullWidth
-      InputProps={inputProps}
-      {...props}
-    />
-  );
-};
+    return (
+      <StyledTextField
+        variant={variant}
+        fullWidth
+        InputProps={inputProps}
+        inputRef={ref}
+        {...props}
+      />
+    );
+  },
+);
+
+Input.displayName = 'Input';
 
 export default Input;

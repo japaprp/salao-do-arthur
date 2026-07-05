@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:barbearia_do_artur_mobile/app/navigation/app_route.dart';
+import 'package:barbearia_do_artur_mobile/core/constants/app_constants.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/presentation/widgets/auth_header.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/presentation/widgets/auth_status_banner.dart';
@@ -22,21 +23,18 @@ class SignInScreen extends ConsumerStatefulWidget {
 
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _tenantSubdomainController;
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
 
   @override
   void initState() {
     super.initState();
-    _tenantSubdomainController = TextEditingController();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _tenantSubdomainController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -59,7 +57,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               eyebrow: 'Entrada',
               title: 'Entre para cuidar do seu horário com o Artur.',
               description:
-                  'Use o código da barbearia para ver seus cortes, pacotes, avisos e produtos favoritos.',
+                  'Acesse seus cortes, pacotes, avisos e produtos favoritos da Barbearia do Artur.',
             ),
             const SizedBox(height: AppSpacing.xl),
             AppSurfaceCard(
@@ -72,13 +70,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       AuthStatusBanner(message: authState.failureMessage!),
                       const SizedBox(height: AppSpacing.md),
                     ],
-                    AppTextField(
-                      controller: _tenantSubdomainController,
-                      label: 'Código da barbearia',
-                      validator: InputValidators.salonCode,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
                     AppTextField(
                       controller: _emailController,
                       label: 'Email',
@@ -127,7 +118,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
 
     await ref.read(authFlowControllerProvider.notifier).signIn(
-          tenantSubdomain: _tenantSubdomainController.text.trim(),
+          tenantSubdomain: AppConstants.defaultTenantSubdomain,
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles, STAFF_ROLES } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { UpdateSalonSettingsDto } from './dto/update-salon-settings.dto';
 import { SettingsService } from './settings.service';
@@ -19,6 +20,7 @@ export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Get('salon')
+  @Roles(...STAFF_ROLES)
   @ApiOperation({ summary: 'Buscar configurações do salão' })
   @ApiResponse({ status: 200, description: 'Configurações retornadas com sucesso' })
   findSalonSettings(@CurrentUser() user: AuthenticatedUser) {
@@ -26,6 +28,7 @@ export class SettingsController {
   }
 
   @Put('salon')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Atualizar configurações do salão' })
   @ApiResponse({ status: 200, description: 'Configurações atualizadas com sucesso' })
   updateSalonSettings(

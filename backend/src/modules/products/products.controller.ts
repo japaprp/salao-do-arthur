@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -21,6 +22,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Criar produto' })
   @ApiResponse({ status: 201, description: 'Produto criado com sucesso' })
   create(@Body() createProductDto: CreateProductDto, @CurrentUser() user: AuthenticatedUser) {
@@ -28,6 +30,7 @@ export class ProductsController {
   }
 
   @Get()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Listar produtos' })
   @ApiResponse({ status: 200, description: 'Produtos retornados com sucesso' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -42,6 +45,7 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Buscar produto por ID' })
   @ApiParam({ name: 'id', description: 'ID do produto' })
   @ApiResponse({ status: 200, description: 'Produto encontrado' })
@@ -50,6 +54,7 @@ export class ProductsController {
   }
 
   @Put(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Atualizar produto' })
   @ApiParam({ name: 'id', description: 'ID do produto' })
   @ApiResponse({ status: 200, description: 'Produto atualizado com sucesso' })
@@ -62,6 +67,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Desativar produto' })
   @ApiParam({ name: 'id', description: 'ID do produto' })
   @ApiResponse({ status: 200, description: 'Produto desativado com sucesso' })

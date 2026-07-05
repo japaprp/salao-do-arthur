@@ -13,6 +13,7 @@ import { AuthenticatedUser } from './types/authenticated-user.type';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { Prisma, User, UserRole } from '@prisma/client';
+import type { StringValue } from 'ms';
 import { PrismaService, TenantPrismaClient } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 
@@ -44,8 +45,8 @@ type RefreshTokenPayload = {
 
 @Injectable()
 export class AuthService {
-  private readonly jwtExpiresIn: string | number;
-  private readonly refreshTokenExpiresIn: string | number;
+  private readonly jwtExpiresIn: StringValue | number;
+  private readonly refreshTokenExpiresIn: StringValue | number;
 
   constructor(
     private readonly usersService: UsersService,
@@ -55,8 +56,14 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
   ) {
-    this.jwtExpiresIn = this.configService.get<string | number>('JWT_EXPIRES_IN', '1h');
-    this.refreshTokenExpiresIn = this.configService.get<string | number>('REFRESH_TOKEN_EXPIRES_IN', '7d');
+    this.jwtExpiresIn = this.configService.get<StringValue | number>(
+      'JWT_EXPIRES_IN',
+      '1h' as StringValue,
+    );
+    this.refreshTokenExpiresIn = this.configService.get<StringValue | number>(
+      'REFRESH_TOKEN_EXPIRES_IN',
+      '7d' as StringValue,
+    );
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
@@ -231,28 +238,24 @@ export class AuthService {
     registerDto: RegisterDto | RegisterAdminDto,
     role: UserRole,
   ): Promise<string> {
-    if (role === UserRole.CLIENT && 'tenantSubdomain' in registerDto && registerDto.tenantSubdomain) {
+    if (role === UserRole.CLIENT) {
+      if ('tenantId' in registerDto && registerDto.tenantId) {
+        const tenant = await this.tenantsService.findById(registerDto.tenantId);
+        if (!tenant) {
+          throw new ConflictException('Barbearia não encontrada.');
+        }
+        return tenant.id;
+      }
+
+      const tenantSubdomain =
+        'tenantSubdomain' in registerDto ? registerDto.tenantSubdomain : undefined;
       const tenant = await this.tenantsService.findBySubdomain(
-        this.normalizeTenantSubdomain(registerDto.tenantSubdomain),
+        this.normalizeTenantSubdomain(tenantSubdomain),
       );
       if (!tenant) {
         throw new ConflictException('Barbearia do Artur não encontrada.');
       }
       return tenant.id;
-    }
-
-    if (role === UserRole.CLIENT && 'tenantId' in registerDto && registerDto.tenantId) {
-      const tenant = await this.tenantsService.findById(registerDto.tenantId);
-      if (!tenant) {
-        throw new ConflictException('Tenant não encontrado.');
-      }
-      return tenant.id;
-    }
-
-    if (role === UserRole.CLIENT) {
-      throw new ConflictException(
-        'Informe o codigo da Barbearia do Artur para concluir o cadastro do cliente.',
-      );
     }
 
     if (!('organizationName' in registerDto) || !registerDto.organizationName) {
@@ -269,8 +272,11 @@ export class AuthService {
     return tenant.id;
   }
 
-  private normalizeTenantSubdomain(value: string): string {
-    return value
+  private normalizeTenantSubdomain(value?: string | null): string {
+    const fallbackSubdomain =
+      this.configService.get<string>('DEFAULT_TENANT_SUBDOMAIN') ?? 'barbearia-do-artur';
+
+    return (value?.trim() || fallbackSubdomain)
       .normalize('NFKD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-zA-Z0-9]+/g, '-')

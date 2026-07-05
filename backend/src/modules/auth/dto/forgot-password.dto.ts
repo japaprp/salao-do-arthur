@@ -1,9 +1,9 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class ForgotPasswordDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  tenantSubdomain!: string;
+  tenantSubdomain?: string;
 
   @IsEmail()
   email!: string;

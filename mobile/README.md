@@ -37,6 +37,16 @@ ou
 flutter run -d chrome
 ```
 
+## Build real
+
+Para release, informe a API pública por `dart-define`:
+
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=https://sua-api.com/api
+```
+
+Build de release sem `API_BASE_URL` falha de propósito para não enviar app apontando para localhost.
+
 ## Observacao importante
 
 O disco `C:` esta praticamente sem espaco. O ambiente atual funciona, mas upgrades do Flutter e downloads maiores podem falhar ate haver limpeza de espaco.

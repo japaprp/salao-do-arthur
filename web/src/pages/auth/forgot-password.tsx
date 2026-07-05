@@ -11,9 +11,9 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Loading from '@/components/ui/Loading';
 import { api } from '@/lib/api/client';
+import { DEFAULT_TENANT_SUBDOMAIN } from '@/lib/auth/tenant';
 
 type ForgotPasswordForm = {
-  tenantSubdomain: string;
   email: string;
 };
 
@@ -23,7 +23,6 @@ type ForgotPasswordResponse = {
 };
 
 const forgotPasswordSchema = yup.object({
-  tenantSubdomain: yup.string().trim().required('Código da barbearia é obrigatório'),
   email: yup.string().trim().email('Email inválido').required('Email é obrigatório'),
 });
 
@@ -38,9 +37,6 @@ const ForgotPasswordPage: NextPage = () => {
     formState: { errors },
   } = useForm<ForgotPasswordForm>({
     resolver: yupResolver(forgotPasswordSchema),
-    defaultValues: {
-      tenantSubdomain: 'barbearia-do-artur',
-    },
   });
 
   const onSubmit = async (data: ForgotPasswordForm) => {
@@ -50,7 +46,10 @@ const ForgotPasswordPage: NextPage = () => {
     setError(null);
 
     try {
-      const response = await api.post<ForgotPasswordResponse>('/auth/forgot-password', data);
+      const response = await api.post<ForgotPasswordResponse>('/auth/forgot-password', {
+        tenantSubdomain: DEFAULT_TENANT_SUBDOMAIN,
+        email: data.email,
+      });
       setMessage(response.message);
       setDevResetUrl(response.resetUrl ?? null);
     } catch (err: unknown) {
@@ -92,8 +91,7 @@ const ForgotPasswordPage: NextPage = () => {
                 Esqueceu a senha?
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Informe o código da barbearia e o email. O Artur recebe um caminho seguro para
-                voltar ao painel sem mexer na agenda.
+                Informe o email do Artur. O sistema envia um caminho seguro para voltar ao painel.
               </Typography>
 
               {message ? (
@@ -114,15 +112,6 @@ const ForgotPasswordPage: NextPage = () => {
 
               <Box component="form" onSubmit={handleSubmit(onSubmit)}>
                 <Stack spacing={1.5}>
-                  <Input
-                    required
-                    fullWidth
-                    label="Código da barbearia"
-                    placeholder="barbearia-do-artur"
-                    {...register('tenantSubdomain')}
-                    error={!!errors.tenantSubdomain}
-                    helperText={errors.tenantSubdomain?.message}
-                  />
                   <Input
                     required
                     fullWidth

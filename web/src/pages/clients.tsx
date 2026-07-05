@@ -96,7 +96,7 @@ const ClientsPage: NextPage = () => {
   };
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin>
       <>
         <Head>
           <title>Clientes - Barbearia do Artur</title>

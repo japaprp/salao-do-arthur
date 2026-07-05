@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:barbearia_do_artur_mobile/app/navigation/app_route.dart';
+import 'package:barbearia_do_artur_mobile/core/constants/app_constants.dart';
 import 'package:barbearia_do_artur_mobile/core/utils/input_validators.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/application/providers/auth_providers.dart';
 import 'package:barbearia_do_artur_mobile/features/auth/domain/entities/register_command.dart';
@@ -24,7 +25,6 @@ class SignUpScreen extends ConsumerStatefulWidget {
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _tenantSubdomainController;
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
 
@@ -32,7 +32,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController();
-    _tenantSubdomainController = TextEditingController();
     _emailController = TextEditingController();
     _passwordController = TextEditingController();
   }
@@ -40,7 +39,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _tenantSubdomainController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -64,7 +62,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               title:
                   'Crie seu perfil para agendar com menos conversa e mais clareza.',
               description:
-                  'Você informa o código da barbearia uma vez e depois acompanha horários, pacotes, taxa de cancelamento e produtos indicados pelo Artur.',
+                  'Acompanhe horários, pacotes, taxa de cancelamento e produtos indicados pelo Artur.',
             ),
             const SizedBox(height: AppSpacing.xl),
             AppSurfaceCard(
@@ -82,13 +80,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       label: 'Nome completo',
                       validator: (value) =>
                           InputValidators.requiredField(value, label: 'Nome'),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    AppTextField(
-                      controller: _tenantSubdomainController,
-                      label: 'Código da barbearia',
-                      validator: InputValidators.salonCode,
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -139,7 +130,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             name: _nameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
-            tenantSubdomain: _tenantSubdomainController.text.trim(),
+            tenantSubdomain: AppConstants.defaultTenantSubdomain,
           ),
         );
   }

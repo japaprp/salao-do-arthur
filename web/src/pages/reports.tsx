@@ -44,7 +44,7 @@ const ReportsPage: NextPage = () => {
     error instanceof Error ? error.message : 'Não foi possível carregar os relatórios.';
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin>
       <>
         <Head>
           <title>Relatórios - Barbearia do Artur</title>

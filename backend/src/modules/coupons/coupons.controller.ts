@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { UpdateCouponDto } from './dto/update-coupon.dto';
@@ -21,6 +22,7 @@ export class CouponsController {
   constructor(private readonly couponsService: CouponsService) {}
 
   @Post()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Criar cupom' })
   @ApiResponse({ status: 201, description: 'Cupom criado com sucesso' })
   create(@Body() createCouponDto: CreateCouponDto, @CurrentUser() user: AuthenticatedUser) {
@@ -28,6 +30,7 @@ export class CouponsController {
   }
 
   @Get()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Listar cupons' })
   @ApiResponse({ status: 200, description: 'Cupons retornados com sucesso' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -42,6 +45,7 @@ export class CouponsController {
   }
 
   @Get(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Buscar cupom por ID' })
   @ApiParam({ name: 'id', description: 'ID do cupom' })
   @ApiResponse({ status: 200, description: 'Cupom encontrado' })
@@ -50,6 +54,7 @@ export class CouponsController {
   }
 
   @Put(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Atualizar cupom' })
   @ApiParam({ name: 'id', description: 'ID do cupom' })
   @ApiResponse({ status: 200, description: 'Cupom atualizado com sucesso' })
@@ -62,6 +67,7 @@ export class CouponsController {
   }
 
   @Delete(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Desativar cupom' })
   @ApiParam({ name: 'id', description: 'ID do cupom' })
   @ApiResponse({ status: 200, description: 'Cupom desativado com sucesso' })

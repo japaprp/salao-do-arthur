@@ -6,6 +6,7 @@ import { UpdateProfessionalDto } from './dto/update-professional.dto';
 import { SyncProfessionalServicesDto } from './dto/sync-professional-services.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MANAGEMENT_ROLES, Roles } from '../auth/guards/roles.guard';
 import { AuthenticatedUser } from '../auth/types/authenticated-user.type';
 
 @ApiTags('professionals')
@@ -16,6 +17,7 @@ export class ProfessionalsController {
   constructor(private readonly professionalsService: ProfessionalsService) {}
 
   @Post()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Criar novo profissional' })
   @ApiResponse({ status: 201, description: 'Profissional criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
@@ -30,6 +32,7 @@ export class ProfessionalsController {
   }
 
   @Get()
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Listar todos os profissionais' })
   @ApiResponse({ status: 200, description: 'Lista de profissionais retornada' })
   findAll(@CurrentUser() user: AuthenticatedUser) {
@@ -45,6 +48,7 @@ export class ProfessionalsController {
   }
 
   @Get(':id/services')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Listar vínculos entre profissional e serviços' })
   @ApiParam({ name: 'id', description: 'ID do profissional' })
   @ApiResponse({ status: 200, description: 'Lista de vínculos retornada' })
@@ -53,6 +57,7 @@ export class ProfessionalsController {
   }
 
   @Get(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Buscar profissional por ID' })
   @ApiParam({ name: 'id', description: 'ID do profissional' })
   @ApiResponse({ status: 200, description: 'Profissional encontrado' })
@@ -62,6 +67,7 @@ export class ProfessionalsController {
   }
 
   @Put(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Atualizar profissional' })
   @ApiParam({ name: 'id', description: 'ID do profissional' })
   @ApiResponse({ status: 200, description: 'Profissional atualizado com sucesso' })
@@ -75,6 +81,7 @@ export class ProfessionalsController {
   }
 
   @Put(':id/services')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Sincronizar serviços vinculados ao profissional' })
   @ApiParam({ name: 'id', description: 'ID do profissional' })
   @ApiResponse({ status: 200, description: 'Vínculos atualizados com sucesso' })
@@ -87,6 +94,7 @@ export class ProfessionalsController {
   }
 
   @Delete(':id')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Remover profissional' })
   @ApiParam({ name: 'id', description: 'ID do profissional' })
   @ApiResponse({ status: 200, description: 'Profissional removido com sucesso' })

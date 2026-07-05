@@ -7,6 +7,7 @@ import { AuthenticatedUser } from '../types/authenticated-user.type';
 function createContext(user?: AuthenticatedUser): ExecutionContext {
   return {
     getHandler: jest.fn(),
+    getClass: jest.fn(),
     switchToHttp: jest.fn(() => ({
       getRequest: jest.fn(() => ({ user })),
     })),
@@ -16,7 +17,7 @@ function createContext(user?: AuthenticatedUser): ExecutionContext {
 describe('RolesGuard', () => {
   it('allows routes without required roles', () => {
     const reflector = {
-      get: jest.fn(() => undefined),
+      getAllAndOverride: jest.fn(() => undefined),
     } as unknown as Reflector;
     const guard = new RolesGuard(reflector);
 
@@ -25,7 +26,7 @@ describe('RolesGuard', () => {
 
   it('allows users with an accepted role', () => {
     const reflector = {
-      get: jest.fn(() => [UserRole.OWNER, UserRole.ADMIN]),
+      getAllAndOverride: jest.fn(() => [UserRole.OWNER, UserRole.ADMIN]),
     } as unknown as Reflector;
     const guard = new RolesGuard(reflector);
 
@@ -43,7 +44,7 @@ describe('RolesGuard', () => {
 
   it('blocks users without an accepted role', () => {
     const reflector = {
-      get: jest.fn(() => [UserRole.OWNER, UserRole.ADMIN]),
+      getAllAndOverride: jest.fn(() => [UserRole.OWNER, UserRole.ADMIN]),
     } as unknown as Reflector;
     const guard = new RolesGuard(reflector);
 
@@ -57,5 +58,37 @@ describe('RolesGuard', () => {
         }),
       ),
     ).toThrow(ForbiddenException);
+  });
+
+  it('checks role metadata on handler and controller class', () => {
+    const handler = function handler() {};
+    class Controller {}
+    const getHandler = jest.fn(() => handler);
+    const getClass = jest.fn(() => Controller);
+    const getAllAndOverride = jest.fn(() => [UserRole.OWNER, UserRole.ADMIN]);
+    const reflector = {
+      getAllAndOverride,
+    } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    const context = {
+      getHandler,
+      getClass,
+      switchToHttp: jest.fn(() => ({
+        getRequest: jest.fn(() => ({
+          user: {
+            userId: 'user-1',
+            email: 'admin@barbeariadoartur.app',
+            role: UserRole.ADMIN,
+            tenantId: 'tenant-1',
+          },
+        })),
+      })),
+    } as unknown as ExecutionContext;
+
+    expect(guard.canActivate(context)).toBe(true);
+    expect(getAllAndOverride).toHaveBeenCalledWith(expect.any(String), [
+      handler,
+      Controller,
+    ]);
   });
 });

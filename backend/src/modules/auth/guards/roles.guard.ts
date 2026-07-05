@@ -8,12 +8,30 @@ export const ROLES_KEY = 'roles';
 
 export const Roles = (...roles: UserRole[]) => Reflect.metadata(ROLES_KEY, roles);
 
+export const ADMIN_ROLES = [UserRole.OWNER, UserRole.ADMIN];
+
+export const MANAGEMENT_ROLES = [
+  UserRole.OWNER,
+  UserRole.ADMIN,
+  UserRole.MANAGER,
+];
+
+export const STAFF_ROLES = [
+  UserRole.OWNER,
+  UserRole.ADMIN,
+  UserRole.MANAGER,
+  UserRole.RECEPTION,
+];
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.get<UserRole[]>(ROLES_KEY, context.getHandler());
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (!requiredRoles) {
       return true;
     }
