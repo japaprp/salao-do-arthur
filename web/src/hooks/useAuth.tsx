@@ -155,6 +155,10 @@ export function getHomePathForUser(user: User | null): string {
 
 function resolveAuthErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
+    if (!error.response) {
+      return 'A API de produção ainda não está respondendo. A web está no ar, mas o login depende do backend no Render com banco MySQL configurado.';
+    }
+
     const message = error.response?.data?.message;
 
     if (Array.isArray(message)) {
