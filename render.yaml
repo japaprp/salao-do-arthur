@@ -7,7 +7,7 @@ services:
     branch: main
     rootDir: backend
     autoDeployTrigger: commit
-    buildCommand: export DATABASE_URL="mysql://placeholder:placeholder@127.0.0.1:3306/placeholder" && npm ci && npm run prisma:generate && npm run build
+    buildCommand: export DATABASE_URL="mysql://placeholder:placeholder@127.0.0.1:3306/placeholder" && npm ci --include=dev && npm run prisma:generate && npm run build
     startCommand: npm run prisma:migrate:deploy && npm run start:prod
     initialDeployHook: npm run prisma:seed
     healthCheckPath: /api/health/ready
