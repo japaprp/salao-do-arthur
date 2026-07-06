@@ -64,7 +64,7 @@ O Aiven tem plano MySQL gratuito para projeto pequeno, sem cartao, com 1 GB de a
 Depois que criar o MySQL no Aiven, copie a connection string e configure no Render:
 
 ```text
-DATABASE_URL=mysql://USUARIO:SENHA@HOST:PORTA/defaultdb?ssl-mode=REQUIRED
+DATABASE_URL=mysql://USUARIO:SENHA@HOST:PORTA/defaultdb?sslaccept=strict
 ```
 
 Segredos gerados automaticamente pelo Render:
