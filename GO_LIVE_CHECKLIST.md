@@ -8,8 +8,8 @@ Repositorio correto:
 
 - Backend NestJS com Prisma/MySQL, auth, RBAC, agenda, lojinha e Mercado Pago preparado.
 - Web Next.js pronta para GitHub Pages via `.github/workflows/pages.yml`.
-- API pronta para Render via `render.yaml`.
-- MySQL privado com disco pronto no `render.yaml`.
+- API pronta para Render Free via `render.yaml`.
+- Banco MySQL deve ser externo para evitar cobranca de disco/private service no Render.
 - Login do Artur sem codigo de barbearia.
 - Tenant padrao: `barbearia-do-artur`.
 
@@ -48,21 +48,28 @@ No Render, criar Blueprint usando:
 https://github.com/japaprp/salao-do-arthur
 ```
 
-O Blueprint cria:
+O Blueprint cria apenas:
 
 ```text
 salao-do-arthur-api
-salao-do-arthur-mysql
 ```
 
-O MySQL roda como private service Docker com disco persistente.
-Isso evita depender de outro provedor de banco, mas exige plano Render com private service/disk.
+Para nao pagar Render agora, use MySQL externo. Opcao indicada:
+
+```text
+Aiven for MySQL Free
+```
+
+O Aiven tem plano MySQL gratuito para projeto pequeno, sem cartao, com 1 GB de armazenamento.
+Depois que criar o MySQL no Aiven, copie a connection string e configure no Render:
+
+```text
+DATABASE_URL=mysql://USUARIO:SENHA@HOST:PORTA/defaultdb?ssl-mode=REQUIRED
+```
 
 Segredos gerados automaticamente pelo Render:
 
 ```text
-MYSQL_PASSWORD
-MYSQL_ROOT_PASSWORD
 JWT_SECRET
 REFRESH_TOKEN_SECRET
 PASSWORD_RESET_SECRET
@@ -98,12 +105,14 @@ https://URL_PUBLICA_DA_API/api/payments/webhooks/mercado-pago
 
 ## Sequencia correta para ficar real
 
-1. Abrir o Blueprint do Render usando o repo `https://github.com/japaprp/salao-do-arthur`.
-2. Revisar os dois serviços: `salao-do-arthur-api` e `salao-do-arthur-mysql`.
-3. Aplicar o Blueprint no Render.
-4. Esperar `/api/health/ready` responder 200.
-5. Configurar `NEXT_PUBLIC_API_URL` no GitHub repo.
-6. Ativar GitHub Pages como GitHub Actions.
-7. Rodar workflow `Deploy Web to GitHub Pages`.
-8. Testar login do Artur na URL publica.
-9. Depois cadastrar Mercado Pago real.
+1. Criar MySQL gratuito no Aiven.
+2. Copiar a connection string MySQL.
+3. Abrir o Blueprint do Render usando o repo `https://github.com/japaprp/salao-do-arthur`.
+4. Preencher `DATABASE_URL` com a connection string do Aiven.
+5. Aplicar o Blueprint no Render.
+6. Esperar `/api/health/ready` responder 200.
+7. Configurar `NEXT_PUBLIC_API_URL` no GitHub repo.
+8. Ativar GitHub Pages como GitHub Actions.
+9. Rodar workflow `Deploy Web to GitHub Pages`.
+10. Testar login do Artur na URL publica.
+11. Depois cadastrar Mercado Pago real.
