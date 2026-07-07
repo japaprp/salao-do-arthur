@@ -25,7 +25,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
   @ApiOperation({ summary: 'Login de usuário' })
   @ApiResponse({ status: 200, description: 'Login realizado com sucesso' })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
