@@ -16,6 +16,7 @@ const browserBaseURL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
 const serverBaseURL =
   process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
 const resolvedBaseURL = typeof window === 'undefined' ? serverBaseURL : browserBaseURL;
+const siteBasePath = normalizeBasePath(process.env.NEXT_PUBLIC_SITE_BASE_PATH);
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: resolvedBaseURL,
@@ -172,7 +173,16 @@ function redirectToLogin() {
     return;
   }
 
-  if (!window.location.pathname.startsWith('/auth/login')) {
-    window.location.href = '/auth/login';
+  const loginPath = `${siteBasePath}/auth/login`;
+  if (!window.location.pathname.startsWith(loginPath)) {
+    window.location.href = loginPath;
   }
+}
+
+function normalizeBasePath(value?: string) {
+  if (!value || value === '/') {
+    return '';
+  }
+
+  return `/${value.replace(/^\/+|\/+$/g, '')}`;
 }
