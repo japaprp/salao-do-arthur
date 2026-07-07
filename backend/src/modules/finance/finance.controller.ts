@@ -11,11 +11,11 @@ type FinancePeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 @Controller('finance')
 @UseGuards(JwtAuthGuard)
-@Roles(UserRole.OWNER, UserRole.ADMIN)
 export class FinanceController {
   constructor(private readonly financeService: FinanceService) {}
 
   @Get('overview')
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   getOverview(
     @CurrentUser() user: AuthenticatedUser,
     @Query('period') period?: FinancePeriod,
@@ -24,6 +24,7 @@ export class FinanceController {
   }
 
   @Post('transactions')
+  @Roles(UserRole.OWNER, UserRole.ADMIN)
   createTransaction(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateFinanceTransactionDto,

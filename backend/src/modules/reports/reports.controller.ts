@@ -10,12 +10,12 @@ import { ReportsService } from './reports.service';
 @ApiTags('reports')
 @Controller('reports')
 @UseGuards(JwtAuthGuard)
-@Roles(...MANAGEMENT_ROLES)
 @ApiBearerAuth('JWT-auth')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Get('overview')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Retorna visão consolidada de dashboard e relatórios' })
   @ApiResponse({ status: 200, description: 'Visão consolidada retornada com sucesso' })
   getOverview(@CurrentUser() user: AuthenticatedUser) {
@@ -23,6 +23,7 @@ export class ReportsController {
   }
 
   @Get('export')
+  @Roles(...MANAGEMENT_ROLES)
   @ApiOperation({ summary: 'Exporta relatório em PDF ou Excel' })
   async exportOverview(
     @CurrentUser() user: AuthenticatedUser,
