@@ -19,6 +19,7 @@ export type SalonSettingsPayload = Partial<
     | 'allowWaitlist'
     | 'enableCheckout'
     | 'enableLoyalty'
+    | 'enableCashback'
     | 'enableReferrals'
     | 'enableProductCatalog'
     | 'instagram'
@@ -66,6 +67,7 @@ function normalizeSalonSettings(raw: unknown): SalonSettings {
     allowWaitlist: Boolean(value.allowWaitlist ?? true),
     enableCheckout: Boolean(value.enableCheckout ?? true),
     enableLoyalty: Boolean(value.enableLoyalty ?? true),
+    enableCashback: Boolean(value.enableCashback ?? true),
     enableReferrals: Boolean(value.enableReferrals ?? true),
     enableProductCatalog: Boolean(value.enableProductCatalog ?? true),
     primaryColor: value.primaryColor == null ? null : String(value.primaryColor),

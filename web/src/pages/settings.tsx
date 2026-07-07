@@ -1,6 +1,11 @@
 import React from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import BusinessIcon from '@mui/icons-material/Business';
+import SaveIcon from '@mui/icons-material/Save';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import {
   Alert,
   Box,
@@ -12,8 +17,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
-import StorefrontIcon from '@mui/icons-material/Storefront';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
@@ -39,6 +42,7 @@ type SettingsDraft = {
   enableProductCatalog: boolean;
   enableCheckout: boolean;
   enableLoyalty: boolean;
+  enableCashback: boolean;
   enableReferrals: boolean;
   allowWaitlist: boolean;
 };
@@ -58,6 +62,7 @@ const emptySettingsDraft: SettingsDraft = {
   enableProductCatalog: true,
   enableCheckout: true,
   enableLoyalty: true,
+  enableCashback: true,
   enableReferrals: true,
   allowWaitlist: true,
 };
@@ -88,6 +93,7 @@ const SettingsPage: NextPage = () => {
       enableProductCatalog: settings.enableProductCatalog,
       enableCheckout: settings.enableCheckout,
       enableLoyalty: settings.enableLoyalty,
+      enableCashback: settings.enableCashback,
       enableReferrals: settings.enableReferrals,
       allowWaitlist: settings.allowWaitlist,
     });
@@ -170,12 +176,49 @@ const SettingsPage: NextPage = () => {
               </Alert>
             ) : null}
 
+            <Grid container spacing={2.5} sx={{ mb: 4 }}>
+              <Grid item xs={12} sm={6} lg={3}>
+                <SettingsShortcutCard
+                  icon={<BusinessIcon color="primary" />}
+                  title="Dados"
+                  subtitle={draft.salonName || 'Barbearia'}
+                  targetId="business-settings"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} lg={3}>
+                <SettingsShortcutCard
+                  icon={<StorefrontIcon color="primary" />}
+                  title="Operação"
+                  subtitle={draft.enableProductCatalog ? 'Lojinha ativa' : 'Lojinha inativa'}
+                  targetId="operation-settings"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} lg={3}>
+                <SettingsShortcutCard
+                  icon={<WorkspacePremiumIcon color="primary" />}
+                  title="Pontos"
+                  subtitle={draft.enableLoyalty ? 'Pontos ativos' : 'Pontos inativos'}
+                  targetId="loyalty-settings"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} lg={3}>
+                <SettingsShortcutCard
+                  icon={<AccountBalanceWalletIcon color="primary" />}
+                  title="Cashback"
+                  subtitle={draft.enableCashback ? 'Cashback ativo' : 'Cashback inativo'}
+                  targetId="loyalty-settings"
+                />
+              </Grid>
+            </Grid>
+
             <Grid container spacing={2.5}>
               <Grid item xs={12} lg={8}>
                 <Card
+                  id="business-settings"
                   title="Dados da barbearia"
                   subtitle="Informações de contato e apresentação"
                   density="compact"
+                  sx={{ scrollMarginTop: 24 }}
                 >
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
@@ -235,10 +278,12 @@ const SettingsPage: NextPage = () => {
 
               <Grid item xs={12} lg={4}>
                 <Card
+                  id="operation-settings"
                   title="Operação"
                   subtitle="Regras simples para agenda e módulos"
                   density="compact"
                   action={<StorefrontIcon color="primary" />}
+                  sx={{ scrollMarginTop: 24 }}
                 >
                   <Stack spacing={2}>
                     <TextField
@@ -284,17 +329,6 @@ const SettingsPage: NextPage = () => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={draft.enableLoyalty}
-                          onChange={(event) =>
-                            updateDraft('enableLoyalty', event.target.checked)
-                          }
-                        />
-                      }
-                      label="Fidelidade ativa"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Checkbox
                           checked={draft.allowWaitlist}
                           onChange={(event) =>
                             updateDraft('allowWaitlist', event.target.checked)
@@ -307,8 +341,61 @@ const SettingsPage: NextPage = () => {
                 </Card>
               </Grid>
 
-              <Grid item xs={12}>
-                <Card title="Redes sociais" subtitle="Canais públicos" density="compact">
+              <Grid item xs={12} lg={4}>
+                <Card
+                  id="loyalty-settings"
+                  title="Pontos e cashback"
+                  subtitle="Controle do relacionamento com clientes"
+                  density="compact"
+                  action={<WorkspacePremiumIcon color="primary" />}
+                  sx={{ scrollMarginTop: 24 }}
+                >
+                  <Stack spacing={2}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={draft.enableLoyalty}
+                          onChange={(event) =>
+                            updateDraft('enableLoyalty', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Pontos ativos"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={draft.enableCashback}
+                          onChange={(event) =>
+                            updateDraft('enableCashback', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Cashback ativo"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={draft.enableReferrals}
+                          onChange={(event) =>
+                            updateDraft('enableReferrals', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Indicações ativas"
+                    />
+                  </Stack>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} lg={8}>
+                <Card
+                  id="social-settings"
+                  title="Redes sociais"
+                  subtitle="Canais públicos"
+                  density="compact"
+                  sx={{ scrollMarginTop: 24 }}
+                >
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={4}>
                       <TextField
@@ -368,6 +455,7 @@ function buildSettingsPayload(form: SettingsDraft): SalonSettingsPayload | null 
     enableProductCatalog: form.enableProductCatalog,
     enableCheckout: form.enableCheckout,
     enableLoyalty: form.enableLoyalty,
+    enableCashback: form.enableCashback,
     enableReferrals: form.enableReferrals,
     allowWaitlist: form.allowWaitlist,
   };
@@ -376,6 +464,71 @@ function buildSettingsPayload(form: SettingsDraft): SalonSettingsPayload | null 
 function parseInteger(value: string) {
   const numberValue = Number(value.trim());
   return Number.isInteger(numberValue) && numberValue >= 0 ? numberValue : null;
+}
+
+function SettingsShortcutCard({
+  icon,
+  title,
+  subtitle,
+  targetId,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  targetId: string;
+}) {
+  const activate = () => scrollToSection(targetId);
+
+  return (
+    <Card
+      hover
+      density="compact"
+      onClick={activate}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          activate();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      sx={{
+        minHeight: 148,
+        '&:focus-visible': {
+          outline: '2px solid',
+          outlineColor: 'primary.main',
+          outlineOffset: 2,
+        },
+      }}
+    >
+      <Stack spacing={1.25}>
+        <Box
+          sx={{
+            width: 42,
+            height: 42,
+            borderRadius: 2,
+            display: 'grid',
+            placeItems: 'center',
+            bgcolor: 'action.hover',
+          }}
+        >
+          {icon}
+        </Box>
+        <Box>
+          <Typography variant="subtitle1" fontWeight={800}>
+            {title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {subtitle}
+          </Typography>
+        </Box>
+      </Stack>
+    </Card>
+  );
+}
+
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 export default SettingsPage;

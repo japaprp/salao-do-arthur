@@ -432,6 +432,7 @@ model SalonSettings {
   allowWaitlist              Boolean   @default(true)
   enableCheckout             Boolean   @default(true)
   enableLoyalty              Boolean   @default(true)
+  enableCashback             Boolean   @default(true)
   enableReferrals            Boolean   @default(true)
   enableProductCatalog       Boolean   @default(true)
   primaryColor               String?

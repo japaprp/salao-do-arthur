@@ -73,6 +73,10 @@ export class UpdateSalonSettingsDto {
 
   @IsOptional()
   @IsBoolean()
+  enableCashback?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
   enableReferrals?: boolean;
 
   @IsOptional()

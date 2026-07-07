@@ -29,6 +29,7 @@ import {
   useClients,
   useRedeemClientLoyalty,
 } from '@/hooks/useClients';
+import { useSalonSettings } from '@/hooks/useSettings';
 import { formatCurrency } from '@/lib/formatters/appointments';
 import { entityGridProps, metricGridProps } from '@/lib/ui/gridPresets';
 import type { Client } from '@/types';
@@ -41,6 +42,7 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
 
 const ClientsPage: NextPage = () => {
   const { data: clients = [], isLoading, error } = useClients();
+  const { data: settings } = useSalonSettings();
   const redeemLoyalty = useRedeemClientLoyalty();
   const adjustLoyalty = useAdjustClientLoyalty();
   const [loyaltyAction, setLoyaltyAction] = React.useState<'redeem' | 'adjust' | null>(null);
@@ -55,6 +57,8 @@ const ClientsPage: NextPage = () => {
   const errorMessage =
     error instanceof Error ? error.message : 'Não foi possível carregar os clientes.';
   const loyaltySubmitting = redeemLoyalty.isPending || adjustLoyalty.isPending;
+  const pointsEnabled = settings?.enableLoyalty ?? true;
+  const cashbackEnabled = settings?.enableCashback ?? true;
 
   const openLoyaltyModal = (client: Client, action: 'redeem' | 'adjust') => {
     setSelectedClient(client);
@@ -72,8 +76,9 @@ const ClientsPage: NextPage = () => {
 
   const submitLoyaltyAction = async () => {
     if (!selectedClient || !loyaltyAction || !reason.trim()) return;
+    if (loyaltyAction === 'redeem' && !pointsEnabled) return;
 
-    const parsedPoints = Number(points);
+    const parsedPoints = pointsEnabled ? Number(points) : 0;
     if (!Number.isFinite(parsedPoints)) return;
 
     if (loyaltyAction === 'redeem') {
@@ -83,7 +88,8 @@ const ClientsPage: NextPage = () => {
         reason: reason.trim(),
       });
     } else {
-      const parsedAmount = amount.trim() ? Number(amount) : undefined;
+      const parsedAmount =
+        cashbackEnabled && amount.trim() ? Number(amount.replace(',', '.')) : undefined;
       await adjustLoyalty.mutateAsync({
         clientId: selectedClient.id,
         points: parsedPoints,
@@ -256,6 +262,7 @@ const ClientsPage: NextPage = () => {
                             size="small"
                             variant="outlined"
                             onClick={() => openLoyaltyModal(client, 'redeem')}
+                            disabled={!pointsEnabled}
                           >
                             Resgatar
                           </Button>
@@ -263,6 +270,7 @@ const ClientsPage: NextPage = () => {
                             size="small"
                             variant="contained"
                             onClick={() => openLoyaltyModal(client, 'adjust')}
+                            disabled={!pointsEnabled && !cashbackEnabled}
                           >
                             Ajustar
                           </Button>
@@ -301,6 +309,7 @@ const ClientsPage: NextPage = () => {
                     type="number"
                     value={points}
                     onChange={(event) => setPoints(event.target.value)}
+                    disabled={!pointsEnabled}
                     fullWidth
                   />
                   {loyaltyAction === 'adjust' && (
@@ -309,6 +318,7 @@ const ClientsPage: NextPage = () => {
                       type="number"
                       value={amount}
                       onChange={(event) => setAmount(event.target.value)}
+                      disabled={!cashbackEnabled}
                       fullWidth
                     />
                   )}
@@ -329,7 +339,12 @@ const ClientsPage: NextPage = () => {
                 </Button>
                 <Button
                   onClick={submitLoyaltyAction}
-                  disabled={!reason.trim() || loyaltySubmitting}
+                  disabled={
+                    !reason.trim() ||
+                    loyaltySubmitting ||
+                    (loyaltyAction === 'redeem' && !pointsEnabled) ||
+                    (loyaltyAction === 'adjust' && !pointsEnabled && !cashbackEnabled)
+                  }
                   variant="contained"
                 >
                   Confirmar

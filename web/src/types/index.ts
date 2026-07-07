@@ -38,6 +38,7 @@ export interface SalonSettings {
   allowWaitlist: boolean;
   enableCheckout: boolean;
   enableLoyalty: boolean;
+  enableCashback: boolean;
   enableReferrals: boolean;
   enableProductCatalog: boolean;
   primaryColor?: string | null;

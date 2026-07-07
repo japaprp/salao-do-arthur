@@ -38,6 +38,11 @@ const LEVELS: Array<{
   },
 ];
 
+type LoyaltySettings = {
+  enableLoyalty: boolean;
+  enableCashback: boolean;
+};
+
 @Injectable()
 export class LoyaltyService {
   constructor(
@@ -97,14 +102,37 @@ export class LoyaltyService {
         return;
       }
 
+      const settings = await this.getLoyaltySettings(transaction, tenantId);
       const amount = Number(order.totalAmount);
+
+      if (!settings.enableLoyalty) {
+        await this.applyTransaction(transaction, {
+          tenantId,
+          clientId: order.clientId,
+          orderId: order.id,
+          points: 0,
+          amount: 0,
+          lifetimeValueIncrement: amount,
+          type: 'EARN',
+          reason: `Pedido pago ${order.id}`,
+          externalKey,
+          metadata: {
+            orderTotal: amount,
+            loyaltyEnabled: false,
+            cashbackEnabled: settings.enableCashback,
+          },
+        });
+        return;
+      }
+
       const points = Math.max(1, Math.floor(amount));
       const client = await transaction.client.findFirstOrThrow({
         where: { id: order.clientId, tenantId },
         select: { loyaltyPoints: true },
       });
       const level = this.getLevelForPoints(client.loyaltyPoints + points);
-      const cashbackAmount = this.roundMoney(amount * this.getCashbackRate(level));
+      const cashbackRate = settings.enableCashback ? this.getCashbackRate(level) : 0;
+      const cashbackAmount = this.roundMoney(amount * cashbackRate);
 
       await this.applyTransaction(transaction, {
         tenantId,
@@ -118,8 +146,9 @@ export class LoyaltyService {
         externalKey,
         metadata: {
           orderTotal: amount,
-          cashbackRate: this.getCashbackRate(level),
+          cashbackRate,
           level,
+          cashbackEnabled: settings.enableCashback,
         },
       });
     });
@@ -141,6 +170,11 @@ export class LoyaltyService {
   async redeemClient(user: AuthenticatedUser, clientId: string, dto: RedeemLoyaltyDto) {
     const result = await this.prisma.withTenant(user.tenantId, async transaction => {
       await this.assertClientExists(transaction, user.tenantId, clientId);
+      const settings = await this.getLoyaltySettings(transaction, user.tenantId);
+      if (!settings.enableLoyalty) {
+        throw new BadRequestException('Programa de pontos desabilitado no perfil do Artur.');
+      }
+
       const wallet = await this.ensureWallet(transaction, user.tenantId, clientId);
 
       if (wallet.pointsBalance < dto.points) {
@@ -179,6 +213,14 @@ export class LoyaltyService {
 
     const result = await this.prisma.withTenant(user.tenantId, async transaction => {
       await this.assertClientExists(transaction, user.tenantId, clientId);
+      const settings = await this.getLoyaltySettings(transaction, user.tenantId);
+      if (!settings.enableLoyalty && dto.points !== 0) {
+        throw new BadRequestException('Programa de pontos desabilitado no perfil do Artur.');
+      }
+      if (!settings.enableCashback && (dto.amount ?? 0) !== 0) {
+        throw new BadRequestException('Cashback desabilitado no perfil do Artur.');
+      }
+
       await this.applyTransaction(transaction, {
         tenantId: user.tenantId,
         clientId,
@@ -288,16 +330,19 @@ export class LoyaltyService {
 
     const wallet = client.loyaltyWallet ?? (await this.ensureWallet(transaction, tenantId, clientId));
     const currentLevel = wallet.currentLevel;
+    const settings = await this.getLoyaltySettings(transaction, tenantId);
+    const cashbackRate = settings.enableCashback ? this.getCashbackRate(currentLevel) : 0;
 
     return {
       client,
       wallet,
       currentLevel,
       displayLevel: this.getLevelDisplayName(currentLevel),
-      cashbackRate: this.getCashbackRate(currentLevel),
+      cashbackRate,
       benefits: this.getBenefits(currentLevel),
       nextLevel: this.getNextLevel(client.loyaltyPoints),
       transactions: client.loyaltyWallet?.loyaltyTransactions ?? [],
+      settings,
     };
   }
 
@@ -330,6 +375,21 @@ export class LoyaltyService {
       },
       update: {},
     });
+  }
+
+  private async getLoyaltySettings(
+    transaction: TenantPrismaClient,
+    tenantId: string,
+  ): Promise<LoyaltySettings> {
+    const settings = await transaction.salonSettings.findUnique({
+      where: { tenantId },
+      select: { enableLoyalty: true, enableCashback: true },
+    });
+
+    return {
+      enableLoyalty: settings?.enableLoyalty ?? true,
+      enableCashback: settings?.enableCashback ?? true,
+    };
   }
 
   private getLevelForPoints(points: number): LoyaltyLevel {

@@ -66,6 +66,9 @@ export class SettingsService {
     if (updateSalonSettingsDto.enableLoyalty !== undefined) {
       payload.enableLoyalty = updateSalonSettingsDto.enableLoyalty;
     }
+    if (updateSalonSettingsDto.enableCashback !== undefined) {
+      payload.enableCashback = updateSalonSettingsDto.enableCashback;
+    }
     if (updateSalonSettingsDto.enableReferrals !== undefined) {
       payload.enableReferrals = updateSalonSettingsDto.enableReferrals;
     }
