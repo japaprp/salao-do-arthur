@@ -9,6 +9,7 @@ interface StatCardProps {
   icon: React.ReactNode;
   footnote?: string;
   valueColor?: string;
+  onClick?: () => void;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -18,14 +19,39 @@ export const StatCard: React.FC<StatCardProps> = ({
   icon,
   footnote,
   valueColor = 'primary.main',
+  onClick,
 }) => {
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (!onClick) {
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <Card
       title={title}
       subtitle={subtitle}
-      hover
+      hover={Boolean(onClick)}
       density="compact"
-      sx={{ minHeight: { xs: 170, md: 186 } }}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      sx={{
+        minHeight: { xs: 170, md: 186 },
+        ...(onClick && {
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: 2,
+          },
+        }),
+      }}
     >
       <Box
         display="flex"

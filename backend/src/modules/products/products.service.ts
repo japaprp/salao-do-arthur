@@ -1,16 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Product, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { toPrismaJson } from '../../common/utils/prisma-json.util';
 import { slugify } from '../../common/utils/slugify.util';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductsRepository } from './repositories/products.repository';
+import { ProductWithRelations, ProductsRepository } from './repositories/products.repository';
 
 @Injectable()
 export class ProductsService {
   constructor(private readonly productsRepository: ProductsRepository) {}
 
-  async create(tenantId: string, createProductDto: CreateProductDto): Promise<Product> {
+  async create(
+    tenantId: string,
+    createProductDto: CreateProductDto,
+    createdByUserId?: string,
+  ): Promise<ProductWithRelations> {
     const payload: Prisma.ProductUncheckedCreateInput = {
       tenantId,
       categoryId: createProductDto.categoryId,
@@ -29,7 +33,7 @@ export class ProductsService {
       metadata: createProductDto.metadata ? toPrismaJson(createProductDto.metadata) : undefined,
     };
 
-    return this.productsRepository.create(payload);
+    return this.productsRepository.create(payload, createProductDto.inventory, createdByUserId);
   }
 
   async findAllByTenant(tenantId: string) {
@@ -49,7 +53,12 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, tenantId: string, updateProductDto: UpdateProductDto) {
+  async update(
+    id: string,
+    tenantId: string,
+    updateProductDto: UpdateProductDto,
+    updatedByUserId?: string,
+  ) {
     await this.findByIdAndTenant(id, tenantId);
 
     const payload: Prisma.ProductUncheckedUpdateInput = {};
@@ -74,7 +83,7 @@ export class ProductsService {
       payload.trackInventory = updateProductDto.trackInventory;
     if (updateProductDto.metadata) payload.metadata = toPrismaJson(updateProductDto.metadata);
 
-    return this.productsRepository.update(id, tenantId, payload);
+    return this.productsRepository.update(id, tenantId, payload, updateProductDto.inventory, updatedByUserId);
   }
 
   async remove(id: string, tenantId: string) {

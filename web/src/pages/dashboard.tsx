@@ -1,6 +1,7 @@
 import React from 'react';
 import { NextPage } from 'next';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { Alert, Box, Container, Grid, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CalendarIcon from '@mui/icons-material/CalendarToday';
@@ -23,6 +24,7 @@ import {
 } from '@/lib/ui/gridPresets';
 
 const DashboardPage: NextPage = () => {
+  const router = useRouter();
   const { user } = useAuth();
   const { data: reportsOverview, isLoading, error } = useReportsOverview();
   const summary = reportsOverview?.summary;
@@ -49,7 +51,11 @@ const DashboardPage: NextPage = () => {
                   Bem-vindo, {user?.name}! Agenda, loja e operação do Artur em uma visão rápida.
                 </Typography>
               </div>
-              <Button variant="primary" startIcon={<AddIcon />}>
+              <Button
+                variant="primary"
+                startIcon={<AddIcon />}
+                onClick={() => router.push('/appointments')}
+              >
                 Novo Agendamento
               </Button>
             </Box>
@@ -68,6 +74,7 @@ const DashboardPage: NextPage = () => {
                   value={`${summary?.activeAppointments ?? 0}`}
                   icon={<CalendarIcon color="primary" />}
                   footnote="Inclui agendados, check-in e atendimentos em andamento."
+                  onClick={() => router.push('/appointments')}
                 />
               </Grid>
               <Grid item {...metricGridProps}>
@@ -78,6 +85,7 @@ const DashboardPage: NextPage = () => {
                   icon={<MoneyIcon color="success" />}
                   valueColor="success.main"
                   footnote="Calculada pela API a partir dos agendamentos ativos."
+                  onClick={() => router.push('/finance')}
                 />
               </Grid>
               <Grid item {...metricGridProps}>
@@ -88,6 +96,7 @@ const DashboardPage: NextPage = () => {
                   icon={<PeopleIcon color="secondary" />}
                   valueColor="secondary.main"
                   footnote={`+${summary?.newClients ?? 0} novos clientes no mês.`}
+                  onClick={() => router.push('/clients')}
                 />
               </Grid>
               <Grid item {...metricGridProps}>
@@ -98,6 +107,7 @@ const DashboardPage: NextPage = () => {
                   icon={<TrendingIcon color="warning" />}
                   valueColor="warning.main"
                   footnote={`${summary?.monthlyCompletedAppointments ?? 0} concluídos no mês atual.`}
+                  onClick={() => router.push('/reports')}
                 />
               </Grid>
             </Grid>
@@ -120,16 +130,36 @@ const DashboardPage: NextPage = () => {
                       sx={{ minHeight: { xs: 220, sm: 236, lg: 250 } }}
                     >
                       <Stack spacing={1}>
-                        <Button variant="primary" fullWidth startIcon={<AddIcon />}>
+                        <Button
+                          variant="primary"
+                          fullWidth
+                          startIcon={<AddIcon />}
+                          onClick={() => router.push('/appointments')}
+                        >
                           Novo Agendamento
                         </Button>
-                        <Button variant="secondary" fullWidth startIcon={<CalendarIcon />}>
+                        <Button
+                          variant="secondary"
+                          fullWidth
+                          startIcon={<CalendarIcon />}
+                          onClick={() => router.push('/appointments')}
+                        >
                           Confirmar próximos
                         </Button>
-                        <Button variant="secondary" fullWidth startIcon={<PeopleIcon />}>
+                        <Button
+                          variant="secondary"
+                          fullWidth
+                          startIcon={<PeopleIcon />}
+                          onClick={() => router.push('/clients')}
+                        >
                           Novo Cliente
                         </Button>
-                        <Button variant="outlined" fullWidth startIcon={<CalendarIcon />}>
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          startIcon={<CalendarIcon />}
+                          onClick={() => router.push('/appointments')}
+                        >
                           Ver encaixes vagos
                         </Button>
                       </Stack>

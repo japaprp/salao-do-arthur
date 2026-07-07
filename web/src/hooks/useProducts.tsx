@@ -3,12 +3,90 @@ import { Product, StoreOrder } from '@/types';
 import { api } from '@/lib/api/client';
 import { normalizeProduct } from '@/lib/api/normalizers';
 
+export interface ProductInventoryPayload {
+  availableQty: number;
+  reorderPoint: number;
+  safetyStock: number;
+}
+
+export interface ProductPayload {
+  name: string;
+  sku?: string;
+  shortDescription?: string;
+  description?: string;
+  price: number;
+  compareAtPrice?: number;
+  costPrice?: number;
+  featured: boolean;
+  active: boolean;
+  shippable: boolean;
+  trackInventory: boolean;
+  inventory?: ProductInventoryPayload;
+}
+
 export const useProducts = () =>
   useQuery<Product[]>({
     queryKey: ['products'],
     queryFn: async () => {
       const response = await api.get<unknown[]>('/products');
       return Array.isArray(response) ? response.map((product) => normalizeProduct(product)) : [];
+    },
+  });
+
+export const useCreateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: ProductPayload) =>
+      normalizeProduct(await api.post('/products', payload)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['store-products'] });
+    },
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: ProductPayload }) =>
+      normalizeProduct(await api.put(`/products/${id}`, payload)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['store-products'] });
+      queryClient.invalidateQueries({ queryKey: ['store-orders'] });
+    },
+  });
+};
+
+export const useDeactivateProduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => normalizeProduct(await api.delete(`/products/${id}`)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['store-products'] });
+    },
+  });
+};
+
+export const useStorefrontProducts = () =>
+  useQuery<Product[]>({
+    queryKey: ['store-products'],
+    queryFn: async () => {
+      const response = await api.get<unknown[]>('/store/products');
+      return Array.isArray(response) ? response.map((product) => normalizeProduct(product)) : [];
+    },
+  });
+
+export const useMyStoreOrders = () =>
+  useQuery<StoreOrder[]>({
+    queryKey: ['my-store-orders'],
+    queryFn: async () => {
+      const response = await api.get<unknown[]>('/store/orders');
+      return Array.isArray(response) ? response.map(normalizeStoreOrder) : [];
     },
   });
 

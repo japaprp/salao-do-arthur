@@ -22,6 +22,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { styled } from '@mui/material/styles';
 import { useRouter } from 'next/router';
 import { navigationItems } from '@/components/layout/navigation';
@@ -103,6 +104,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
     void logout();
   };
 
+  const handleProfileSettings = () => {
+    handleClose();
+    void router.push('/settings');
+  };
+
   const handleNavigation = (path: string) => {
     void router.push(path);
     if (isMobile) {
@@ -157,6 +163,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, title }) => {
             <MenuItem onClick={handleClose}>{user?.name ?? 'Usuário autenticado'}</MenuItem>
             <MenuItem onClick={handleClose}>{user?.email ?? 'Sem email'}</MenuItem>
             <Divider />
+            <MenuItem onClick={handleProfileSettings}>
+              <SettingsIcon sx={{ mr: 1 }} />
+              Perfil do Artur
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <LogoutIcon sx={{ mr: 1 }} />
               Sair

@@ -98,6 +98,17 @@ export const useDeleteAppointment = () => {
   });
 };
 
+export const useMyAppointments = () =>
+  useQuery<Appointment[]>({
+    queryKey: ['appointments', 'mine'],
+    queryFn: async () => {
+      const response = await api.get<unknown[]>('/appointments/mine');
+      return Array.isArray(response)
+        ? response.map((appointment) => normalizeAppointment(appointment))
+        : [];
+    },
+  });
+
 export const useConfirmAppointment = () => {
   const queryClient = useQueryClient();
 

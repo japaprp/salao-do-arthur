@@ -21,6 +21,36 @@ export interface Tenant {
   updatedAt: IsoDateTimeString;
 }
 
+export interface SalonSettings {
+  id: string;
+  tenantId: string;
+  salonName: string;
+  legalName?: string | null;
+  description?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  timezone: string;
+  currency: string;
+  locale: string;
+  appointmentLeadTimeMinutes: number;
+  cancellationWindowHours: number;
+  allowWaitlist: boolean;
+  enableCheckout: boolean;
+  enableLoyalty: boolean;
+  enableReferrals: boolean;
+  enableProductCatalog: boolean;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
+  accentColor?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  tiktok?: string | null;
+  privacyPolicyUrl?: string | null;
+  createdAt: IsoDateTimeString;
+  updatedAt: IsoDateTimeString;
+}
+
 export interface Professional {
   id: string;
   userId: string;

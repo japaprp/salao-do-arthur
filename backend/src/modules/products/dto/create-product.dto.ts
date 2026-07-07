@@ -1,4 +1,5 @@
 import {
+  ValidateNested,
   IsBoolean,
   IsNumber,
   IsObject,
@@ -6,6 +7,8 @@ import {
   IsString,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ProductInventoryDto } from './product-inventory.dto';
 
 export class CreateProductDto {
   @IsString()
@@ -64,6 +67,11 @@ export class CreateProductDto {
   @IsOptional()
   @IsObject()
   metadata?: Record<string, unknown>;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ProductInventoryDto)
+  inventory?: ProductInventoryDto;
 }
 
 export type CreateProductInput = CreateProductDto & {

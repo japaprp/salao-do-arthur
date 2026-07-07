@@ -6,6 +6,7 @@ import FinanceIcon from '@mui/icons-material/AccountBalanceWallet';
 import InventoryIcon from '@mui/icons-material/Inventory2';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 export interface NavigationItem {
   label: string;
@@ -53,5 +54,10 @@ export const navigationItems: NavigationItem[] = [
     label: 'Relatórios',
     icon: AssessmentIcon,
     path: '/reports',
+  },
+  {
+    label: 'Perfil do Artur',
+    icon: SettingsIcon,
+    path: '/settings',
   },
 ];

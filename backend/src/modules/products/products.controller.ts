@@ -26,7 +26,7 @@ export class ProductsController {
   @ApiOperation({ summary: 'Criar produto' })
   @ApiResponse({ status: 201, description: 'Produto criado com sucesso' })
   create(@Body() createProductDto: CreateProductDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.productsService.create(user.tenantId, createProductDto);
+    return this.productsService.create(user.tenantId, createProductDto, user.userId);
   }
 
   @Get()
@@ -63,7 +63,7 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.productsService.update(id, user.tenantId, updateProductDto);
+    return this.productsService.update(id, user.tenantId, updateProductDto, user.userId);
   }
 
   @Delete(':id')

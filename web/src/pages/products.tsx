@@ -1,12 +1,16 @@
 import React from 'react';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/DeleteOutline';
+import EditIcon from '@mui/icons-material/Edit';
 import InventoryIcon from '@mui/icons-material/Inventory2';
 import ReceiptIcon from '@mui/icons-material/ReceiptLong';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import WarningIcon from '@mui/icons-material/WarningAmber';
 import {
   Box,
+  Alert,
   Button,
   Checkbox,
   Chip,
@@ -25,17 +29,70 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { StatCard } from '@/components/dashboard/StatCard';
 import Layout from '@/components/layout/Layout';
 import Card from '@/components/ui/Card';
-import { useProducts, useRefundPayment, useStoreOrders } from '@/hooks/useProducts';
+import {
+  ProductPayload,
+  useCreateProduct,
+  useDeactivateProduct,
+  useProducts,
+  useRefundPayment,
+  useStoreOrders,
+  useUpdateProduct,
+} from '@/hooks/useProducts';
 import { formatCurrency } from '@/lib/formatters/appointments';
 import { entityGridProps, metricGridProps } from '@/lib/ui/gridPresets';
+import { Product } from '@/types';
+
+type ProductDialogMode = 'create' | 'edit';
+
+type ProductDraft = {
+  id?: string;
+  name: string;
+  sku: string;
+  shortDescription: string;
+  description: string;
+  price: string;
+  compareAtPrice: string;
+  costPrice: string;
+  availableQty: string;
+  reorderPoint: string;
+  safetyStock: string;
+  featured: boolean;
+  active: boolean;
+  shippable: boolean;
+  trackInventory: boolean;
+};
+
+const emptyProductDraft: ProductDraft = {
+  name: '',
+  sku: '',
+  shortDescription: '',
+  description: '',
+  price: '',
+  compareAtPrice: '',
+  costPrice: '',
+  availableQty: '0',
+  reorderPoint: '0',
+  safetyStock: '0',
+  featured: false,
+  active: true,
+  shippable: true,
+  trackInventory: true,
+};
 
 const ProductsPage: NextPage = () => {
+  const [productDialogMode, setProductDialogMode] =
+    React.useState<ProductDialogMode | null>(null);
+  const [productDraft, setProductDraft] = React.useState<ProductDraft>(emptyProductDraft);
+  const [productFeedback, setProductFeedback] = React.useState<string | null>(null);
   const [refundPaymentId, setRefundPaymentId] = React.useState<string | null>(null);
   const [refundAmount, setRefundAmount] = React.useState('');
   const [refundReason, setRefundReason] = React.useState('');
   const [restockItems, setRestockItems] = React.useState(false);
   const { data: products = [], isLoading, error } = useProducts();
   const { data: orders = [], isLoading: isLoadingOrders } = useStoreOrders();
+  const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
+  const deactivateProduct = useDeactivateProduct();
   const refundPayment = useRefundPayment();
   const activeProducts = products.filter((product) => product.active);
   const stockTotal = products.reduce(
@@ -54,6 +111,92 @@ const ProductsPage: NextPage = () => {
   const orderRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
   const errorMessage =
     error instanceof Error ? error.message : 'Não foi possível carregar a lojinha.';
+  const isSavingProduct = createProduct.isLoading || updateProduct.isLoading;
+  const productDialogTitle =
+    productDialogMode === 'edit' ? 'Editar produto' : 'Adicionar produto';
+
+  const openCreateProductDialog = () => {
+    setProductFeedback(null);
+    setProductDraft(emptyProductDraft);
+    setProductDialogMode('create');
+  };
+
+  const openEditProductDialog = (product: Product) => {
+    setProductFeedback(null);
+    setProductDraft({
+      id: product.id,
+      name: product.name,
+      sku: product.sku ?? '',
+      shortDescription: product.shortDescription ?? '',
+      description: product.description ?? '',
+      price: toInputNumber(product.price),
+      compareAtPrice: toInputNumber(product.compareAtPrice),
+      costPrice: '',
+      availableQty: String(product.inventory?.availableQty ?? 0),
+      reorderPoint: String(product.inventory?.reorderPoint ?? 0),
+      safetyStock: String(product.inventory?.safetyStock ?? 0),
+      featured: product.featured,
+      active: product.active,
+      shippable: product.shippable,
+      trackInventory: product.trackInventory,
+    });
+    setProductDialogMode('edit');
+  };
+
+  const closeProductDialog = () => {
+    if (isSavingProduct) {
+      return;
+    }
+
+    resetProductDialog();
+  };
+
+  const resetProductDialog = () => {
+    setProductDialogMode(null);
+    setProductFeedback(null);
+    setProductDraft(emptyProductDraft);
+  };
+
+  const updateProductDraft = <K extends keyof ProductDraft>(
+    field: K,
+    value: ProductDraft[K],
+  ) => {
+    setProductDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const submitProductDraft = () => {
+    const payload = buildProductPayload(productDraft);
+    if (!payload) {
+      setProductFeedback('Informe nome, preço válido e estoque sem números negativos.');
+      return;
+    }
+
+    const onSuccess = resetProductDialog;
+    const onError = (mutationError: unknown) => {
+      setProductFeedback(
+        mutationError instanceof Error
+          ? mutationError.message
+          : 'Não foi possível salvar o produto.',
+      );
+    };
+
+    if (productDialogMode === 'edit' && productDraft.id) {
+      updateProduct.mutate({ id: productDraft.id, payload }, { onSuccess, onError });
+      return;
+    }
+
+    createProduct.mutate(payload, { onSuccess, onError });
+  };
+
+  const confirmDeactivateProduct = (product: Product) => {
+    const confirmed = window.confirm(
+      `Desativar "${product.name}" da lojinha? Ele deixa de aparecer para venda.`,
+    );
+
+    if (confirmed) {
+      deactivateProduct.mutate(product.id);
+    }
+  };
 
   const closeRefundDialog = () => {
     setRefundPaymentId(null);
@@ -86,13 +229,30 @@ const ProductsPage: NextPage = () => {
 
         <Layout title="Lojinha">
           <Container maxWidth="xl">
-            <Box mb={4}>
-              <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
-                Lojinha
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Produtos para vender no balcão junto do corte, da barba e dos pacotes.
-              </Typography>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems={{ xs: 'stretch', md: 'center' }}
+              gap={2}
+              flexDirection={{ xs: 'column', md: 'row' }}
+              mb={4}
+            >
+              <Box>
+                <Typography variant="h4" component="h1" gutterBottom fontWeight={600}>
+                  Lojinha
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Produtos para vender no balcão junto do corte, da barba e dos pacotes.
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={openCreateProductDialog}
+                sx={{ alignSelf: { xs: 'stretch', md: 'center' } }}
+              >
+                Adicionar produto
+              </Button>
             </Box>
 
             <Grid container spacing={2.5} sx={{ mb: 4 }}>
@@ -291,6 +451,29 @@ const ProductsPage: NextPage = () => {
                         >
                           {product.description ?? 'Sem descrição detalhada.'}
                         </Typography>
+
+                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<EditIcon />}
+                            onClick={() => openEditProductDialog(product)}
+                          >
+                            Editar
+                          </Button>
+                          {product.active ? (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              startIcon={<DeleteIcon />}
+                              onClick={() => confirmDeactivateProduct(product)}
+                              disabled={deactivateProduct.isLoading}
+                            >
+                              Desativar
+                            </Button>
+                          ) : null}
+                        </Stack>
                       </Stack>
                     </Card>
                   </Grid>
@@ -298,13 +481,210 @@ const ProductsPage: NextPage = () => {
               ) : (
                 <Grid item xs={12}>
                   <Card>
-                    <Typography variant="body1" color="text.secondary">
-                      Nenhum produto encontrado.
-                    </Typography>
+                    <Stack spacing={2} alignItems="flex-start">
+                      <Typography variant="body1" color="text.secondary">
+                        Nenhum produto encontrado.
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={openCreateProductDialog}
+                      >
+                        Cadastrar primeiro produto
+                      </Button>
+                    </Stack>
                   </Card>
                 </Grid>
               )}
             </Grid>
+
+            <Dialog
+              open={productDialogMode !== null}
+              onClose={closeProductDialog}
+              fullWidth
+              maxWidth="md"
+            >
+              <DialogTitle>{productDialogTitle}</DialogTitle>
+              <DialogContent dividers>
+                <Stack spacing={2.5} sx={{ pt: 1 }}>
+                  {productFeedback ? <Alert severity="error">{productFeedback}</Alert> : null}
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={8}>
+                      <TextField
+                        fullWidth
+                        required
+                        label="Nome do produto"
+                        value={productDraft.name}
+                        onChange={(event) => updateProductDraft('name', event.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="SKU ou código"
+                        value={productDraft.sku}
+                        onChange={(event) => updateProductDraft('sku', event.target.value)}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Descrição curta"
+                        value={productDraft.shortDescription}
+                        onChange={(event) =>
+                          updateProductDraft('shortDescription', event.target.value)
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={3}
+                        label="Descrição completa"
+                        value={productDraft.description}
+                        onChange={(event) =>
+                          updateProductDraft('description', event.target.value)
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        required
+                        label="Preço de venda"
+                        value={productDraft.price}
+                        onChange={(event) => updateProductDraft('price', event.target.value)}
+                        inputProps={{ inputMode: 'decimal' }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="Preço antigo"
+                        value={productDraft.compareAtPrice}
+                        onChange={(event) =>
+                          updateProductDraft('compareAtPrice', event.target.value)
+                        }
+                        inputProps={{ inputMode: 'decimal' }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <TextField
+                        fullWidth
+                        label="Custo"
+                        value={productDraft.costPrice}
+                        onChange={(event) => updateProductDraft('costPrice', event.target.value)}
+                        inputProps={{ inputMode: 'decimal' }}
+                      />
+                    </Grid>
+
+                    {productDraft.trackInventory ? (
+                      <>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            fullWidth
+                            label="Quantidade em estoque"
+                            value={productDraft.availableQty}
+                            onChange={(event) =>
+                              updateProductDraft('availableQty', event.target.value)
+                            }
+                            inputProps={{ inputMode: 'numeric' }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            fullWidth
+                            label="Avisar reposição em"
+                            value={productDraft.reorderPoint}
+                            onChange={(event) =>
+                              updateProductDraft('reorderPoint', event.target.value)
+                            }
+                            inputProps={{ inputMode: 'numeric' }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            fullWidth
+                            label="Estoque de segurança"
+                            value={productDraft.safetyStock}
+                            onChange={(event) =>
+                              updateProductDraft('safetyStock', event.target.value)
+                            }
+                            inputProps={{ inputMode: 'numeric' }}
+                          />
+                        </Grid>
+                      </>
+                    ) : null}
+                  </Grid>
+
+                  <Stack direction="row" spacing={1.5} flexWrap="wrap" sx={{ gap: 1 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={productDraft.active}
+                          onChange={(event) =>
+                            updateProductDraft('active', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Produto ativo"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={productDraft.featured}
+                          onChange={(event) =>
+                            updateProductDraft('featured', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Destacar na loja"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={productDraft.shippable}
+                          onChange={(event) =>
+                            updateProductDraft('shippable', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Pode vender na lojinha"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={productDraft.trackInventory}
+                          onChange={(event) =>
+                            updateProductDraft('trackInventory', event.target.checked)
+                          }
+                        />
+                      }
+                      label="Controlar estoque"
+                    />
+                  </Stack>
+                </Stack>
+              </DialogContent>
+              <DialogActions>
+                <Button variant="outlined" onClick={closeProductDialog} disabled={isSavingProduct}>
+                  Cancelar
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={submitProductDraft}
+                  disabled={!canSubmitProductDraft(productDraft) || isSavingProduct}
+                >
+                  {isSavingProduct
+                    ? 'Salvando...'
+                    : productDialogMode === 'edit'
+                      ? 'Salvar produto'
+                      : 'Adicionar produto'}
+                </Button>
+              </DialogActions>
+            </Dialog>
+
             <Dialog open={refundPaymentId != null} onClose={closeRefundDialog} fullWidth maxWidth="sm">
               <DialogTitle>Estornar pagamento</DialogTitle>
               <DialogContent>
@@ -352,5 +732,77 @@ const ProductsPage: NextPage = () => {
     </AuthGuard>
   );
 };
+
+function canSubmitProductDraft(form: ProductDraft) {
+  return buildProductPayload(form) != null;
+}
+
+function buildProductPayload(form: ProductDraft): ProductPayload | null {
+  const price = parseDecimal(form.price);
+  if (!form.name.trim() || price == null) {
+    return null;
+  }
+
+  const compareAtPrice = parseOptionalDecimal(form.compareAtPrice);
+  const costPrice = parseOptionalDecimal(form.costPrice);
+  const availableQty = parseInteger(form.availableQty);
+  const reorderPoint = parseInteger(form.reorderPoint);
+  const safetyStock = parseInteger(form.safetyStock);
+
+  if (
+    compareAtPrice === false ||
+    costPrice === false ||
+    availableQty == null ||
+    reorderPoint == null ||
+    safetyStock == null
+  ) {
+    return null;
+  }
+
+  return {
+    name: form.name.trim(),
+    sku: form.sku.trim() || undefined,
+    shortDescription: form.shortDescription.trim() || undefined,
+    description: form.description.trim() || undefined,
+    price,
+    compareAtPrice: compareAtPrice ?? undefined,
+    costPrice: costPrice ?? undefined,
+    featured: form.featured,
+    active: form.active,
+    shippable: form.shippable,
+    trackInventory: form.trackInventory,
+    inventory: form.trackInventory
+      ? {
+          availableQty,
+          reorderPoint,
+          safetyStock,
+        }
+      : undefined,
+  };
+}
+
+function parseDecimal(value: string) {
+  const normalized = value.trim().replace(',', '.');
+  const numberValue = Number(normalized);
+  return normalized && Number.isFinite(numberValue) && numberValue >= 0 ? numberValue : null;
+}
+
+function parseOptionalDecimal(value: string) {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const parsed = parseDecimal(value);
+  return parsed == null ? false : parsed;
+}
+
+function parseInteger(value: string) {
+  const numberValue = Number(value.trim());
+  return Number.isInteger(numberValue) && numberValue >= 0 ? numberValue : null;
+}
+
+function toInputNumber(value?: number | null) {
+  return value == null ? '' : String(value);
+}
 
 export default ProductsPage;
