@@ -21,14 +21,18 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Loading from '@/components/ui/Loading';
 import { useAuth } from '@/hooks/useAuth';
-import { LoginForm } from '@/types';
+
+type ArturLoginForm = {
+  arturLoginEmail: string;
+  arturLoginPassword: string;
+};
 
 const loginSchema = yup.object().shape({
-  email: yup
+  arturLoginEmail: yup
     .string()
     .email('Email inválido')
     .required('Email é obrigatório'),
-  password: yup
+  arturLoginPassword: yup
     .string()
     .min(8, 'Senha deve ter pelo menos 8 caracteres')
     .required('Senha é obrigatória'),
@@ -70,15 +74,19 @@ const Login: NextPage = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>({
+  } = useForm<ArturLoginForm>({
     resolver: yupResolver(loginSchema),
+    defaultValues: {
+      arturLoginEmail: '',
+      arturLoginPassword: '',
+    },
   });
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: ArturLoginForm) => {
     setError(null);
 
     try {
-      await login(data.email, data.password);
+      await login(data.arturLoginEmail.trim(), data.arturLoginPassword);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');
     }
@@ -268,22 +276,28 @@ const Login: NextPage = () => {
               <Box
                 component="form"
                 onSubmit={handleSubmit(onSubmit)}
+                autoComplete="off"
                 sx={{ mt: 1, width: '100%' }}
               >
                 <Input
                   margin="normal"
                   required
                   fullWidth
-                  id="email"
+                  id="artur-login-email"
                   label="Email"
-                  autoComplete="email"
+                  autoComplete="off"
                   autoFocus
                   placeholder="artur@barbeariadoartur.app"
                   startIcon={<EmailIcon />}
                   sx={darkInputSx}
-                  {...register('email')}
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
+                  inputProps={{
+                    autoComplete: 'off',
+                    'data-lpignore': 'true',
+                    'data-1p-ignore': 'true',
+                  }}
+                  {...register('arturLoginEmail')}
+                  error={!!errors.arturLoginEmail}
+                  helperText={errors.arturLoginEmail?.message}
                 />
 
                 <Input
@@ -292,13 +306,18 @@ const Login: NextPage = () => {
                   fullWidth
                   label="Senha"
                   type="password"
-                  id="password"
-                  autoComplete="current-password"
+                  id="artur-login-password"
+                  autoComplete="new-password"
                   startIcon={<LockIcon />}
                   sx={darkInputSx}
-                  {...register('password')}
-                  error={!!errors.password}
-                  helperText={errors.password?.message}
+                  inputProps={{
+                    autoComplete: 'new-password',
+                    'data-lpignore': 'true',
+                    'data-1p-ignore': 'true',
+                  }}
+                  {...register('arturLoginPassword')}
+                  error={!!errors.arturLoginPassword}
+                  helperText={errors.arturLoginPassword?.message}
                 />
 
                 <Button

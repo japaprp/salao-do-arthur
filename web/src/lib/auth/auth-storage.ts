@@ -1,7 +1,9 @@
 import { User } from '@/types';
 
-const USER_STORAGE_KEY = 'user';
-const TOKEN_STORAGE_KEY = 'auth_token';
+const STORAGE_PREFIX = 'barbearia_do_artur';
+const USER_STORAGE_KEY = `${STORAGE_PREFIX}.user`;
+const TOKEN_STORAGE_KEY = `${STORAGE_PREFIX}.auth_token`;
+const LEGACY_STORAGE_KEYS = ['user', 'auth_token'];
 
 export function readStoredUser(): User | null {
   if (typeof window === 'undefined') {
@@ -34,6 +36,7 @@ export function persistAuthSession(user: User, accessToken: string): void {
     return;
   }
 
+  clearLegacyAuthSession();
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
   localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
 }
@@ -53,4 +56,9 @@ export function clearAuthSession(): void {
 
   localStorage.removeItem(USER_STORAGE_KEY);
   localStorage.removeItem(TOKEN_STORAGE_KEY);
+  clearLegacyAuthSession();
+}
+
+function clearLegacyAuthSession(): void {
+  LEGACY_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
 }
