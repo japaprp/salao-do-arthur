@@ -343,8 +343,21 @@ export class AppointmentsService {
         ? this.normalizeScheduledAt(updateAppointmentDto.scheduledAt)
         : null;
 
-    // Se está alterando horário ou profissional, verificar disponibilidade
-    if (normalizedScheduledAt != null || updateAppointmentDto.professionalId) {
+    if (updateAppointmentDto.clientId != null) {
+      await this.clientsService.findByIdAndTenant(updateAppointmentDto.clientId, tenantId);
+    }
+    if (updateAppointmentDto.professionalId != null) {
+      await this.professionalsService.findByIdAndTenant(updateAppointmentDto.professionalId, tenantId);
+    }
+    if (updateAppointmentDto.serviceId != null) {
+      await this.servicesService.findByIdAndTenant(updateAppointmentDto.serviceId, tenantId);
+    }
+
+    if (
+      normalizedScheduledAt != null
+      || updateAppointmentDto.professionalId != null
+      || updateAppointmentDto.durationMinutes != null
+    ) {
       const professionalId = updateAppointmentDto.professionalId ?? appointment.professionalId;
       const scheduledAt = normalizedScheduledAt ?? appointment.scheduledAt;
       const durationMinutes = updateAppointmentDto.durationMinutes ?? appointment.durationMinutes;

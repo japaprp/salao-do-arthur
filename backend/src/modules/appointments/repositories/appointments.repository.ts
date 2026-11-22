@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService, TenantPrismaClient } from '../../../prisma/prisma.service';
 import { Appointment, AppointmentStatus, TimeOff } from '@prisma/client';
 import { CreateAppointmentInput } from '../dto/create-appointment.dto';
 
@@ -44,8 +44,9 @@ export class AppointmentsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createAppointmentDto: CreateAppointmentPayload): Promise<Appointment> {
-    return this.prisma.withTenant(createAppointmentDto.tenantId, transaction =>
-      transaction.appointment.create({
+    return this.prisma.withTenant(createAppointmentDto.tenantId, async transaction => {
+      await this.assertScheduleAvailable(transaction, createAppointmentDto);
+      return transaction.appointment.create({
         data: {
           tenantId: createAppointmentDto.tenantId,
           clientId: createAppointmentDto.clientId,
@@ -60,8 +61,8 @@ export class AppointmentsRepository {
           notes: createAppointmentDto.notes,
         },
         include: appointmentInclude,
-      }),
-    );
+      });
+    });
   }
 
   async findAllByTenant(tenantId: string): Promise<Appointment[]> {
@@ -124,51 +125,33 @@ export class AppointmentsRepository {
     );
   }
 
-  async checkAvailability(
-    professionalId: string,
-    scheduledAt: Date,
-    durationMinutes: number,
-    tenantId: string,
-    excludeAppointmentId?: string,
-  ): Promise<boolean> {
-    const endTime = new Date(scheduledAt.getTime() + durationMinutes * 60000);
+  private async assertScheduleAvailable(
+    transaction: TenantPrismaClient,
+    schedule: Pick<Appointment, 'tenantId' | 'professionalId' | 'scheduledAt' | 'durationMinutes'>,
+    excludeId = '',
+  ): Promise<void> {
+    const { tenantId, professionalId, scheduledAt, durationMinutes } = schedule;
+    const professionals = await transaction.$queryRaw<{ id: string }[]>`
+      SELECT id FROM Professional
+      WHERE id = ${professionalId} AND tenantId = ${tenantId} AND deletedAt IS NULL
+      FOR UPDATE
+    `;
+    if (professionals.length === 0) {
+      throw new NotFoundException('Profissional não encontrado.');
+    }
 
-    const conflictingAppointments = await this.prisma.withTenant(tenantId, transaction =>
-      transaction.appointment.findMany({
-        where: {
-          professionalId,
-          tenantId,
-          status: {
-            notIn: [AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED],
-          },
-          OR: [
-            {
-              scheduledAt: {
-                lt: endTime,
-              },
-              AND: {
-                scheduledAt: {
-                  gte: scheduledAt,
-                },
-              },
-            },
-            {
-              scheduledAt: {
-                lte: scheduledAt,
-              },
-              AND: {
-                scheduledAt: {
-                  gte: new Date(scheduledAt.getTime() - durationMinutes * 60000),
-                },
-              },
-            },
-          ],
-          ...(excludeAppointmentId && { id: { not: excludeAppointmentId } }),
-        },
-      }),
-    );
-
-    return conflictingAppointments.length === 0;
+    const endAt = new Date(scheduledAt.getTime() + durationMinutes * 60_000);
+    const conflicts = await transaction.$queryRaw<{ id: string }[]>`
+      SELECT id FROM Appointment
+      WHERE tenantId = ${tenantId} AND professionalId = ${professionalId}
+        AND deletedAt IS NULL AND status <> ${AppointmentStatus.CANCELLED} AND id <> ${excludeId}
+        AND scheduledAt < ${endAt}
+        AND TIMESTAMPADD(MINUTE, durationMinutes, scheduledAt) > ${scheduledAt}
+      LIMIT 1
+    `;
+    if (conflicts.length > 0) {
+      throw new ConflictException('Horário não disponível para este profissional.');
+    }
   }
 
   async update(
@@ -177,10 +160,30 @@ export class AppointmentsRepository {
     updateAppointmentDto: UpdateAppointmentPayload,
   ): Promise<Appointment> {
     return this.prisma.withTenant(tenantId, async transaction => {
-      await transaction.appointment.findFirstOrThrow({
-        where: { id, tenantId },
-        select: { id: true },
-      });
+      const appointments = await transaction.$queryRaw<
+        Pick<Appointment, 'professionalId' | 'scheduledAt' | 'durationMinutes' | 'status'>[]
+      >`
+        SELECT professionalId, scheduledAt, durationMinutes, status FROM Appointment
+        WHERE id = ${id} AND tenantId = ${tenantId} AND deletedAt IS NULL
+        FOR UPDATE
+      `;
+      const [current] = appointments;
+      if (!current) {
+        throw new NotFoundException('Agendamento não encontrado.');
+      }
+
+      if ((updateAppointmentDto.status ?? current.status) !== AppointmentStatus.CANCELLED
+          && (updateAppointmentDto.professionalId != null
+              || updateAppointmentDto.scheduledAt != null
+              || updateAppointmentDto.durationMinutes != null
+              || current.status === AppointmentStatus.CANCELLED)) {
+        await this.assertScheduleAvailable(transaction, {
+          tenantId,
+          professionalId: updateAppointmentDto.professionalId ?? current.professionalId,
+          scheduledAt: updateAppointmentDto.scheduledAt ?? current.scheduledAt,
+          durationMinutes: updateAppointmentDto.durationMinutes ?? current.durationMinutes,
+        }, id);
+      }
 
       return transaction.appointment.update({
         where: { id },
