@@ -60,7 +60,7 @@ async function main() {
 
   const chosenSlot = availableSlots[0] as { startAt: string; label?: string };
 
-  const bookedAppointment = await request('/appointments/book', {
+  const bookingRequest: RequestOptions = {
     method: 'POST',
     accessToken,
     body: {
@@ -69,7 +69,21 @@ async function main() {
       scheduledAt: chosenSlot.startAt,
       notes: '[smoke] Reserva criada automaticamente',
     },
-  });
+  };
+  let bookedAppointment;
+  if (process.env.SMOKE_TEST_CONCURRENT_BOOKING === 'true') {
+    const results = await Promise.all([
+      send('/appointments/book', bookingRequest),
+      send('/appointments/book', bookingRequest),
+    ]);
+    const statuses = results.map(({ response }) => response.status).sort();
+    if (statuses.join(',') !== '201,409') {
+      throw new Error(`Esperava uma única reserva e um conflito, recebi HTTP ${statuses.join(', ')}.`);
+    }
+    bookedAppointment = results.find(({ response }) => response.status === 201)?.payload;
+  } else {
+    bookedAppointment = await request('/appointments/book', bookingRequest);
+  }
 
   const appointments = await request('/appointments/mine', {
     method: 'GET',
@@ -103,7 +117,7 @@ type RequestOptions = {
   body?: Record<string, unknown>;
 };
 
-async function request(path: string, options: RequestOptions) {
+async function send(path: string, options: RequestOptions) {
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: options.method,
     headers: {
@@ -113,7 +127,11 @@ async function request(path: string, options: RequestOptions) {
     body: options.body == null ? undefined : JSON.stringify(options.body),
   });
 
-  const payload = await readJson(response);
+  return { response, payload: await readJson(response) };
+}
+
+async function request(path: string, options: RequestOptions) {
+  const { response, payload } = await send(path, options);
   if (!response.ok) {
     throw new Error(
       `Falha em ${options.method} ${path}: ${response.status} ${JSON.stringify(payload)}`,
