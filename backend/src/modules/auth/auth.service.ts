@@ -305,8 +305,12 @@ export class AuthService {
   }
 
   private getPasswordResetSecret(): string {
-    return this.configService.get<string>('PASSWORD_RESET_SECRET')
-      ?? this.configService.get<string>('JWT_SECRET', 'change_this_password_reset_secret');
+    const secret = this.configService.get<string>('PASSWORD_RESET_SECRET')
+      ?? (process.env.NODE_ENV !== 'production' ? this.configService.get<string>('JWT_SECRET') : undefined);
+    if (!secret) {
+      throw new Error('PASSWORD_RESET_SECRET não configurado.');
+    }
+    return secret;
   }
 
   private getWebAppUrl(): string {
@@ -385,7 +389,7 @@ export class AuthService {
 
     const token = this.jwtService.sign(tokenPayload, {
       expiresIn: this.refreshTokenExpiresIn,
-      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET', 'change_this_refresh_secret'),
+      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET')!,
     });
 
     // Armazenar no banco
