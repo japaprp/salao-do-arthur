@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
@@ -34,6 +34,23 @@ export class AuthController {
     const { refreshToken, ...publicResponse } = authResponse;
     this.setRefreshTokenCookie(response, refreshToken);
     return publicResponse;
+  }
+
+  @Post('mobile/login')
+  @Throttle({ default: { limit: 10, ttl: 15 * 60 * 1000 } })
+  @ApiOperation({ summary: 'Login para aplicativo nativo com tokens no corpo da resposta' })
+  async mobileLogin(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
+  }
+
+  @Post('mobile/refresh')
+  @Throttle({ default: { limit: 20, ttl: 15 * 60 * 1000 } })
+  @ApiOperation({ summary: 'Renovar sessão do aplicativo nativo com refresh token em armazenamento seguro' })
+  async mobileRefresh(@Body() refreshTokenDto: RefreshTokenDto) {
+    if (!refreshTokenDto.refreshToken) {
+      throw new UnauthorizedException('Refresh token ausente.');
+    }
+    return this.authService.refresh({ refreshToken: refreshTokenDto.refreshToken });
   }
 
   @Post('register')
