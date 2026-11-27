@@ -47,8 +47,9 @@ As credenciais vazias no Blueprint significam que o checkout ainda não está pr
 
 1. Confirmar que o MySQL externo é persistente, tem backups automáticos e TLS.
 2. Fazer backup antes de qualquer migração de produção.
-3. Verificar o status das migrações e comparar schema com o banco.
-4. Aplicar apenas migrações aditivas e compatíveis com a versão atualmente em produção.
+3. Executar o SQL somente-leitura `ops/preflight/financial-appointment-duplicates.sql`; se retornar linhas, interromper e reconciliar os lançamentos manualmente sem apagar histórico.
+4. Verificar o status das migrações e comparar schema com o banco.
+5. Aplicar apenas migrações aditivas e compatíveis com a versão atualmente em produção.
 5. Validar healthcheck `/api/health/ready` e os fluxos principais.
 6. Testar restauração em banco isolado; um arquivo de backup sem teste de restauração não comprova recuperabilidade.
 
