@@ -27,7 +27,7 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 - O npm ci do backend reportou 36 vulnerabilidades: 1 baixa, 20 moderadas, 13 altas e 2 críticas. A etapa npm audit está em modo relatório e o release continua bloqueado por esse achado.
 - Nenhum merge do PR em main, deploy ou publicação foi executado.
 - CI backend: type-check, lint, build e 86 testes unitários PASS no commit 56bcd5b; smoke MySQL PASS no mesmo commit: 12 migrações aplicadas, seed, healthcheck e concorrência (uma reserva aceita e outra conflito).
-- O mesmo backend smoke foi disparado novamente no commit d29bc6d após ajuste de inicialização web; a última consulta ainda o mostrava em execução.
+- O backend smoke foi reexecutado no commit d29bc6d após ajuste de inicialização web e também terminou PASS.
 - CI web: 3 suítes e 11 testes PASS, type-check, lint e build PASS. CI mobile: analyze e 3 testes PASS; 34 infos de depreciação do Material ainda precisam de migração futura.
 - Correção de tenant wrapper preserva campos JSON, Date e objetos de valor; o smoke concorrente comprovou a correção no MySQL descartável.
 - Web não persiste access token no localStorage; refresh token fica em cookie HttpOnly. Mobile usa endpoints próprios e armazenamento seguro. A combinação atual GitHub Pages + Render ainda é incompatível com SameSite=Lax sem domínio próprio; ver PRODUCTION_DEPLOYMENT.md. Web access token fica em memória; refresh token é HttpOnly. App nativo usa endpoints próprios e secure storage.
