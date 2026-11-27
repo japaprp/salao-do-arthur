@@ -17,6 +17,16 @@ O procedimento Nginx/systemd não é o caminho ativo descrito pelos workflows e 
 - O seed demonstrativo não deve ser executado em produção. A variável `ALLOW_DEMO_SEED` deve permanecer `false`.
 - O workflow self-hosted `deploy-production.yml` é uma alternativa separada e só pode ser executado a partir de `main`.
 
+## Compatibilidade de autenticação entre frontend e API
+
+**Bloqueio de produção identificado:** o frontend descrito atualmente usa `https://japaprp.github.io` e a API Render usa um domínio `*.onrender.com`. São sites diferentes. O refresh token é emitido em cookie `HttpOnly; Secure; SameSite=Lax`, enquanto o frontend chama `/auth/refresh` por `fetch/axios` cross-site com credenciais. Nesse cenário, o navegador não envia o cookie Lax na requisição cross-site, e a renovação automática da sessão pode falhar quando o access token expirar.
+
+Antes do go-live, escolher e homologar uma destas soluções:
+1. **Preferencial:** frontend e API em subdomínios do mesmo domínio próprio (por exemplo, `app.seudominio.com` e `api.seudominio.com`), com HTTPS, CORS e cookies testados nos navegadores-alvo.
+2. Implementar um fluxo cross-site deliberado, com política de cookie compatível, proteção CSRF/validação de Origin e teste real de bloqueio de cookies de terceiros. Apenas trocar `SameSite=Lax` por `None` não garante compatibilidade em navegadores que bloqueiam cookies de terceiros.
+
+Não publicar com a combinação atual GitHub Pages + Render sem resolver e testar este ponto.
+
 ## Variáveis obrigatórias da API
 
 Configurar no Render, sem colocar valores secretos no Git:
