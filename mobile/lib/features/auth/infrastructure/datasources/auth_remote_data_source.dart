@@ -16,7 +16,7 @@ class AuthRemoteDataSource {
     required String password,
   }) async {
     final loginResponse = await _apiClient.post(
-      ApiEndpoints.authLogin,
+      ApiEndpoints.authMobileLogin,
       data: {
         'tenantSubdomain': tenantSubdomain,
         'email': email,
