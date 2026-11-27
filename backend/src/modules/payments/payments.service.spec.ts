@@ -14,6 +14,8 @@ describe('PaymentsService', () => {
     },
     inventory: {
       update: jest.fn(),
+      updateMany: jest.fn(),
+      findUnique: jest.fn(),
     },
     stockMovement: {
       create: jest.fn(),
@@ -64,6 +66,12 @@ describe('PaymentsService', () => {
     jest.clearAllMocks();
     transaction.order.updateMany.mockResolvedValue({ count: 1 });
     transaction.payment.updateMany.mockResolvedValue({ count: 1 });
+    transaction.inventory.updateMany.mockResolvedValue({ count: 1 });
+    transaction.inventory.findUnique.mockResolvedValue({
+      id: 'inventory-1',
+      reservedQty: 0,
+      availableQty: 10,
+    });
     service = new PaymentsService(
       prisma as never,
       mercadoPagoProvider as never,
@@ -226,7 +234,7 @@ describe('PaymentsService', () => {
     expect(transaction.refund.create).toHaveBeenCalled();
     expect(transaction.payment.update).not.toHaveBeenCalled();
     expect(transaction.order.update).not.toHaveBeenCalled();
-    expect(transaction.inventory.update).not.toHaveBeenCalled();
+    expect(transaction.inventory.updateMany).not.toHaveBeenCalled();
   });
 
   it('does not submit an identical refund request twice', async () => {
@@ -280,9 +288,13 @@ describe('PaymentsService', () => {
         }),
       }),
     );
-    expect(transaction.inventory.update).toHaveBeenCalledWith({
-      where: { productId: 'product-1' },
-      data: { reservedQty: 0 },
+    expect(transaction.inventory.updateMany).toHaveBeenCalledWith({
+      where: {
+        productId: 'product-1',
+        tenantId: 'tenant-1',
+        reservedQty: { gte: 2 },
+      },
+      data: { reservedQty: { decrement: 2 } },
     });
     expect(transaction.stockMovement.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -405,11 +417,15 @@ describe('PaymentsService', () => {
         }),
       }),
     );
-    expect(transaction.inventory.update).toHaveBeenCalledWith({
-      where: { productId: 'product-1' },
+    expect(transaction.inventory.updateMany).toHaveBeenCalledWith({
+      where: {
+        productId: 'product-1',
+        tenantId: 'tenant-1',
+        reservedQty: { gte: 2 },
+      },
       data: {
-        reservedQty: 0,
-        availableQty: 10,
+        reservedQty: { decrement: 2 },
+        availableQty: { increment: 2 },
       },
     });
     expect(transaction.stockMovement.create).toHaveBeenCalledWith(
