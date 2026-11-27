@@ -55,6 +55,28 @@ describe('FinanceService', () => {
     transaction.transaction.findMany.mockResolvedValue([]);
   });
 
+  it('writes appointment revenue and commission with duplicate-safe inserts', async () => {
+    transaction.appointment.findFirst = jest.fn().mockResolvedValue({
+      id: 'appointment-1',
+      tenantId: 'tenant-1',
+      totalAmount: 100,
+      finishedAt: new Date('2026-11-27T12:00:00.000Z'),
+      professional: { commissionPercent: 40 },
+    });
+    transaction.commission.createMany = jest.fn().mockResolvedValue({ count: 1 });
+    transaction.transaction.createMany = jest.fn().mockResolvedValue({ count: 1 });
+    const service = new FinanceService(prisma as never, auditService as never);
+
+    await service.recordAppointmentCompletion('tenant-1', 'appointment-1');
+
+    expect(transaction.commission.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skipDuplicates: true }),
+    );
+    expect(transaction.transaction.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skipDuplicates: true }),
+    );
+  });
+
   it('excludes appointment-linked income from the manual income total', async () => {
     const service = new FinanceService(prisma as never, auditService as never);
 
