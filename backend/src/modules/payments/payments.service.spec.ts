@@ -4,7 +4,9 @@ import { PaymentsService } from './payments.service';
 
 describe('PaymentsService', () => {
   const transaction = {
+    $queryRaw: jest.fn().mockResolvedValue([{ id: 'payment-1' }]),
     payment: {
+      findFirst: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
     },
@@ -21,7 +23,10 @@ describe('PaymentsService', () => {
       create: jest.fn(),
     },
     refund: {
+      findUnique: jest.fn(),
+      aggregate: jest.fn(),
       create: jest.fn(),
+      updateMany: jest.fn(),
     },
   };
 
@@ -66,6 +71,20 @@ describe('PaymentsService', () => {
     jest.clearAllMocks();
     transaction.order.updateMany.mockResolvedValue({ count: 1 });
     transaction.payment.updateMany.mockResolvedValue({ count: 1 });
+    transaction.payment.findFirst.mockResolvedValue({
+      id: 'payment-1',
+      status: PaymentStatus.PAID,
+      amount: 100,
+      providerReference: 'mp-payment-1',
+    });
+    transaction.refund.findUnique.mockResolvedValue(null);
+    transaction.refund.aggregate.mockResolvedValue({ _sum: { amount: null } });
+    transaction.refund.create.mockResolvedValue({
+      id: 'refund-reservation-1',
+      amount: 20,
+      status: 'reserved',
+    });
+    transaction.refund.updateMany.mockResolvedValue({ count: 1 });
     transaction.inventory.updateMany.mockResolvedValue({ count: 1 });
     transaction.inventory.findUnique.mockResolvedValue({
       id: 'inventory-1',
@@ -163,7 +182,7 @@ describe('PaymentsService', () => {
     payment.providerReference = 'mp-payment-1';
     payment.amount = 100;
     prisma.payment.findFirst.mockResolvedValue(payment);
-    prisma.refund.findUnique.mockResolvedValue(null);
+    transaction.refund.findUnique.mockResolvedValue(null);
     prisma.payment.findFirstOrThrow.mockResolvedValue({ id: 'payment-1' });
     mercadoPagoProvider.refundPayment.mockResolvedValue({
       id: 'mp-refund-1',
@@ -200,7 +219,7 @@ describe('PaymentsService', () => {
     payment.providerReference = 'mp-payment-1';
     prisma.payment.findFirst.mockResolvedValue(payment);
     prisma.refund.findUnique.mockResolvedValue(null);
-    prisma.refund.aggregate.mockResolvedValue({ _sum: { amount: 80 } });
+    transaction.refund.aggregate.mockResolvedValue({ _sum: { amount: 80 } });
 
     await expect(service.refundPayment(
       { userId: 'owner-1', tenantId: 'tenant-1', role: 'OWNER' } as never,
@@ -243,7 +262,7 @@ describe('PaymentsService', () => {
     payment.providerReference = 'mp-payment-1';
     payment.amount = 100;
     prisma.payment.findFirst.mockResolvedValue(payment);
-    prisma.refund.findUnique.mockResolvedValue({ id: 'refund-existing' });
+    transaction.refund.findUnique.mockResolvedValue({ id: 'refund-existing', amount: 20, status: 'approved' });
     prisma.payment.findFirstOrThrow.mockResolvedValue({ id: 'payment-1' });
 
     await service.refundPayment(
