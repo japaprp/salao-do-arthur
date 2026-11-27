@@ -807,6 +807,7 @@ model Transaction {
   appointment    Appointment?  @relation(fields: [appointmentId], references: [id])
   professional   Professional? @relation(fields: [professionalId], references: [id])
 
+  @@unique([tenantId, appointmentId, type, category])
   @@index([tenantId, status, recordedAt])
 }
 
@@ -1454,6 +1455,7 @@ model Commission {
   order          Order?          @relation(fields: [orderId], references: [id])
   rule           CommissionRule? @relation(fields: [ruleId], references: [id])
 
+  @@unique([tenantId, appointmentId, professionalId])
   @@index([tenantId, paid, createdAt])
 }
 
