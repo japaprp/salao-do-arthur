@@ -394,7 +394,11 @@ describe('PaymentsService', () => {
     });
     expect(transaction.payment.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { orderId: 'order-1', tenantId: 'tenant-1' },
+        where: {
+          orderId: 'order-1',
+          tenantId: 'tenant-1',
+          status: { in: [PaymentStatus.PENDING, PaymentStatus.AUTHORIZED] },
+        },
         data: expect.objectContaining({
           status: PaymentStatus.CANCELLED,
           failureReason: 'cc_rejected_other_reason',
