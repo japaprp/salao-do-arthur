@@ -31,7 +31,7 @@ sudo apt update
 sudo apt install -y nginx mysql-client curl
 ```
 
-Node 20 deve estar instalado no servidor e disponível no `PATH` do usuário de deploy.
+Node 22 deve estar instalado no servidor e disponível no `PATH` do usuário de deploy. O backend usa `firebase-admin@14`, que requer Node.js 22 ou superior.
 
 ## Arquivos de ambiente
 
