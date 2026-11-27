@@ -18,6 +18,10 @@ Base Flutter do app cliente estruturada conforme Feature-First + Clean Architect
 - `home` autenticada com agenda, pacote mensal e atalhos do cliente
 - auth do cliente usando `codigo da Barbearia do Artur` (`tenantSubdomain`) em vez de `tenantId` bruto
 
+## Limite de uso
+
+Este aplicativo é voltado aos clientes da barbearia (cadastro, agenda, loja e perfil/fidelidade). A administração do estabelecimento é feita pelo painel web; o proprietário não deve depender do app móvel para configurar serviços, profissionais ou financeiro.
+
 ## Documentacao principal
 
 - arquitetura: `docs/ARCHITECTURE.md`

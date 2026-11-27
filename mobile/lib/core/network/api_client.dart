@@ -183,9 +183,9 @@ class ApiClient {
   }
 
   bool _isAnonymousPath(String path) {
-    return path == ApiEndpoints.authLogin ||
+    return path == ApiEndpoints.authMobileLogin ||
         path == ApiEndpoints.authRegister ||
-        path == ApiEndpoints.authRefresh;
+        path == ApiEndpoints.authMobileRefresh;
   }
 
   Future<bool> _shouldRefresh(String path, DioException error) async {
@@ -194,7 +194,7 @@ class ApiClient {
         ) ??
         _sharedPreferences.getString(AppStorageKeys.refreshToken);
 
-    return path != ApiEndpoints.authRefresh &&
+    return path != ApiEndpoints.authMobileRefresh &&
         error.response?.statusCode == 401 &&
         (refreshToken?.isNotEmpty ?? false);
   }
@@ -210,7 +210,7 @@ class ApiClient {
 
     try {
       final response = await _dio.post<Map<String, dynamic>>(
-        ApiEndpoints.authRefresh,
+        ApiEndpoints.authMobileRefresh,
         data: {
           'refreshToken': refreshToken,
         },

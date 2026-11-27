@@ -1,0 +1,57 @@
+name: Dependency security gate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/package.json'
+      - 'backend/package-lock.json'
+      - 'web/package.json'
+      - 'web/package-lock.json'
+      - '.github/workflows/security-audit.yml'
+  push:
+    branches: [main, 'fix/release-readiness-20261127']
+    paths:
+      - 'backend/package.json'
+      - 'backend/package-lock.json'
+      - 'web/package.json'
+      - 'web/package-lock.json'
+      - '.github/workflows/security-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  backend-audit:
+    name: Block release on backend high/critical advisories
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Install locked dependencies
+        working-directory: backend
+        run: npm ci
+      - name: Fail on high or critical advisories
+        working-directory: backend
+        run: npm audit --audit-level=high
+
+  web-audit:
+    name: Block release on web high/critical advisories
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install locked dependencies
+        working-directory: web
+        run: npm ci
+      - name: Fail on high or critical advisories
+        working-directory: web
+        run: npm audit --audit-level=high

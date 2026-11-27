@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     name: Deploy production
     runs-on: ubuntu-latest
     environment: production

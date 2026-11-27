@@ -15,7 +15,9 @@ Evoluir a base para um produto vertical reutilizavel para barbearias, com agenda
 ```powershell
 cd backend
 npx prisma db push
+$env:ALLOW_DEMO_SEED='true'
 npm run prisma:seed
+$env:ALLOW_DEMO_SEED='false'
 npm run start:dev
 ```
 

@@ -33,7 +33,6 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
 
 type RefreshResponse = {
   accessToken: string;
-  refreshToken: string;
   tokenType: string;
   expiresIn: string | number;
 };
@@ -131,7 +130,11 @@ function canAttemptTokenRefresh(config: RetryableRequestConfig): boolean {
   );
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+export async function restoreAuthSession(): Promise<boolean> {
+  return (await refreshAccessToken(false)) !== null;
+}
+
+async function refreshAccessToken(redirectOnFailure = true): Promise<string | null> {
   if (refreshPromise) {
     return refreshPromise;
   }
@@ -158,7 +161,9 @@ async function refreshAccessToken(): Promise<string | null> {
     })
     .catch(() => {
       clearAuthSession();
-      redirectToLogin();
+      if (redirectOnFailure) {
+        redirectToLogin();
+      }
       return null;
     })
     .finally(() => {

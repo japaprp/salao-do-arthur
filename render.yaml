@@ -6,14 +6,17 @@ services:
     region: oregon
     branch: main
     rootDir: backend
-    autoDeployTrigger: commit
+    autoDeployTrigger: off
     buildCommand: export DATABASE_URL="mysql://placeholder:placeholder@127.0.0.1:3306/placeholder" && npm ci --include=dev && npm run prisma:generate && npm run build
     startCommand: npm run prisma:migrate:deploy && npm run start:prod
-    initialDeployHook: npm run prisma:seed
     healthCheckPath: /api/health/ready
     envVars:
       - key: NODE_ENV
         value: production
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      - key: ALLOW_DEMO_SEED
+        value: "false"
       - key: HOST
         value: 0.0.0.0
       - key: DEFAULT_TENANT_SUBDOMAIN
@@ -38,6 +41,8 @@ services:
         generateValue: true
       - key: PASSWORD_RESET_SECRET
         generateValue: true
+      - key: MERCADO_PAGO_CHECKOUT_READY
+        value: "false"
       - key: MERCADO_PAGO_ACCESS_TOKEN
         value: ""
       - key: MERCADO_PAGO_WEBHOOK_SECRET

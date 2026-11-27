@@ -279,7 +279,6 @@ export interface UpdateAppointmentDto extends Partial<CreateAppointmentDto> {
 
 export interface AuthResponse {
   accessToken: string;
-  refreshToken: string;
   tokenType: string;
   expiresIn: string | number;
   refreshExpiresIn?: string | number;

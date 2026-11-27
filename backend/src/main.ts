@@ -23,12 +23,17 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const isProduction = process.env.NODE_ENV === 'production';
+  const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? '0');
+  if (!Number.isSafeInteger(trustProxyHops) || trustProxyHops < 0) {
+    throw new Error('TRUST_PROXY_HOPS must be a non-negative integer.');
+  }
+  app.set('trust proxy', trustProxyHops);
   const port = Number(process.env.PORT ?? process.env.BACKEND_PORT ?? 3100);
   const host = process.env.HOST ?? '127.0.0.1';
 
   app.disable('x-powered-by');
   app.use(cookieParser());
-  app.enableCors(buildCorsOptions());
+  app.enableCors(buildCorsOptions(isProduction));
   app.use(securityHeadersMiddleware(isProduction));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
   app.setGlobalPrefix('api');

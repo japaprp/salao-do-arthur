@@ -8,7 +8,7 @@ import {
   readStoredToken,
   readStoredUser,
 } from '@/lib/auth/auth-storage';
-import { api } from '@/lib/api/client';
+import { api, restoreAuthSession } from '@/lib/api/client';
 import { normalizeUser } from '@/lib/api/normalizers';
 import { getHomePathForUserRole } from '@/lib/auth/roles';
 import { DEFAULT_TENANT_SUBDOMAIN } from '@/lib/auth/tenant';
@@ -46,23 +46,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const bootstrapAuth = async () => {
       const storedUser = readStoredUser();
-      const storedToken = readStoredToken();
-
-      if (storedUser) {
-        setUser(storedUser);
-      }
-
-      if (!storedToken) {
+      if (!storedUser) {
         clearAuthSession();
         setUser(null);
         setIsLoading(false);
         return;
       }
+      setUser(storedUser);
 
       try {
+        const restored = await restoreAuthSession();
+        if (!restored) {
+          throw new Error('Sessão expirada ou indisponível.');
+        }
+
         const profile = normalizeUser(await api.get('/auth/profile'));
+        const accessToken = readStoredToken();
+        if (!accessToken) {
+          throw new Error('Não foi possível restaurar o token de acesso.');
+        }
+
         setUser(profile);
-        persistAuthSession(profile, storedToken);
+        persistAuthSession(profile, accessToken);
       } catch {
         clearAuthSession();
         setUser(null);

@@ -25,7 +25,7 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
-  REFRESH_TOKEN_SECRET: string = 'change_this_refresh_secret';
+  REFRESH_TOKEN_SECRET?: string;
 
   @IsOptional()
   @IsString()
@@ -77,6 +77,14 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  MERCADO_PAGO_CHECKOUT_READY?: string;
+
+  @IsOptional()
+  @IsString()
+  TRUST_PROXY_HOPS?: string;
+
+  @IsOptional()
+  @IsString()
   MOBILE_PAYMENT_RETURN_URL?: string;
 }
 
@@ -88,6 +96,33 @@ export function validate(config: Record<string, unknown>) {
 
   if (errors.length > 0) {
     throw new Error(`Environment validation failed: ${errors.toString()}`);
+  }
+
+  if (validatedConfig.NODE_ENV === Environment.Production) {
+    const requiredSecrets = [
+      ['JWT_SECRET', validatedConfig.JWT_SECRET],
+      ['REFRESH_TOKEN_SECRET', validatedConfig.REFRESH_TOKEN_SECRET],
+      ['PASSWORD_RESET_SECRET', validatedConfig.PASSWORD_RESET_SECRET],
+    ] as const;
+    for (const [name, value] of requiredSecrets) {
+      if (typeof value !== 'string' || value.length < 32 || /change_this|troque_(?:essa|por)|example|placeholder/i.test(value)) {
+        throw new Error('Production requires ' + name + ' to be a unique secret with at least 32 characters.');
+      }
+    }
+    const secretValues = requiredSecrets.map(([, value]) => value);
+    if (new Set(secretValues).size !== secretValues.length) {
+      throw new Error('JWT_SECRET, REFRESH_TOKEN_SECRET and PASSWORD_RESET_SECRET must be different.');
+    }
+    if (!/^\d+$/.test(validatedConfig.TRUST_PROXY_HOPS ?? '')) {
+      throw new Error('Production requires TRUST_PROXY_HOPS to match the verified reverse-proxy topology.');
+    }
+
+    const configuredCorsOrigins = typeof config.CORS_ORIGINS === 'string'
+      ? config.CORS_ORIGINS.split(',').map(value => value.trim()).filter(Boolean)
+      : [];
+    if (configuredCorsOrigins.length === 0) {
+      throw new Error('Production requires at least one explicit CORS_ORIGINS entry.');
+    }
   }
   return validatedConfig;
 }
