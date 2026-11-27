@@ -17,11 +17,18 @@ describe('PaymentsService', () => {
     stockMovement: {
       create: jest.fn(),
     },
+    refund: {
+      create: jest.fn(),
+    },
   };
 
   const prisma = {
     payment: {
       findFirst: jest.fn(),
+      findFirstOrThrow: jest.fn(),
+    },
+    refund: {
+      findUnique: jest.fn(),
     },
     paymentWebhookEvent: {
       upsert: jest.fn(),
@@ -136,6 +143,62 @@ describe('PaymentsService', () => {
       where: { id: 'webhook-3', processedAt: null },
       data: { processingAt: null },
     });
+  });
+
+  it('uses a stable idempotency key when creating a refund', async () => {
+    const payment = buildPaymentFixture();
+    payment.status = PaymentStatus.PAID;
+    payment.providerReference = 'mp-payment-1';
+    payment.amount = 100;
+    prisma.payment.findFirst.mockResolvedValue(payment);
+    prisma.refund.findUnique.mockResolvedValue(null);
+    prisma.payment.findFirstOrThrow.mockResolvedValue({ id: 'payment-1' });
+    mercadoPagoProvider.refundPayment.mockResolvedValue({
+      id: 'mp-refund-1',
+      status: 'approved',
+      amount: 20,
+      raw: { id: 'mp-refund-1', status: 'approved' },
+    });
+
+    await service.refundPayment(
+      { userId: 'owner-1', tenantId: 'tenant-1', role: 'OWNER' } as never,
+      'payment-1',
+      { amount: 20, reason: 'Solicitação do cliente', restockItems: false },
+    );
+
+    expect(mercadoPagoProvider.refundPayment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerReference: 'mp-payment-1',
+        amount: 20,
+        idempotencyKey: expect.stringMatching(/^[a-f0-9]{64}$/),
+      }),
+    );
+    expect(transaction.refund.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          idempotencyKey: expect.stringMatching(/^[a-f0-9]{64}$/),
+        }),
+      }),
+    );
+  });
+
+  it('does not submit an identical refund request twice', async () => {
+    const payment = buildPaymentFixture();
+    payment.status = PaymentStatus.PAID;
+    payment.providerReference = 'mp-payment-1';
+    payment.amount = 100;
+    prisma.payment.findFirst.mockResolvedValue(payment);
+    prisma.refund.findUnique.mockResolvedValue({ id: 'refund-existing' });
+    prisma.payment.findFirstOrThrow.mockResolvedValue({ id: 'payment-1' });
+
+    await service.refundPayment(
+      { userId: 'owner-1', tenantId: 'tenant-1', role: 'OWNER' } as never,
+      'payment-1',
+      { amount: 20, reason: 'Solicitação do cliente', restockItems: false },
+    );
+
+    expect(mercadoPagoProvider.refundPayment).not.toHaveBeenCalled();
+    expect(transaction.refund.create).not.toHaveBeenCalled();
   });
 
   it('marks an approved Mercado Pago payment as paid and consumes reserved stock', async () => {
