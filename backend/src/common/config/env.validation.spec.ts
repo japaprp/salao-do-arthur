@@ -4,6 +4,7 @@ import { validate } from './env.validation';
 describe('production environment validation', () => {
   const validProductionConfig = () => ({
     NODE_ENV: 'production',
+    TRUST_PROXY_HOPS: '1',
     DATABASE_URL: 'mysql://user:password@db.example.test:3306/salao',
     JWT_SECRET: 'a'.repeat(40),
     REFRESH_TOKEN_SECRET: 'b'.repeat(40),
@@ -34,6 +35,13 @@ describe('production environment validation', () => {
     config.JWT_SECRET = 'troque_por_um_secret_longo_e_aleatorio';
 
     expect(() => validate(config)).toThrow('JWT_SECRET');
+  });
+
+  it('rejects production without an explicit trusted proxy hop count', () => {
+    const config = validProductionConfig();
+    delete (config as Partial<typeof config>).TRUST_PROXY_HOPS;
+
+    expect(() => validate(config)).toThrow('TRUST_PROXY_HOPS');
   });
 
   it('rejects production without explicit CORS origins', () => {
