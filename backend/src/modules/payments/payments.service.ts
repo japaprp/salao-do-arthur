@@ -221,7 +221,7 @@ export class PaymentsService {
       .digest('hex');
 
     const existingRefund = await this.prisma.refund.findUnique({
-      where: { idempotencyKey },
+      where: { idempotencyKey, tenantId: user.tenantId },
       select: { id: true },
     });
     if (existingRefund) {
@@ -243,6 +243,7 @@ export class PaymentsService {
     const priorRefunds = await this.prisma.refund.aggregate({
       where: {
         paymentId: payment.id,
+        tenantId: user.tenantId,
         status: { notIn: ['rejected', 'cancelled'] },
       },
       _sum: { amount: true },
