@@ -4,7 +4,7 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 
 | Etapa | Escopo | Estado atual |
 |---|---|---|
-| 1 | Auditoria completa de código, dependências, arquitetura e configuração | BLOCKED — inventário parcial; auditoria de dependências e todos os módulos ainda pendente |
+| 1 | Auditoria completa de código, dependências, arquitetura e configuração | BLOCKED — inventário parcial; npm ci reportou 36 vulnerabilidades (13 altas e 2 críticas); relatório npm audit detalhado e triagem ainda pendentes |
 | 2 | Segurança, autenticação, autorização e isolamento entre tenants | BLOCKED — endurecimento implementado na branch; CI e auditoria de todos os caminhos ainda pendentes |
 | 3 | Integridade do banco, transações, concorrência e migrações | BLOCKED — migrações adicionadas; execução contra MySQL isolado e preflight de dados reais não executados |
 | 4 | Pagamentos, webhooks, estornos e idempotência | BLOCKED — correções implementadas; sandbox Mercado Pago e concorrência real não executados |
@@ -24,6 +24,7 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 
 - Branch de trabalho: fix/release-readiness-20261127.
 - A main não recebeu as correções do produto; houve um arquivo de teste criado e removido por engano, com registro de inclusão e reversão no histórico. Conteúdo final da main foi verificado sem esse arquivo.
+- O npm ci do backend reportou 36 vulnerabilidades: 1 baixa, 20 moderadas, 13 altas e 2 críticas. A etapa npm audit foi adicionada ao CI em modo relatório; nenhuma atualização de dependência foi aplicada sem triagem.
 - Nenhum merge, deploy ou publicação foi executado.
 - O CI já identificou e permitiu corrigir uma expectativa de teste desatualizada; tipagem/build passaram em uma execução anterior, mas o teste de cancelamento falhou naquela execução.
 - Uma nova validação completa precisa rodar sobre o HEAD mais recente antes de classificar o conjunto de correções como PASS.
