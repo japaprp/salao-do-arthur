@@ -39,6 +39,8 @@ services:
         generateValue: true
       - key: PASSWORD_RESET_SECRET
         generateValue: true
+      - key: MERCADO_PAGO_CHECKOUT_READY
+        value: "false"
       - key: MERCADO_PAGO_ACCESS_TOKEN
         value: ""
       - key: MERCADO_PAGO_WEBHOOK_SECRET
