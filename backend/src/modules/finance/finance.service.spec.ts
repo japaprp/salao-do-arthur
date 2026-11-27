@@ -93,14 +93,17 @@ describe('FinanceService', () => {
     const aggregateCalls = transaction.transaction.aggregate.mock.calls as unknown as Array<[
       { where: Record<string, unknown> },
     ]>;
-    expect(aggregateCalls[2][0].where).toEqual({
+    const manualIncomeWhere = aggregateCalls[2][0].where;
+    expect(manualIncomeWhere).toMatchObject({
       tenantId: 'tenant-1',
       appointmentId: null,
       type: 'INCOME',
       status: 'CONFIRMED',
-      recordedAt: { gte: expect.any(Date), lt: expect.any(Date) },
       deletedAt: null,
     });
+    const recordedAt = manualIncomeWhere.recordedAt as { gte: Date; lt: Date };
+    expect(recordedAt.gte).toBeInstanceOf(Date);
+    expect(recordedAt.lt).toBeInstanceOf(Date);
     expect(result.summary.revenue).toBe(150);
   });
 });
