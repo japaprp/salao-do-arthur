@@ -39,11 +39,12 @@ describe('SettingsService', () => {
   });
 
   it('allows checkout activation only with provider credentials and an HTTPS webhook', async () => {
-    configService.get.mockImplementation((key: string) => ({
+    const providerConfig: Record<string, string> = {
       MERCADO_PAGO_ACCESS_TOKEN: 'sandbox-access-token',
       MERCADO_PAGO_WEBHOOK_SECRET: 'sandbox-webhook-secret',
       MERCADO_PAGO_WEBHOOK_URL: 'https://api.example.test/api/payments/webhooks/mercado-pago',
-    }[key]));
+    };
+    configService.get.mockImplementation((key: string) => providerConfig[key]);
     settingsRepository.update.mockResolvedValue({ tenantId: 'tenant-1', enableCheckout: true });
     const service = new SettingsService(
       settingsRepository as never,
