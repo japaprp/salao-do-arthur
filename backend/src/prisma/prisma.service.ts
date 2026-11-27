@@ -46,6 +46,13 @@ function scopeTenantData(data: unknown, tenantId: string): unknown {
     return data;
   }
 
+  // Preserve Date, Prisma.Decimal, Buffer and other value objects.
+  // Only plain records represent nested Prisma input/relation objects.
+  const prototype = Object.getPrototypeOf(data);
+  if (prototype !== Object.prototype && prototype !== null) {
+    return data;
+  }
+
   const record = data as Record<string, unknown>;
   if (record.tenantId !== undefined && record.tenantId !== tenantId) {
     throw new Error('Tenant context mismatch in write operation.');
