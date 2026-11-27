@@ -430,7 +430,7 @@ model SalonSettings {
   cancellationWindowHours    Int       @default(24)
   reminderLeadHours          Json?
   allowWaitlist              Boolean   @default(true)
-  enableCheckout             Boolean   @default(true)
+  enableCheckout             Boolean   @default(false)
   enableLoyalty              Boolean   @default(true)
   enableCashback             Boolean   @default(true)
   enableReferrals            Boolean   @default(true)
