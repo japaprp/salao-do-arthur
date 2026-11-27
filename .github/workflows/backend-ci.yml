@@ -50,7 +50,7 @@ jobs:
         run: npm run build
 
       - name: Run validated backend specs
-        run: npm test -- --runInBand auth.service.spec.ts professionals.service.spec.ts reports.service.spec.ts appointments.service.spec.ts payments.service.spec.ts finance.service.spec.ts
+        run: npm test -- --runInBand auth.service.spec.ts professionals.service.spec.ts reports.service.spec.ts appointments.service.spec.ts payments.service.spec.ts finance.service.spec.ts settings.service.spec.ts
 
   smoke:
     name: Smoke client flow
