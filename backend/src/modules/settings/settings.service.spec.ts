@@ -38,8 +38,29 @@ describe('SettingsService', () => {
     expect(settingsRepository.update).not.toHaveBeenCalled();
   });
 
+  it('keeps checkout disabled until the server explicitly marks the integration as homologated', async () => {
+    const providerConfig: Record<string, string> = {
+      MERCADO_PAGO_ACCESS_TOKEN: 'sandbox-access-token',
+      MERCADO_PAGO_WEBHOOK_SECRET: 'sandbox-webhook-secret',
+      MERCADO_PAGO_WEBHOOK_URL: 'https://api.example.test/api/payments/webhooks/mercado-pago',
+    };
+    configService.get.mockImplementation((key: string) => providerConfig[key]);
+    const service = new SettingsService(
+      settingsRepository as never,
+      tenantsService as never,
+      configService as unknown as ConfigService,
+    );
+
+    await expect(service.updateByTenantId('tenant-1', {
+      enableCheckout: true,
+    })).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(settingsRepository.update).not.toHaveBeenCalled();
+  });
+
   it('allows checkout activation only with provider credentials and an HTTPS webhook', async () => {
     const providerConfig: Record<string, string> = {
+      MERCADO_PAGO_CHECKOUT_READY: 'true',
       MERCADO_PAGO_ACCESS_TOKEN: 'sandbox-access-token',
       MERCADO_PAGO_WEBHOOK_SECRET: 'sandbox-webhook-secret',
       MERCADO_PAGO_WEBHOOK_URL: 'https://api.example.test/api/payments/webhooks/mercado-pago',
