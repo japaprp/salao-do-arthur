@@ -26,6 +26,7 @@ Configurar no Render, sem colocar valores secretos no Git:
 - `CORS_ORIGINS`: origens HTTPS exatas do frontend publicado.
 - `WEB_APP_URL`: URL pública da aplicação.
 - `NODE_ENV=production`.
+- `TRUST_PROXY_HOPS`: número de saltos de proxy confiáveis; o Blueprint Render declara `1`, mas confirme a topologia real do provedor antes da liberação. Não aumentar esse valor sem verificar os proxies intermediários.
 - `ALLOW_DEMO_SEED=false`.
 
 O processo de inicialização valida os segredos e rejeita placeholders. Não reutilizar credenciais de desenvolvimento ou CI.
