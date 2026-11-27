@@ -218,7 +218,7 @@ describe('PaymentsService', () => {
     payment.status = PaymentStatus.PARTIALLY_REFUNDED;
     payment.providerReference = 'mp-payment-1';
     prisma.payment.findFirst.mockResolvedValue(payment);
-    prisma.refund.findUnique.mockResolvedValue(null);
+    transaction.refund.findUnique.mockResolvedValue(null);
     transaction.refund.aggregate.mockResolvedValue({ _sum: { amount: 80 } });
 
     await expect(service.refundPayment(
@@ -235,7 +235,7 @@ describe('PaymentsService', () => {
     payment.status = PaymentStatus.PAID;
     payment.providerReference = 'mp-payment-1';
     prisma.payment.findFirst.mockResolvedValue(payment);
-    prisma.refund.findUnique.mockResolvedValue(null);
+    transaction.refund.findUnique.mockResolvedValue(null);
     prisma.payment.findFirstOrThrow.mockResolvedValue({ id: 'payment-1' });
     mercadoPagoProvider.refundPayment.mockResolvedValue({
       id: 'mp-refund-pending',
