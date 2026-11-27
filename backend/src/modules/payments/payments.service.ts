@@ -357,8 +357,13 @@ export class PaymentsService {
       return;
     }
 
-    if (['rejected', 'cancelled', 'refunded', 'charged_back'].includes(paymentDetails.status)) {
+    if (paymentDetails.status === 'rejected' || paymentDetails.status === 'cancelled') {
       await this.cancelOrderAndReleaseReservation(payment.order, paymentDetails);
+      return;
+    }
+
+    if (paymentDetails.status === 'refunded' || paymentDetails.status === 'charged_back') {
+      await this.markPaymentReversed(payment.order, payment, paymentDetails);
       return;
     }
 
@@ -465,13 +470,24 @@ export class PaymentsService {
     }
 
     await this.prisma.withTenant(order.tenantId, async transaction => {
-      await transaction.order.update({
-        where: { id: order.id },
+      const cancellation = await transaction.order.updateMany({
+        where: {
+          id: order.id,
+          tenantId: order.tenantId,
+          status: OrderStatus.PENDING_PAYMENT,
+        },
         data: { status: OrderStatus.CANCELLED, cancelledAt: new Date() },
       });
+      if (cancellation.count === 0) {
+        return;
+      }
 
       await transaction.payment.updateMany({
-        where: { orderId: order.id, tenantId: order.tenantId },
+        where: {
+          orderId: order.id,
+          tenantId: order.tenantId,
+          status: { in: [PaymentStatus.PENDING, PaymentStatus.AUTHORIZED] },
+        },
         data: {
           status: PaymentStatus.CANCELLED,
           failureReason: paymentDetails?.statusDetail,
@@ -481,6 +497,72 @@ export class PaymentsService {
 
       await this.releaseReservedStock(transaction, order, `Pagamento cancelado`);
     });
+  }
+
+  private async markPaymentReversed(
+    order: OrderWithPayment,
+    payment: Payment,
+    paymentDetails: MercadoPagoPaymentDetails,
+  ) {
+    try {
+      await this.prisma.withTenant(order.tenantId, async transaction => {
+        const reversal = await transaction.order.updateMany({
+          where: {
+            id: order.id,
+            tenantId: order.tenantId,
+            status: {
+              in: [
+                OrderStatus.PAID,
+                OrderStatus.PREPARING,
+                OrderStatus.READY_FOR_PICKUP,
+                OrderStatus.SHIPPED,
+                OrderStatus.DELIVERED,
+              ],
+            },
+          },
+          data: { status: OrderStatus.REFUNDED },
+        });
+        if (reversal.count === 0) {
+          return;
+        }
+
+        const paymentReversal = await transaction.payment.updateMany({
+          where: {
+            id: payment.id,
+            tenantId: order.tenantId,
+            status: { in: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_REFUNDED] },
+          },
+          data: {
+            status: PaymentStatus.REFUNDED,
+            failureReason: paymentDetails.statusDetail ?? paymentDetails.status,
+            metadata: paymentDetails.raw as Prisma.InputJsonObject,
+          },
+        });
+        if (paymentReversal.count === 0) {
+          throw new Error('PAYMENT_REVERSAL_ALREADY_APPLIED');
+        }
+
+        const idempotencyKey = createHash('sha256')
+          .update([payment.id, paymentDetails.id, paymentDetails.status].join(':'))
+          .digest('hex');
+        await transaction.refund.create({
+          data: {
+            tenantId: order.tenantId,
+            paymentId: payment.id,
+            idempotencyKey,
+            amount: payment.amount,
+            reason: paymentDetails.statusDetail ?? paymentDetails.status,
+            status: paymentDetails.status,
+            metadata: paymentDetails.raw as Prisma.InputJsonObject,
+          },
+        });
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'PAYMENT_REVERSAL_ALREADY_APPLIED') {
+        return;
+      }
+      throw error;
+    }
   }
 
   private async releaseReservedStock(
