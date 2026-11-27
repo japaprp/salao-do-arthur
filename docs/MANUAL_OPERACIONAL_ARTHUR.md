@@ -6,7 +6,7 @@
 
 O Artur usa somente o site administrativo que será fornecido na entrega. Não precisa acessar GitHub, Render, banco de dados, terminal ou configurações técnicas.
 
-- **Criar a primeira conta do proprietário:** tela de cadastro administrativo (/auth/register). Informar nome da barbearia, nome do responsável, e-mail, senha e confirmação.
+- **Criar a primeira conta do proprietário:** tela de onboarding administrativo (/auth/register/admin). Informar nome da barbearia, nome do responsável, e-mail, senha e confirmação.
 - **Entrar:** /auth/login.
 - Usar uma senha exclusiva e não compartilhá-la. Cada pessoa da equipe deve ter sua própria conta e permissões adequadas.
 
