@@ -10,6 +10,10 @@ import {
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
+if (process.env.NODE_ENV === 'production') {
+  throw new Error('O seed demonstrativo é proibido em produção.');
+}
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -548,8 +552,7 @@ async function main() {
 
   console.log('Seed concluído com sucesso.');
   console.log(`Tenant: ${tenant.subdomain}`);
-  console.log(`Cliente: ${clientUser.email} / Cliente123!`);
-  console.log(`Artur gestor: ${managerUser.email} / Gestora123!`);
+  console.log('Contas demonstrativas criadas/atualizadas. Consulte a documentação local de desenvolvimento.');
   console.log(`Profissionais: ${professionalUserA.email}, ${professionalUserB.email}`);
   console.log('Cupom demo: ARTUR15');
 }
