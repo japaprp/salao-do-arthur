@@ -271,6 +271,64 @@ describe('PaymentsService', () => {
     expect(loyaltyService.awardPaidOrder).not.toHaveBeenCalled();
   });
 
+  it('does not release stock twice when a cancellation event is repeated', async () => {
+    prisma.payment.findFirst.mockResolvedValue(buildPaymentFixture());
+    transaction.order.updateMany.mockResolvedValue({ count: 0 });
+
+    await service.applyProviderPaymentStatus({
+      id: 'mp-payment-1',
+      status: 'rejected',
+      externalReference: 'order-1',
+      raw: { id: 'mp-payment-1', status: 'rejected' },
+    });
+
+    expect(transaction.payment.updateMany).not.toHaveBeenCalled();
+    expect(transaction.inventory.update).not.toHaveBeenCalled();
+    expect(transaction.stockMovement.create).not.toHaveBeenCalled();
+  });
+
+  it('records provider reversals without releasing already-consumed stock', async () => {
+    const payment = buildPaymentFixture();
+    payment.status = PaymentStatus.PAID;
+    payment.providerReference = 'mp-payment-1';
+    payment.order.status = OrderStatus.PAID;
+    prisma.payment.findFirst.mockResolvedValue(payment);
+
+    await service.applyProviderPaymentStatus({
+      id: 'mp-payment-1',
+      status: 'refunded',
+      externalReference: 'order-1',
+      raw: { id: 'mp-payment-1', status: 'refunded' },
+    });
+
+    expect(transaction.order.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'order-1',
+        tenantId: 'tenant-1',
+        status: {
+          in: [
+            OrderStatus.PAID,
+            OrderStatus.PREPARING,
+            OrderStatus.READY_FOR_PICKUP,
+            OrderStatus.SHIPPED,
+            OrderStatus.DELIVERED,
+          ],
+        },
+      },
+      data: { status: OrderStatus.REFUNDED },
+    });
+    expect(transaction.refund.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          paymentId: 'payment-1',
+          status: 'refunded',
+        }),
+      }),
+    );
+    expect(transaction.inventory.update).not.toHaveBeenCalled();
+    expect(transaction.stockMovement.create).not.toHaveBeenCalled();
+  });
+
   it('cancels rejected payments and releases reserved stock', async () => {
     prisma.payment.findFirst.mockResolvedValue(buildPaymentFixture());
 
@@ -282,8 +340,12 @@ describe('PaymentsService', () => {
       raw: { id: 'mp-payment-1', status: 'rejected' },
     });
 
-    expect(transaction.order.update).toHaveBeenCalledWith({
-      where: { id: 'order-1' },
+    expect(transaction.order.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'order-1',
+        tenantId: 'tenant-1',
+        status: OrderStatus.PENDING_PAYMENT,
+      },
       data: { status: OrderStatus.CANCELLED, cancelledAt: expect.any(Date) },
     });
     expect(transaction.payment.updateMany).toHaveBeenCalledWith(
