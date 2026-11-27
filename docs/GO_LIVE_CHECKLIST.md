@@ -9,7 +9,7 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 | 3 | Integridade do banco, transações, concorrência e migrações | BLOCKED — migrações adicionadas; execução contra MySQL isolado e preflight de dados reais não executados |
 | 4 | Pagamentos, webhooks, estornos e idempotência | BLOCKED — correções implementadas; sandbox Mercado Pago e concorrência real não executados |
 | 5 | Financeiro, receitas, despesas, comissões e conciliação | BLOCKED — correção de dupla contagem e unicidade implementadas; conciliação e fechamento de caixa não homologados |
-| 6 | Agenda, profissionais, horários e cancelamentos | BLOCKED — código e proteção de concorrência presentes; jornada semanal recorrente não possui tela administrativa; fluxo ponta a ponta não homologado |
+| 6 | Agenda, profissionais, horários e cancelamentos | BLOCKED — código e proteção de concorrência presentes; jornada semanal recorrente não possui tela administrativa e a janela provisória está fixa em 09h–19h todos os dias; fluxo ponta a ponta não homologado |
 | 7 | Clientes, histórico, pontos e notificações | NOT RUN — validação completa pendente |
 | 8 | Painel administrativo e permissões por perfil | NOT RUN — teste com contas separadas pendente |
 | 9 | Web e aplicativo móvel, responsividade e acessibilidade | NOT RUN — teste em dispositivos reais pendente |
