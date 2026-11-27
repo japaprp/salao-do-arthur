@@ -1,10 +1,15 @@
 import { FinanceService } from './finance.service';
 
+type AggregateResult = {
+  _sum: { totalAmount?: number | null; amount?: number | null };
+  _count?: { id: number };
+};
+
 describe('FinanceService', () => {
   const transaction = {
     appointment: {
       findFirst: jest.fn(),
-      aggregate: jest.fn().mockResolvedValue({
+      aggregate: jest.fn<Promise<AggregateResult>, []>().mockResolvedValue({
         _sum: { totalAmount: 100 },
         _count: { id: 1 },
       }),
@@ -16,7 +21,7 @@ describe('FinanceService', () => {
       }),
     },
     transaction: {
-      aggregate: jest.fn()
+      aggregate: jest.fn<Promise<AggregateResult>, []>()
         .mockResolvedValueOnce({ _sum: { amount: 50 } })
         .mockResolvedValueOnce({ _sum: { amount: 0 }, _count: { id: 0 } }),
       findMany: jest.fn().mockResolvedValue([]),
@@ -85,16 +90,15 @@ describe('FinanceService', () => {
 
     const result = await service.getOverview('tenant-1', 'monthly');
 
-    expect(transaction.transaction.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId: 'tenant-1',
-          appointmentId: null,
-          type: 'INCOME',
-          status: 'CONFIRMED',
-        }),
-      }),
-    );
+    const aggregateCalls = transaction.transaction.aggregate.mock.calls as unknown as Array<[
+      { where: Record<string, unknown> },
+    ]>;
+    expect(aggregateCalls[1][0].where).toEqual({
+      tenantId: 'tenant-1',
+      appointmentId: null,
+      type: 'INCOME',
+      status: 'CONFIRMED',
+    });
     expect(result.summary.revenue).toBe(150);
   });
 });
