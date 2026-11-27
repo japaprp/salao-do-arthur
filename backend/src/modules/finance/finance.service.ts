@@ -49,6 +49,7 @@ export class FinanceService {
         transaction.transaction.aggregate({
           where: {
             tenantId,
+            appointmentId: null,
             type: 'INCOME',
             status: 'CONFIRMED',
             recordedAt: { gte: range.start, lt: range.end },
