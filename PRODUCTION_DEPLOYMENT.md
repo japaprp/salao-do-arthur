@@ -50,8 +50,8 @@ As credenciais vazias no Blueprint significam que o checkout ainda não está pr
 3. Executar o SQL somente-leitura `ops/preflight/financial-appointment-duplicates.sql`; se retornar linhas, interromper e reconciliar os lançamentos manualmente sem apagar histórico.
 4. Verificar o status das migrações e comparar schema com o banco.
 5. Aplicar apenas migrações aditivas e compatíveis com a versão atualmente em produção.
-5. Validar healthcheck `/api/health/ready` e os fluxos principais.
-6. Testar restauração em banco isolado; um arquivo de backup sem teste de restauração não comprova recuperabilidade.
+6. Validar healthcheck `/api/health/ready` e os fluxos principais.
+7. Testar restauração em banco isolado; um arquivo de backup sem teste de restauração não comprova recuperabilidade.
 
 A implantação não deve apagar ou sobrescrever dados do banco. Rollback de código não reverte automaticamente migrações.
 
