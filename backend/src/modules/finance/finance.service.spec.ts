@@ -93,7 +93,7 @@ describe('FinanceService', () => {
     const aggregateCalls = transaction.transaction.aggregate.mock.calls as unknown as Array<[
       { where: Record<string, unknown> },
     ]>;
-    const manualIncomeWhere = aggregateCalls[2][0].where;
+    const manualIncomeWhere = aggregateCalls[0][0].where;
     expect(manualIncomeWhere).toMatchObject({
       tenantId: 'tenant-1',
       appointmentId: null,
