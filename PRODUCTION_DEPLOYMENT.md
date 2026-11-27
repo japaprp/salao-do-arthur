@@ -36,6 +36,7 @@ O checkout deve permanecer desativado até que todos os itens abaixo estejam con
 
 - Access token da conta correta.
 - Segredo de assinatura do webhook.
+- `MERCADO_PAGO_CHECKOUT_READY=true` configurado somente pela equipe técnica depois da homologação integral; o padrão deve permanecer `false`.
 - URL pública HTTPS do webhook.
 - Fluxo de pagamento aprovado, recusado, expirado e estornado no sandbox.
 - Repetição e concorrência de webhooks sem duplicar baixa de estoque, receita ou estorno.
