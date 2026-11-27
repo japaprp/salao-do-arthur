@@ -113,15 +113,49 @@ export class PaymentsService {
       return { received: true, duplicated: true };
     }
 
-    const paymentDetails = await this.mercadoPagoProvider.getPayment(resourceId);
-    await this.applyProviderPaymentStatus(paymentDetails);
-
-    await this.prisma.paymentWebhookEvent.update({
-      where: { id: event.id },
-      data: { processedAt: new Date() },
+    // Claim the event atomically. A stale lease can be reclaimed after a worker crash.
+    const claimedAt = new Date();
+    const staleLeaseBefore = new Date(claimedAt.getTime() - 5 * 60_000);
+    const claim = await this.prisma.paymentWebhookEvent.updateMany({
+      where: {
+        id: event.id,
+        processedAt: null,
+        OR: [
+          { processingAt: null },
+          { processingAt: { lt: staleLeaseBefore } },
+        ],
+      },
+      data: { processingAt: claimedAt },
     });
 
-    return { received: true };
+    if (claim.count === 0) {
+      const latestEvent = await this.prisma.paymentWebhookEvent.findUnique({
+        where: { id: event.id },
+        select: { processedAt: true },
+      });
+      return latestEvent?.processedAt
+        ? { received: true, duplicated: true }
+        : { received: true, processing: true };
+    }
+
+    try {
+      const paymentDetails = await this.mercadoPagoProvider.getPayment(resourceId);
+      await this.applyProviderPaymentStatus(paymentDetails);
+
+      await this.prisma.paymentWebhookEvent.update({
+        where: { id: event.id },
+        data: { processedAt: new Date(), processingAt: null },
+      });
+
+      return { received: true };
+    } catch (error) {
+      // Release the lease so Mercado Pago can retry immediately after transient failures.
+      await this.prisma.paymentWebhookEvent.updateMany({
+        where: { id: event.id, processedAt: null },
+        data: { processingAt: null },
+      });
+      throw error;
+    }
   }
 
   async cancelPendingOrder(user: AuthenticatedUser, orderId: string) {
