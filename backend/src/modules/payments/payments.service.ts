@@ -602,6 +602,18 @@ export class PaymentsService {
           throw new Error('PAYMENT_REVERSAL_ALREADY_APPLIED');
         }
 
+        await transaction.refund.updateMany({
+          where: {
+            paymentId: payment.id,
+            tenantId: order.tenantId,
+            status: { notIn: ['rejected', 'cancelled', 'superseded'] },
+          },
+          data: {
+            status: 'superseded',
+            metadata: paymentDetails.raw as Prisma.InputJsonObject,
+          },
+        });
+
         const idempotencyKey = createHash('sha256')
           .update([payment.id, paymentDetails.id, paymentDetails.status].join(':'))
           .digest('hex');
