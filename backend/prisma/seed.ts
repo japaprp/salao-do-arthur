@@ -10,8 +10,8 @@ import {
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
-if (process.env.NODE_ENV === 'production') {
-  throw new Error('O seed demonstrativo é proibido em produção.');
+if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DEMO_SEED !== 'true') {
+  throw new Error('Seed demonstrativo bloqueado. Defina ALLOW_DEMO_SEED=true apenas em desenvolvimento/testes isolados.');
 }
 
 const prisma = new PrismaClient();
