@@ -382,24 +382,42 @@ export class PaymentsService {
       return;
     }
 
-    await this.prisma.withTenant(order.tenantId, async transaction => {
-      await transaction.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentStatus.PAID,
-          method: paymentDetails.paymentMethod ?? payment.method,
-          providerReference: paymentDetails.id,
-          paidAt: new Date(),
-          metadata: paymentDetails.raw as Prisma.InputJsonObject,
-        },
-      });
+    let settled = false;
+    try {
+      settled = await this.prisma.withTenant(order.tenantId, async transaction => {
+        const paidAt = new Date();
+        const orderClaim = await transaction.order.updateMany({
+          where: {
+            id: order.id,
+            tenantId: order.tenantId,
+            status: OrderStatus.PENDING_PAYMENT,
+          },
+          data: { status: OrderStatus.PAID, paidAt },
+        });
+        if (orderClaim.count === 0) {
+          return false;
+        }
 
-      await transaction.order.update({
-        where: { id: order.id },
-        data: { status: OrderStatus.PAID, paidAt: new Date() },
-      });
+        const paymentClaim = await transaction.payment.updateMany({
+          where: {
+            id: payment.id,
+            tenantId: order.tenantId,
+            status: { in: [PaymentStatus.PENDING, PaymentStatus.AUTHORIZED] },
+          },
+          data: {
+            status: PaymentStatus.PAID,
+            method: paymentDetails.paymentMethod ?? payment.method,
+            providerReference: paymentDetails.id,
+            paidAt,
+            metadata: paymentDetails.raw as Prisma.InputJsonObject,
+          },
+        });
+        if (paymentClaim.count === 0) {
+          // Throwing rolls back the order claim as well.
+          throw new Error('PAYMENT_ALREADY_SETTLED');
+        }
 
-      for (const item of order.items) {
+        for (const item of order.items) {
         if (!item.product?.trackInventory || !item.product.inventory) {
           continue;
         }
@@ -423,10 +441,19 @@ export class PaymentsService {
             reason: `Pagamento aprovado ${paymentDetails.id}`,
           },
         });
+        }
+        return true;
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'PAYMENT_ALREADY_SETTLED') {
+        return;
       }
-    });
+      throw error;
+    }
 
-    await this.loyaltyService.awardPaidOrder(order.tenantId, order.id);
+    if (settled) {
+      await this.loyaltyService.awardPaidOrder(order.tenantId, order.id);
+    }
   }
 
   private async cancelOrderAndReleaseReservation(
