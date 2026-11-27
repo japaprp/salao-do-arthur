@@ -14,7 +14,7 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 | 8 | Painel administrativo e permissões por perfil | NOT RUN — teste com contas separadas pendente |
 | 9 | Web e aplicativo móvel, responsividade e acessibilidade | BLOCKED — CI web/mobile PASS; teste em dispositivos reais, responsividade e acessibilidade ainda pendentes |
 | 10 | Automações, lembretes e recuperação de falhas | NOT RUN — teste integrado pendente |
-| 11 | Infraestrutura, domínio, HTTPS, banco e variáveis | BLOCKED — Render/Pages identificados; MySQL externo, domínio, segredos e capacidade contratada não verificados |
+| 11 | Infraestrutura, domínio, HTTPS, banco e variáveis | BLOCKED — MySQL externo, domínio, segredos e capacidade não verificados; frontend GitHub Pages e API Render são cross-site, incompatíveis com o refresh cookie SameSite=Lax atual sem domínio próprio ou fluxo cross-site homologado |
 | 12 | Backups, restauração, monitoramento e recuperação | BLOCKED — não há evidência de restauração real |
 | 13 | Publicação controlada e rollback | BLOCKED — workflows protegidos; publicação e rollback não executados |
 | 14 | Homologação final e simulação de operação | NOT RUN — exige ambiente isolado, sandbox e dispositivo real |
