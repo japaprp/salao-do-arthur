@@ -282,7 +282,7 @@ export class PaymentsService {
         throw error;
       }
       const concurrentRefund = await this.prisma.refund.findUnique({
-        where: { idempotencyKey },
+        where: { idempotencyKey, tenantId: user.tenantId },
         select: { id: true },
       });
       if (!concurrentRefund) {
