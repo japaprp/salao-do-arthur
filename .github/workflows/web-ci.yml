@@ -43,5 +43,11 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --passWithNoTests
+
       - name: Build
         run: npm run build
