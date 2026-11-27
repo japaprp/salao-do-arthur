@@ -220,75 +220,109 @@ export class PaymentsService {
       ].join(':'))
       .digest('hex');
 
-    const existingRefund = await this.prisma.refund.findUnique({
-      where: { idempotencyKey, tenantId: user.tenantId },
-      select: { id: true },
+    const reservation = await this.prisma.withTenant(user.tenantId, async transaction => {
+      // Serialize distinct refund requests for the same payment before reserving an amount.
+      await transaction.$queryRaw<{ id: string }[]>`
+        SELECT id FROM Payment
+        WHERE id = ${payment.id} AND tenantId = ${user.tenantId} AND deletedAt IS NULL
+        FOR UPDATE
+      `;
+
+      const lockedPayment = await transaction.payment.findFirst({
+        where: { id: payment.id, tenantId: user.tenantId, deletedAt: null },
+        select: { id: true, status: true, amount: true, providerReference: true },
+      });
+      if (!lockedPayment) {
+        throw new NotFoundException('Pagamento não encontrado.');
+      }
+      if (
+        lockedPayment.status !== PaymentStatus.PAID
+        && lockedPayment.status !== PaymentStatus.PARTIALLY_REFUNDED
+      ) {
+        throw new BadRequestException('Apenas pagamentos aprovados podem ser estornados.');
+      }
+      if (!lockedPayment.providerReference) {
+        throw new BadRequestException('Pagamento sem referência do Mercado Pago.');
+      }
+
+      const existingRefund = await transaction.refund.findUnique({
+        where: { idempotencyKey },
+        select: { id: true, amount: true, status: true },
+      });
+      if (existingRefund && existingRefund.status !== 'reserved') {
+        return { completed: true as const };
+      }
+
+      const priorRefunds = await transaction.refund.aggregate({
+        where: {
+          paymentId: payment.id,
+          tenantId: user.tenantId,
+          status: { notIn: ['rejected', 'cancelled', 'superseded'] },
+          ...(existingRefund ? { id: { not: existingRefund.id } } : {}),
+        },
+        _sum: { amount: true },
+      });
+      const paymentAmount = Number(lockedPayment.amount);
+      const alreadyRefunded = Number(priorRefunds._sum.amount ?? 0);
+      const remainingAmount = Math.max(0, paymentAmount - alreadyRefunded);
+      const refundAmount = existingRefund ? Number(existingRefund.amount) : amount ?? remainingAmount;
+      if (
+        remainingAmount <= 0
+        || refundAmount <= 0
+        || refundAmount > remainingAmount
+        || (amount != null && amount > remainingAmount)
+      ) {
+        throw new BadRequestException(
+          'Valor do estorno maior que o saldo ainda disponível para estorno.',
+        );
+      }
+
+      if (!existingRefund) {
+        await transaction.refund.create({
+          data: {
+            tenantId: user.tenantId,
+            paymentId: payment.id,
+            idempotencyKey,
+            createdByUserId: user.userId,
+            amount: refundAmount,
+            reason: dto.reason,
+            status: 'reserved',
+          },
+        });
+      }
+
+      return {
+        completed: false as const,
+        providerReference: lockedPayment.providerReference,
+        refundAmount,
+        providerAmount: amount == null && alreadyRefunded === 0 ? undefined : refundAmount,
+        isTotalRefund: refundAmount >= remainingAmount,
+      };
     });
-    if (existingRefund) {
+
+    if (reservation.completed) {
       return this.prisma.payment.findFirstOrThrow({
         where: { id: payment.id, tenantId: user.tenantId },
         include: { refunds: true, order: { include: { items: true, payments: true } } },
       });
     }
 
-    if (payment.status !== PaymentStatus.PAID && payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
-      throw new BadRequestException('Apenas pagamentos aprovados podem ser estornados.');
-    }
-
-    if (!payment.providerReference) {
-      throw new BadRequestException('Pagamento sem referência do Mercado Pago.');
-    }
-
-    const paymentAmount = Number(payment.amount);
-    const priorRefunds = await this.prisma.refund.aggregate({
-      where: {
-        paymentId: payment.id,
-        tenantId: user.tenantId,
-        status: { notIn: ['rejected', 'cancelled'] },
-      },
-      _sum: { amount: true },
-    });
-    const alreadyRefunded = Number(priorRefunds._sum.amount ?? 0);
-    const remainingAmount = Math.max(0, paymentAmount - alreadyRefunded);
-    if (remainingAmount <= 0 || (amount != null && amount > remainingAmount)) {
-      throw new BadRequestException('Valor do estorno maior que o saldo ainda disponível para estorno.');
-    }
-    const refundAmount = amount ?? remainingAmount;
-    const providerAmount = amount == null && alreadyRefunded === 0 ? undefined : refundAmount;
-
     const refundResult = await this.mercadoPagoProvider.refundPayment({
-      providerReference: payment.providerReference,
-      amount: providerAmount,
+      providerReference: reservation.providerReference,
+      amount: reservation.providerAmount,
       idempotencyKey,
     });
 
-    try {
-      await this.persistRefund({
-        user,
-        payment,
-        refundResult,
-        idempotencyKey,
-        reason: dto.reason,
-        restockItems: dto.restockItems === true,
-        isTotalRefund: refundAmount >= remainingAmount,
-      });
-    } catch (error) {
-      const isUniqueConflict =
-        typeof error === 'object'
-        && error !== null
-        && 'code' in error
-        && (error as { code?: string }).code === 'P2002';
-      if (!isUniqueConflict) {
-        throw error;
-      }
-      const concurrentRefund = await this.prisma.refund.findUnique({
-        where: { idempotencyKey, tenantId: user.tenantId },
-        select: { id: true },
-      });
-      if (!concurrentRefund) {
-        throw error;
-      }
-    }
+    await this.persistRefund({
+      user,
+      payment,
+      refundResult,
+      idempotencyKey,
+      reservedAmount: reservation.refundAmount,
+      reason: dto.reason,
+      restockItems: dto.restockItems === true,
+      isTotalRefund: reservation.isTotalRefund,
+    });
 
     return this.prisma.payment.findFirstOrThrow({
       where: { id: payment.id, tenantId: user.tenantId },
@@ -646,6 +680,7 @@ export class PaymentsService {
     payment: Payment & { order: OrderWithPayment | null };
     refundResult: MercadoPagoRefundResult;
     idempotencyKey: string;
+    reservedAmount: number;
     reason: string;
     restockItems: boolean;
     isTotalRefund: boolean;
@@ -655,19 +690,24 @@ export class PaymentsService {
       return;
     }
 
-    await this.prisma.withTenant(input.user.tenantId, async transaction => {
-      await transaction.refund.create({
-        data: {
-          tenantId: input.user.tenantId,
-          paymentId: input.payment.id,
+    const persisted = await this.prisma.withTenant(input.user.tenantId, async transaction => {
+      const reservationUpdate = await transaction.refund.updateMany({
+        where: {
           idempotencyKey: input.idempotencyKey,
-          createdByUserId: input.user.userId,
-          amount: input.refundResult.amount,
-          reason: input.reason,
+          tenantId: input.user.tenantId,
+          status: 'reserved',
+        },
+        data: {
+          amount: input.refundResult.amount > 0
+            ? input.refundResult.amount
+            : input.reservedAmount,
           status: input.refundResult.status,
           metadata: input.refundResult.raw as Prisma.InputJsonObject,
         },
       });
+      if (reservationUpdate.count === 0) {
+        return false;
+      }
 
       const refundApproved = input.refundResult.status === 'approved';
       if (refundApproved) {
@@ -727,7 +767,12 @@ export class PaymentsService {
           });
         }
       }
+      return true;
     });
+
+    if (!persisted) {
+      return;
+    }
 
     await this.auditService.record({
       tenantId: input.user.tenantId,
