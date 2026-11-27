@@ -631,23 +631,26 @@ export class PaymentsService {
         },
       });
 
-      await transaction.payment.update({
-        where: { id: input.payment.id },
-        data: {
-          status: input.isTotalRefund
-            ? PaymentStatus.REFUNDED
-            : PaymentStatus.PARTIALLY_REFUNDED,
-        },
-      });
-
-      if (input.isTotalRefund) {
-        await transaction.order.update({
-          where: { id: order.id },
-          data: { status: OrderStatus.REFUNDED },
+      const refundApproved = input.refundResult.status === 'approved';
+      if (refundApproved) {
+        await transaction.payment.update({
+          where: { id: input.payment.id },
+          data: {
+            status: input.isTotalRefund
+              ? PaymentStatus.REFUNDED
+              : PaymentStatus.PARTIALLY_REFUNDED,
+          },
         });
+
+        if (input.isTotalRefund) {
+          await transaction.order.update({
+            where: { id: order.id },
+            data: { status: OrderStatus.REFUNDED },
+          });
+        }
       }
 
-      if (input.restockItems) {
+      if (refundApproved && input.restockItems) {
         for (const item of order.items) {
           if (!item.product?.trackInventory || !item.product.inventory) {
             continue;
@@ -680,12 +683,15 @@ export class PaymentsService {
     await this.auditService.record({
       tenantId: input.user.tenantId,
       userId: input.user.userId,
-      action: input.isTotalRefund ? 'payment.refund.total' : 'payment.refund.partial',
+      action: input.refundResult.status === 'approved'
+        ? (input.isTotalRefund ? 'payment.refund.total' : 'payment.refund.partial')
+        : 'payment.refund.requested',
       entity: 'Payment',
       entityId: input.payment.id,
       metadata: {
         amount: input.refundResult.amount,
-        restockItems: input.restockItems,
+        status: input.refundResult.status,
+        restockItems: input.refundResult.status === 'approved' && input.restockItems,
         reason: input.reason,
       },
     });
