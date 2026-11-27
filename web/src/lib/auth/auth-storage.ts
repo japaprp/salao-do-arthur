@@ -2,7 +2,7 @@ import { User } from '@/types';
 
 const STORAGE_PREFIX = 'barbearia_do_artur';
 const USER_STORAGE_KEY = `${STORAGE_PREFIX}.user`;
-const LEGACY_STORAGE_KEYS = ['user', 'auth_token'];
+const LEGACY_STORAGE_KEYS = ['user', 'auth_token', `${STORAGE_PREFIX}.auth_token`];
 let accessToken: string | null = null;
 
 export function readStoredUser(): User | null {
