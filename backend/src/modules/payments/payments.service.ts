@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import {
   BadRequestException,
   ForbiddenException,
@@ -210,6 +211,27 @@ export class PaymentsService {
       throw new NotFoundException('Pagamento não encontrado.');
     }
 
+    const amount = dto.amount;
+    const idempotencyKey = createHash('sha256')
+      .update([
+        payment.id,
+        amount == null ? 'total' : amount.toFixed(2),
+        dto.reason.trim(),
+        dto.restockItems === true ? 'restock' : 'no-restock',
+      ].join(':'))
+      .digest('hex');
+
+    const existingRefund = await this.prisma.refund.findUnique({
+      where: { idempotencyKey },
+      select: { id: true },
+    });
+    if (existingRefund) {
+      return this.prisma.payment.findFirstOrThrow({
+        where: { id: payment.id, tenantId: user.tenantId },
+        include: { refunds: true, order: { include: { items: true, payments: true } } },
+      });
+    }
+
     if (payment.status !== PaymentStatus.PAID && payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
       throw new BadRequestException('Apenas pagamentos aprovados podem ser estornados.');
     }
@@ -218,7 +240,6 @@ export class PaymentsService {
       throw new BadRequestException('Pagamento sem referência do Mercado Pago.');
     }
 
-    const amount = dto.amount;
     const paymentAmount = Number(payment.amount);
     if (amount != null && amount > paymentAmount) {
       throw new BadRequestException('Valor do estorno maior que o pagamento.');
@@ -227,17 +248,36 @@ export class PaymentsService {
     const refundResult = await this.mercadoPagoProvider.refundPayment({
       providerReference: payment.providerReference,
       amount,
-      idempotencyKey: `refund-${payment.id}-${amount ?? 'total'}-${Date.now()}`,
+      idempotencyKey,
     });
 
-    await this.persistRefund({
-      user,
-      payment,
-      refundResult,
-      reason: dto.reason,
-      restockItems: dto.restockItems === true,
-      isTotalRefund: amount == null || amount >= paymentAmount,
-    });
+    try {
+      await this.persistRefund({
+        user,
+        payment,
+        refundResult,
+        idempotencyKey,
+        reason: dto.reason,
+        restockItems: dto.restockItems === true,
+        isTotalRefund: amount == null || amount >= paymentAmount,
+      });
+    } catch (error) {
+      const isUniqueConflict =
+        typeof error === 'object'
+        && error !== null
+        && 'code' in error
+        && (error as { code?: string }).code === 'P2002';
+      if (!isUniqueConflict) {
+        throw error;
+      }
+      const concurrentRefund = await this.prisma.refund.findUnique({
+        where: { idempotencyKey },
+        select: { id: true },
+      });
+      if (!concurrentRefund) {
+        throw error;
+      }
+    }
 
     return this.prisma.payment.findFirstOrThrow({
       where: { id: payment.id, tenantId: user.tenantId },
@@ -458,6 +498,7 @@ export class PaymentsService {
     user: AuthenticatedUser;
     payment: Payment & { order: OrderWithPayment | null };
     refundResult: MercadoPagoRefundResult;
+    idempotencyKey: string;
     reason: string;
     restockItems: boolean;
     isTotalRefund: boolean;
@@ -472,6 +513,7 @@ export class PaymentsService {
         data: {
           tenantId: input.user.tenantId,
           paymentId: input.payment.id,
+          idempotencyKey: input.idempotencyKey,
           createdByUserId: input.user.userId,
           amount: input.refundResult.amount,
           reason: input.reason,
