@@ -6,14 +6,15 @@ services:
     region: oregon
     branch: main
     rootDir: backend
-    autoDeployTrigger: commit
+    autoDeployTrigger: off
     buildCommand: export DATABASE_URL="mysql://placeholder:placeholder@127.0.0.1:3306/placeholder" && npm ci --include=dev && npm run prisma:generate && npm run build
     startCommand: npm run prisma:migrate:deploy && npm run start:prod
-    initialDeployHook: npm run prisma:seed
     healthCheckPath: /api/health/ready
     envVars:
       - key: NODE_ENV
         value: production
+      - key: ALLOW_DEMO_SEED
+        value: "false"
       - key: HOST
         value: 0.0.0.0
       - key: DEFAULT_TENANT_SUBDOMAIN
