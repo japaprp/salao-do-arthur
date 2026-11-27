@@ -24,6 +24,9 @@ export function readStoredUser(): User | null {
 }
 
 export function readStoredToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
   return accessToken;
 }
 
@@ -38,15 +41,18 @@ export function persistAuthSession(user: User, token: string): void {
 }
 
 export function updateStoredTokens(token: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
   accessToken = token;
 }
 
 export function clearAuthSession(): void {
-  accessToken = null;
   if (typeof window === 'undefined') {
     return;
   }
 
+  accessToken = null;
   localStorage.removeItem(USER_STORAGE_KEY);
   clearLegacyAuthSession();
 }
