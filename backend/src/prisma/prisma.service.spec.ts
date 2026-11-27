@@ -60,7 +60,7 @@ describe('PrismaService.withTenant', () => {
       client.user.findMany({ where: { isActive: true } }) as unknown as Promise<unknown>,
     );
 
-    expect(result).toEqual({ where: { active: true, tenantId: 'tenant-1' } });
+    expect(result).toEqual({ where: { isActive: true, tenantId: 'tenant-1' } });
     expect(fakeTransaction.user.findMany).toHaveBeenCalled();
   });
 
