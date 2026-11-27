@@ -374,7 +374,7 @@ const AppointmentsPage: NextPage = () => {
                 <Button variant="outlined">Próximos 7 dias</Button>
                 <Button variant="outlined">Todos os status</Button>
                 <Chip
-                  label="Cancelamento grátis até 1h antes; depois, taxa mínima R$ 20 ou 30%"
+                  label="Até 1h antes: sem taxa. Depois: taxa apenas sugerida (R$ 20 ou 30%); não é cobrada automaticamente."
                   color="warning"
                   variant="outlined"
                 />
