@@ -2,8 +2,8 @@ import { User } from '@/types';
 
 const STORAGE_PREFIX = 'barbearia_do_artur';
 const USER_STORAGE_KEY = `${STORAGE_PREFIX}.user`;
-const TOKEN_STORAGE_KEY = `${STORAGE_PREFIX}.auth_token`;
 const LEGACY_STORAGE_KEYS = ['user', 'auth_token'];
+let accessToken: string | null = null;
 
 export function readStoredUser(): User | null {
   if (typeof window === 'undefined') {
@@ -24,38 +24,30 @@ export function readStoredUser(): User | null {
 }
 
 export function readStoredToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
+  return accessToken;
 }
 
-export function persistAuthSession(user: User, accessToken: string): void {
+export function persistAuthSession(user: User, token: string): void {
   if (typeof window === 'undefined') {
     return;
   }
 
   clearLegacyAuthSession();
+  accessToken = token;
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
 }
 
-export function updateStoredTokens(accessToken: string): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
+export function updateStoredTokens(token: string): void {
+  accessToken = token;
 }
 
 export function clearAuthSession(): void {
+  accessToken = null;
   if (typeof window === 'undefined') {
     return;
   }
 
   localStorage.removeItem(USER_STORAGE_KEY);
-  localStorage.removeItem(TOKEN_STORAGE_KEY);
   clearLegacyAuthSession();
 }
 
