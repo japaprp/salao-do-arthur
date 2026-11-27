@@ -1177,6 +1177,7 @@ model PaymentWebhookEvent {
 
 model Refund {
   id              String   @id @default(uuid())
+  idempotencyKey  String?  @unique
   tenantId        String
   paymentId       String
   createdByUserId String?
