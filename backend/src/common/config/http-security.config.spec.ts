@@ -15,11 +15,12 @@ describe('CORS security policy', () => {
     process.env.CORS_ORIGINS = 'https://japaprp.github.io';
     const options = buildCorsOptions(true);
     const callback = jest.fn();
+    const originHandler = options.origin as (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => void;
 
-    options.origin?.('http://localhost:3001', callback);
+    originHandler('http://localhost:3001', callback);
     expect(callback).toHaveBeenCalledWith(expect.any(Error), false);
 
-    options.origin?.('https://japaprp.github.io', callback);
+    originHandler('https://japaprp.github.io', callback);
     expect(callback).toHaveBeenLastCalledWith(null, true);
   });
 
@@ -27,8 +28,9 @@ describe('CORS security policy', () => {
     process.env.CORS_ORIGINS = '';
     const options = buildCorsOptions(false);
     const callback = jest.fn();
+    const originHandler = options.origin as (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => void;
 
-    options.origin?.('http://localhost:3001', callback);
+    originHandler('http://localhost:3001', callback);
     expect(callback).toHaveBeenCalledWith(null, true);
   });
 });
