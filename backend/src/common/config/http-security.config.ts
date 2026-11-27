@@ -10,7 +10,7 @@ function getAllowedOrigins(): string[] {
     .filter(Boolean);
 }
 
-export function buildCorsOptions(): CorsOptions {
+export function buildCorsOptions(isProduction = process.env.NODE_ENV === 'production'): CorsOptions {
   const allowedOrigins = new Set(getAllowedOrigins());
 
   return {
@@ -20,7 +20,7 @@ export function buildCorsOptions(): CorsOptions {
         return;
       }
 
-      if (allowedOrigins.has(origin) || localhostPattern.test(origin)) {
+      if (allowedOrigins.has(origin) || (!isProduction && localhostPattern.test(origin))) {
         callback(null, true);
         return;
       }
