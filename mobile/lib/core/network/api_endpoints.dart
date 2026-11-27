@@ -2,9 +2,11 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static const String authLogin = '/auth/login';
+  static const String authMobileLogin = '/auth/mobile/login';
   static const String authRegister = '/auth/register';
   static const String authForgotPassword = '/auth/forgot-password';
   static const String authRefresh = '/auth/refresh';
+  static const String authMobileRefresh = '/auth/mobile/refresh';
   static const String authLogout = '/auth/logout';
   static const String authProfile = '/auth/profile';
   static const String clientsMe = '/clients/me';
