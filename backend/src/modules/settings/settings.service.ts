@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma, SalonSettings } from '@prisma/client';
 import { toPrismaJson } from '../../common/utils/prisma-json.util';
 import { TenantsService } from '../tenants/tenants.service';
@@ -10,6 +11,7 @@ export class SettingsService {
   constructor(
     private readonly settingsRepository: SettingsRepository,
     private readonly tenantsService: TenantsService,
+    private readonly configService: ConfigService,
   ) {}
 
   async getByTenantId(tenantId: string): Promise<SalonSettings> {
@@ -35,6 +37,22 @@ export class SettingsService {
     updateSalonSettingsDto: UpdateSalonSettingsDto,
   ): Promise<SalonSettings> {
     await this.getByTenantId(tenantId);
+
+    if (updateSalonSettingsDto.enableCheckout === true) {
+      const requiredProviderConfig = [
+        'MERCADO_PAGO_ACCESS_TOKEN',
+        'MERCADO_PAGO_WEBHOOK_SECRET',
+      ];
+      const missingConfig = requiredProviderConfig.filter(
+        key => !this.configService.get<string>(key)?.trim(),
+      );
+      const webhookUrl = this.configService.get<string>('MERCADO_PAGO_WEBHOOK_URL');
+      if (missingConfig.length > 0 || !webhookUrl?.startsWith('https://')) {
+        throw new BadRequestException(
+          'Checkout indisponível: configure credenciais e URL HTTPS do Mercado Pago antes de ativá-lo.',
+        );
+      }
+    }
 
     const payload: Prisma.SalonSettingsUpdateInput = {};
 
