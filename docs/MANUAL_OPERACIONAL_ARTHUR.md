@@ -30,7 +30,7 @@ Antes de abrir a agenda ao público:
 2. Configure os canais públicos da barbearia, se forem utilizados.
 3. Em **Serviços**, cadastre cada serviço com nome, duração e preço corretos. Revise também os intervalos antes/depois e se o serviço está ativo.
 4. Em **Profissionais**, cadastre a equipe e associe cada profissional aos serviços que realmente executa. Confira eventuais preços e durações personalizados.
-5. Em **Agendamentos**, registre bloqueios e folgas. **A configuração da jornada semanal recorrente por profissional ainda não tem tela administrativa**; esse ponto precisa ser resolvido pela equipe técnica antes de abrir a agenda ao público.
+5. Em **Agendamentos**, registre bloqueios e folgas. **A configuração da jornada semanal recorrente por profissional ainda não tem tela administrativa.** A janela provisória de agendamento está fixa das 09h às 19h, todos os dias; folgas e bloqueios podem ser registrados separadamente. Se o horário real da barbearia ou de algum profissional for diferente, não abra a agenda ao público até a equipe técnica configurar e homologar a regra correta.
 6. Oriente os clientes a criarem sua conta pelo aplicativo; os cadastros aparecem no painel conforme forem realizados.
 7. Se usar a Lojinha, cadastre produtos e confira quantidades físicas antes de ativar o catálogo.
 
@@ -102,7 +102,7 @@ Se um estorno for necessário, abra **Lojinha**, localize o pedido e use a açã
 A homologação ainda precisa comprovar, em ambiente isolado e com dados de teste:
 
 - cadastro e primeiro acesso do proprietário;
-- configuração da jornada semanal por profissional;
+- configuração da jornada semanal por profissional e validação dos dias de funcionamento;
 - criação, alteração, confirmação, conclusão e cancelamento de agendamentos;
 - cálculo e conferência do financeiro e comissões;
 - fluxo de produtos, estoque, pedido e estorno;
