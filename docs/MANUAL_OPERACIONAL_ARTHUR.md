@@ -76,7 +76,7 @@ O bloco **Lançamento rápido** serve para registrar uma receita ou despesa manu
 
 ## 8. Pagamentos e estornos
 
-O checkout online deve permanecer desligado até que a integração Mercado Pago esteja configurada e testada pela equipe técnica. Não tente ativá-lo por conta própria.
+O checkout online deve permanecer desligado até que a integração Mercado Pago esteja configurada e testada pela equipe técnica. A API exige também uma liberação técnica explícita no servidor (`MERCADO_PAGO_CHECKOUT_READY=true`), que deve permanecer `false` até a homologação. Não tente ativá-lo por conta própria.
 
 Se um estorno for necessário, abra **Lojinha**, localize o pedido e use a ação de estorno disponível para o pagamento. Em seguida:
 
