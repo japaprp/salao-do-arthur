@@ -48,7 +48,7 @@ function scopeTenantData(data: unknown, tenantId: string): unknown {
 
   // Preserve Date, Prisma.Decimal, Buffer and other value objects.
   // Only plain records represent nested Prisma input/relation objects.
-  const prototype = Object.getPrototypeOf(data);
+  const prototype: unknown = Object.getPrototypeOf(data);
   if (prototype !== Object.prototype && prototype !== null) {
     return data;
   }
