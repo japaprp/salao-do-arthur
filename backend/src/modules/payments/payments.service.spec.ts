@@ -269,6 +269,41 @@ describe('PaymentsService', () => {
     expect(transaction.inventory.updateMany).not.toHaveBeenCalled();
   });
 
+  it('retries a reserved refund with the same provider idempotency key', async () => {
+    const payment = buildPaymentFixture();
+    payment.status = PaymentStatus.PAID;
+    payment.providerReference = 'mp-payment-1';
+    payment.amount = 100;
+    prisma.payment.findFirst.mockResolvedValue(payment);
+    transaction.refund.findUnique.mockResolvedValue({
+      id: 'refund-reservation-1',
+      amount: 20,
+      status: 'reserved',
+    });
+    mercadoPagoProvider.refundPayment.mockResolvedValue({
+      id: 'mp-refund-retried',
+      status: 'approved',
+      amount: 20,
+      raw: { id: 'mp-refund-retried', status: 'approved' },
+    });
+    prisma.payment.findFirstOrThrow.mockResolvedValue({ id: 'payment-1' });
+
+    await service.refundPayment(
+      { userId: 'owner-1', tenantId: 'tenant-1', role: 'OWNER' } as never,
+      'payment-1',
+      { amount: 20, reason: 'Solicitação do cliente' },
+    );
+
+    expect(transaction.refund.create).not.toHaveBeenCalled();
+    expect(mercadoPagoProvider.refundPayment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerReference: 'mp-payment-1',
+        amount: 20,
+        idempotencyKey: expect.stringMatching(/^[a-f0-9]{64}$/),
+      }),
+    );
+  });
+
   it('does not submit an identical refund request twice', async () => {
     const payment = buildPaymentFixture();
     payment.status = PaymentStatus.PAID;
