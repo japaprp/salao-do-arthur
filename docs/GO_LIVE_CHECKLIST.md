@@ -5,11 +5,11 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 | Etapa | Escopo | Estado atual |
 |---|---|---|
 | 1 | Auditoria completa de código, dependências, arquitetura e configuração | BLOCKED — npm ci reportou 36 vulnerabilidades (1 baixa, 20 moderadas, 13 altas e 2 críticas); relatório detalhado em docs/DEPENDENCY_SECURITY_AUDIT.md; correções e triagem pendentes |
-| 2 | Segurança, autenticação, autorização e isolamento entre tenants | BLOCKED — cobertura estrutural dos 53 modelos com tenantId e testes unitários PASS; modelos relacionais sem tenantId e usos de SQL bruto ainda exigem auditoria (docs/TENANT_ISOLATION_AUDIT.md) |
-| 3 | Integridade do banco, transações, concorrência e migrações | BLOCKED — quatro migrações aplicadas em MySQL descartável pelo CI; preflight de duplicidades e execução/backup em banco real não realizados |
+| 2 | Segurança, autenticação, autorização e isolamento entre tenants | BLOCKED — cobertura estrutural dos 53 modelos com tenantId, preservação de JSON/Date e testes unitários PASS; modelos relacionais sem tenantId e usos de SQL bruto ainda exigem auditoria (docs/TENANT_ISOLATION_AUDIT.md); TRUST_PROXY_HOPS explicitado, topologia real não verificada |
+| 3 | Integridade do banco, transações, concorrência e migrações | BLOCKED — 12 migrações aplicadas em MySQL 8.4 descartável pelo CI; preflight de duplicidades e execução/backup em banco real não realizados |
 | 4 | Pagamentos, webhooks, estornos e idempotência | BLOCKED — testes unitários de webhooks/estornos PASS; sandbox Mercado Pago, conciliação e testes concorrentes contra provedor não executados |
 | 5 | Financeiro, receitas, despesas, comissões e conciliação | BLOCKED — correção de dupla contagem e unicidade implementadas; conciliação e fechamento de caixa não homologados |
-| 6 | Agenda, profissionais, horários e cancelamentos | BLOCKED — proteção de concorrência implementada; jornada semanal recorrente não possui tela administrativa e a janela provisória está fixa em 09h–19h todos os dias; smoke concorrente ainda falhou por serialização de Date no wrapper (correção aplicada, reexecução pendente) |
+| 6 | Agenda, profissionais, horários e cancelamentos | BLOCKED — smoke concorrente PASS (uma reserva aceita e outra conflito); jornada semanal recorrente não possui tela administrativa e a janela provisória permanece fixa em 09h–19h todos os dias |
 | 7 | Clientes, histórico, pontos e notificações | NOT RUN — validação completa pendente |
 | 8 | Painel administrativo e permissões por perfil | NOT RUN — teste com contas separadas pendente |
 | 9 | Web e aplicativo móvel, responsividade e acessibilidade | BLOCKED — CI web/mobile PASS; teste em dispositivos reais, responsividade e acessibilidade ainda pendentes |
@@ -26,10 +26,13 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 - A main não recebeu as correções do produto. A branch foi atualizada com a main por commit de merge dentro da própria branch; PR #2 permanece draft e não foi mesclado em main.
 - O npm ci do backend reportou 36 vulnerabilidades: 1 baixa, 20 moderadas, 13 altas e 2 críticas. A etapa npm audit está em modo relatório e o release continua bloqueado por esse achado.
 - Nenhum merge do PR em main, deploy ou publicação foi executado.
-- CI backend: type-check, lint, build e 82 testes unitários passaram no commit 4579dd3; o smoke MySQL falhou no fluxo de concorrência porque o wrapper tenant alterava Date em dados aninhados. Correção aplicada em aacc910; smoke de revalidação pendente.
+- CI backend: type-check, lint, build e 82 testes unitários PASS no commit b03a86d; smoke MySQL PASS: 12 migrações aplicadas, seed, healthcheck e concorrência (uma reserva aceita e outra conflito).
+- CI web: 2 suítes e 8 testes PASS, type-check, lint e build PASS. CI mobile: analyze e testes PASS.
+- Correção de tenant wrapper preserva campos JSON, Date e objetos de valor; o teste de concorrência comprovou a correção no MySQL descartável.
 - CI web: 2 suítes e 8 testes PASS, type-check, lint e build PASS. CI mobile: analyze e testes PASS.
 - Uma nova validação completa precisa rodar sobre o HEAD mais recente antes de classificar o conjunto de correções como PASS.
-- O manual operacional é preliminar e não deve ser tratado como aceite de produção.
+- O manual operacional é preliminar, com rota correta de onboarding do proprietário (/auth/register/admin), e não deve ser tratado como aceite de produção.
+- O Render Blueprint declara TRUST_PROXY_HOPS=1; confirmar a topologia efetiva de proxies antes da produção.
 
 ## Critérios de liberação
 
