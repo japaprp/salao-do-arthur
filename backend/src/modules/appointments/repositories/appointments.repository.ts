@@ -320,11 +320,19 @@ export class AppointmentsRepository {
   }
 
   async removeTimeOff(id: string, tenantId: string): Promise<TimeOff> {
-    return this.prisma.withTenant(tenantId, transaction =>
-      transaction.timeOff.update({
+    return this.prisma.withTenant(tenantId, async transaction => {
+      const timeOff = await transaction.timeOff.findFirst({
+        where: { id, tenantId, deletedAt: null },
+        select: { id: true },
+      });
+      if (!timeOff) {
+        throw new NotFoundException('Bloqueio de agenda não encontrado.');
+      }
+
+      return transaction.timeOff.update({
         where: { id },
         data: { deletedAt: new Date() },
-      }),
-    );
+      });
+    });
   }
 }
