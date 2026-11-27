@@ -628,6 +628,15 @@ export class AppointmentsService {
     tenantId: string,
     excludeAppointmentId?: string,
   ) {
+    const requestedStartMinutes = scheduledAt.getHours() * 60 + scheduledAt.getMinutes();
+    const requestedEndMinutes = requestedStartMinutes + durationMinutes;
+    if (
+      requestedStartMinutes < BUSINESS_DAY_START_MINUTES
+      || requestedEndMinutes > BUSINESS_DAY_END_MINUTES
+    ) {
+      return false;
+    }
+
     const busyAppointments = await this.loadBusyAppointmentsForDay(
       professionalId,
       scheduledAt,
