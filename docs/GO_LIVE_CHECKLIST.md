@@ -4,7 +4,7 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 
 | Etapa | Escopo | Estado atual |
 |---|---|---|
-| 1 | Auditoria completa de código, dependências, arquitetura e configuração | BLOCKED — npm ci reportou backend 36 vulnerabilidades (1 baixa, 20 moderadas, 13 altas, 2 críticas) e web 28 (17 moderadas, 10 altas, 1 crítica, incluindo Next.js); relatório em docs/DEPENDENCY_SECURITY_AUDIT.md; correções pendentes |
+| 1 | Auditoria completa de código, dependências, arquitetura e configuração | BLOCKED — npm ci reportou backend 36 vulnerabilidades (1 baixa, 20 moderadas, 13 altas, 2 críticas) e web 28 (17 moderadas, 10 altas, 1 crítica, incluindo Next.js); relatório em docs/DEPENDENCY_SECURITY_AUDIT.md; gate bloqueante adicionado em .github/workflows/security-audit.yml; correções pendentes |
 | 2 | Segurança, autenticação, autorização e isolamento entre tenants | BLOCKED — cobertura estrutural dos 53 modelos com tenantId, preservação de JSON/Date, access token web em memória e refresh token HttpOnly; app nativo usa endpoints separados e flutter_secure_storage; modelos relacionais sem tenantId e SQL bruto ainda exigem auditoria (docs/TENANT_ISOLATION_AUDIT.md); TRUST_PROXY_HOPS explicitado, topologia real não verificada |
 | 3 | Integridade do banco, transações, concorrência e migrações | BLOCKED — 12 migrações aplicadas em MySQL 8.4 descartável pelo CI; preflight de duplicidades e execução/backup em banco real não realizados |
 | 4 | Pagamentos, webhooks, estornos e idempotência | BLOCKED — testes unitários de webhooks/estornos PASS; sandbox Mercado Pago, conciliação e testes concorrentes contra provedor não executados |
