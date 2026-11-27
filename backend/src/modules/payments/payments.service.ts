@@ -216,8 +216,7 @@ export class PaymentsService {
       .update([
         payment.id,
         amount == null ? 'total' : amount.toFixed(2),
-        dto.reason.trim(),
-        dto.restockItems === true ? 'restock' : 'no-restock',
+        dto.idempotencyKey?.trim() || dto.reason.trim(),
       ].join(':'))
       .digest('hex');
 
@@ -241,13 +240,24 @@ export class PaymentsService {
     }
 
     const paymentAmount = Number(payment.amount);
-    if (amount != null && amount > paymentAmount) {
-      throw new BadRequestException('Valor do estorno maior que o pagamento.');
+    const priorRefunds = await this.prisma.refund.aggregate({
+      where: {
+        paymentId: payment.id,
+        status: { notIn: ['rejected', 'cancelled'] },
+      },
+      _sum: { amount: true },
+    });
+    const alreadyRefunded = Number(priorRefunds._sum.amount ?? 0);
+    const remainingAmount = Math.max(0, paymentAmount - alreadyRefunded);
+    if (remainingAmount <= 0 || (amount != null && amount > remainingAmount)) {
+      throw new BadRequestException('Valor do estorno maior que o saldo ainda disponível para estorno.');
     }
+    const refundAmount = amount ?? remainingAmount;
+    const providerAmount = amount == null && alreadyRefunded === 0 ? undefined : refundAmount;
 
     const refundResult = await this.mercadoPagoProvider.refundPayment({
       providerReference: payment.providerReference,
-      amount,
+      amount: providerAmount,
       idempotencyKey,
     });
 
@@ -259,7 +269,7 @@ export class PaymentsService {
         idempotencyKey,
         reason: dto.reason,
         restockItems: dto.restockItems === true,
-        isTotalRefund: amount == null || amount >= paymentAmount,
+        isTotalRefund: refundAmount >= remainingAmount,
       });
     } catch (error) {
       const isUniqueConflict =
