@@ -105,7 +105,10 @@ export function validate(config: Record<string, unknown>) {
     if (new Set(secretValues).size !== secretValues.length) {
       throw new Error('JWT_SECRET, REFRESH_TOKEN_SECRET and PASSWORD_RESET_SECRET must be different.');
     }
-    if (!String(config.CORS_ORIGINS ?? '').split(',').map(value => value.trim()).filter(Boolean).length) {
+    const configuredCorsOrigins = typeof config.CORS_ORIGINS === 'string'
+      ? config.CORS_ORIGINS.split(',').map(value => value.trim()).filter(Boolean)
+      : [];
+    if (configuredCorsOrigins.length === 0) {
       throw new Error('Production requires at least one explicit CORS_ORIGINS entry.');
     }
   }
