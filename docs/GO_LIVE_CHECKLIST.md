@@ -5,14 +5,14 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 | Etapa | Escopo | Estado atual |
 |---|---|---|
 | 1 | Auditoria completa de código, dependências, arquitetura e configuração | BLOCKED — npm ci reportou 36 vulnerabilidades (1 baixa, 20 moderadas, 13 altas e 2 críticas); relatório detalhado em docs/DEPENDENCY_SECURITY_AUDIT.md; correções e triagem pendentes |
-| 2 | Segurança, autenticação, autorização e isolamento entre tenants | BLOCKED — cobertura estrutural dos 53 modelos com tenantId, preservação de JSON/Date e testes unitários PASS; modelos relacionais sem tenantId e usos de SQL bruto ainda exigem auditoria (docs/TENANT_ISOLATION_AUDIT.md); TRUST_PROXY_HOPS explicitado, topologia real não verificada |
+| 2 | Segurança, autenticação, autorização e isolamento entre tenants | BLOCKED — cobertura estrutural dos 53 modelos com tenantId, preservação de JSON/Date, access token web em memória e refresh token HttpOnly; app nativo usa endpoints separados e flutter_secure_storage; modelos relacionais sem tenantId e SQL bruto ainda exigem auditoria (docs/TENANT_ISOLATION_AUDIT.md); TRUST_PROXY_HOPS explicitado, topologia real não verificada |
 | 3 | Integridade do banco, transações, concorrência e migrações | BLOCKED — 12 migrações aplicadas em MySQL 8.4 descartável pelo CI; preflight de duplicidades e execução/backup em banco real não realizados |
 | 4 | Pagamentos, webhooks, estornos e idempotência | BLOCKED — testes unitários de webhooks/estornos PASS; sandbox Mercado Pago, conciliação e testes concorrentes contra provedor não executados |
 | 5 | Financeiro, receitas, despesas, comissões e conciliação | BLOCKED — correção de dupla contagem e unicidade implementadas; conciliação e fechamento de caixa não homologados |
 | 6 | Agenda, profissionais, horários e cancelamentos | BLOCKED — smoke concorrente PASS (uma reserva aceita e outra conflito); jornada semanal recorrente não possui tela administrativa e a janela provisória permanece fixa em 09h–19h todos os dias |
 | 7 | Clientes, histórico, pontos e notificações | NOT RUN — validação completa pendente |
 | 8 | Painel administrativo e permissões por perfil | NOT RUN — teste com contas separadas pendente |
-| 9 | Web e aplicativo móvel, responsividade e acessibilidade | BLOCKED — CI web/mobile PASS; teste em dispositivos reais, responsividade e acessibilidade ainda pendentes |
+| 9 | Web e aplicativo móvel, responsividade e acessibilidade | BLOCKED — CI web PASS (3 suítes/11 testes), mobile PASS (3 testes); Flutter ainda reporta 34 infos de depreciação do material.dart; teste em dispositivos reais, responsividade e acessibilidade pendentes |
 | 10 | Automações, lembretes e recuperação de falhas | NOT RUN — teste integrado pendente |
 | 11 | Infraestrutura, domínio, HTTPS, banco e variáveis | BLOCKED — MySQL externo, domínio, segredos e capacidade não verificados; frontend GitHub Pages e API Render são cross-site, incompatíveis com o refresh cookie SameSite=Lax atual sem domínio próprio ou fluxo cross-site homologado |
 | 12 | Backups, restauração, monitoramento e recuperação | BLOCKED — não há evidência de restauração real |
@@ -26,9 +26,11 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 - A main não recebeu as correções do produto. A branch foi atualizada com a main por commit de merge dentro da própria branch; PR #2 permanece draft e não foi mesclado em main.
 - O npm ci do backend reportou 36 vulnerabilidades: 1 baixa, 20 moderadas, 13 altas e 2 críticas. A etapa npm audit está em modo relatório e o release continua bloqueado por esse achado.
 - Nenhum merge do PR em main, deploy ou publicação foi executado.
-- CI backend: type-check, lint, build e 82 testes unitários PASS no commit b03a86d; smoke MySQL PASS: 12 migrações aplicadas, seed, healthcheck e concorrência (uma reserva aceita e outra conflito).
-- CI web: 2 suítes e 8 testes PASS, type-check, lint e build PASS. CI mobile: analyze e testes PASS.
-- Correção de tenant wrapper preserva campos JSON, Date e objetos de valor; o teste de concorrência comprovou a correção no MySQL descartável.
+- CI backend: type-check, lint, build e 86 testes unitários PASS no commit 56bcd5b; smoke MySQL de revalidação desse commit em execução.
+- Smoke MySQL anterior PASS: 12 migrações aplicadas, seed, healthcheck e concorrência (uma reserva aceita e outra conflito).
+- CI web: 3 suítes e 11 testes PASS, type-check, lint e build PASS. CI mobile: analyze e 3 testes PASS; 34 infos de depreciação do Material ainda precisam de migração futura.
+- Correção de tenant wrapper preserva campos JSON, Date e objetos de valor; o smoke concorrente comprovou a correção no MySQL descartável.
+- Web não persiste access token no localStorage; refresh token fica em cookie HttpOnly. Mobile usa endpoints próprios e armazenamento seguro. A combinação atual GitHub Pages + Render ainda é incompatível com SameSite=Lax sem domínio próprio; ver PRODUCTION_DEPLOYMENT.md.
 - CI web: 2 suítes e 8 testes PASS, type-check, lint e build PASS. CI mobile: analyze e testes PASS.
 - Uma nova validação completa precisa rodar sobre o HEAD mais recente antes de classificar o conjunto de correções como PASS.
 - O manual operacional é preliminar, com rota correta de onboarding do proprietário (/auth/register/admin), e não deve ser tratado como aceite de produção.
