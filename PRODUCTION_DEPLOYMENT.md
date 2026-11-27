@@ -20,8 +20,8 @@ O procedimento Nginx/systemd não é o caminho ativo descrito pelos workflows e 
 ## Transporte de tokens
 
 - Access token de curta duração mantido somente em memória no frontend; não deve ser persistido em localStorage.
-- Refresh token enviado somente em cookie HttpOnly, Secure em produção, e removido do corpo JSON das respostas de login/refresh.
-- A restauração da sessão usa o endpoint `/auth/refresh` antes de consultar o perfil.
+- Web: refresh token enviado somente em cookie HttpOnly, Secure em produção, e removido do corpo JSON das respostas `/auth/login` e `/auth/refresh`; a restauração usa `/auth/refresh` antes de consultar o perfil.
+- Aplicativo nativo: endpoints separados `/auth/mobile/login` e `/auth/mobile/refresh` retornam tokens para armazenamento seguro do dispositivo (`flutter_secure_storage`); não compartilhar esse fluxo com o frontend web.
 
 ## Compatibilidade de autenticação entre frontend e API
 
