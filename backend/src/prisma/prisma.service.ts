@@ -31,6 +31,13 @@ const TENANT_UPDATE_OPERATIONS = new Set([
   'update', 'updateMany', 'updateManyAndReturn', 'upsert',
 ]);
 
+// JSON columns are application payloads, not Prisma relation inputs.
+// Never inject tenantId into arbitrary user-controlled JSON objects.
+const TENANT_JSON_FIELDS = new Set([
+  'after', 'attachments', 'before', 'benefit', 'criteria', 'discount',
+  'metadata', 'payload', 'preferences', 'reminderLeadHours', 'triggers', 'variables',
+]);
+
 function scopeTenantData(data: unknown, tenantId: string): unknown {
   if (Array.isArray(data)) {
     return data.map(item => scopeTenantData(item, tenantId));
@@ -43,7 +50,15 @@ function scopeTenantData(data: unknown, tenantId: string): unknown {
   if (record.tenantId !== undefined && record.tenantId !== tenantId) {
     throw new Error('Tenant context mismatch in write operation.');
   }
-  return { ...record, tenantId };
+
+  const scopedRecord: Record<string, unknown> = { ...record, tenantId };
+  for (const [field, value] of Object.entries(record)) {
+    if (TENANT_JSON_FIELDS.has(field) || !value || typeof value !== 'object') {
+      continue;
+    }
+    scopedRecord[field] = scopeTenantData(value, tenantId);
+  }
+  return scopedRecord;
 }
 
 @Injectable()
