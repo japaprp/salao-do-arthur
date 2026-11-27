@@ -2,6 +2,47 @@ import { AuthController } from './auth.controller';
 import { REFRESH_TOKEN_COOKIE_NAME } from './auth.constants';
 
 describe('AuthController refresh token transport', () => {
+  it('returns tokens to the native mobile client for secure device storage', async () => {
+    const mobileSession = {
+      accessToken: 'mobile-access-token',
+      refreshToken: 'mobile-refresh-token',
+      tokenType: 'Bearer' as const,
+      expiresIn: '15m',
+      refreshExpiresIn: '7d',
+      user: { id: 'user-1', email: 'client@example.test' },
+    };
+    const authService = {
+      login: jest.fn().mockResolvedValue(mobileSession),
+    };
+    const controller = new AuthController(authService as never, { get: jest.fn() } as never);
+
+    const result = await controller.mobileLogin({} as never);
+
+    expect(result).toEqual(mobileSession);
+  });
+
+  it('rotates mobile refresh tokens only when the body supplies a refresh token', async () => {
+    const rotatedSession = {
+      accessToken: 'rotated-access-token',
+      refreshToken: 'rotated-refresh-token',
+      tokenType: 'Bearer' as const,
+      expiresIn: '15m',
+      refreshExpiresIn: '7d',
+      user: { id: 'user-1', email: 'client@example.test' },
+    };
+    const authService = {
+      refresh: jest.fn().mockResolvedValue(rotatedSession),
+    };
+    const controller = new AuthController(authService as never, { get: jest.fn() } as never);
+
+    const result = await controller.mobileRefresh({ refreshToken: 'current-refresh-token' });
+
+    expect(authService.refresh).toHaveBeenCalledWith({
+      refreshToken: 'current-refresh-token',
+    });
+    expect(result).toEqual(rotatedSession);
+  });
+
   it('sets refresh token only in an HttpOnly cookie, not in the JSON response', async () => {
     const authService = {
       login: jest.fn().mockResolvedValue({
