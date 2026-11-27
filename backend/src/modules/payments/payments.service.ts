@@ -437,12 +437,27 @@ export class PaymentsService {
           continue;
         }
 
-        const previousQty = item.product.inventory.reservedQty;
-        const newQty = Math.max(0, previousQty - item.quantity);
-        await transaction.inventory.update({
-          where: { productId: item.productId ?? item.product.id },
-          data: { reservedQty: newQty },
+        const productId = item.productId ?? item.product.id;
+        const inventoryUpdate = await transaction.inventory.updateMany({
+          where: {
+            productId,
+            tenantId: order.tenantId,
+            reservedQty: { gte: item.quantity },
+          },
+          data: { reservedQty: { decrement: item.quantity } },
         });
+        if (inventoryUpdate.count === 0) {
+          throw new Error('RESERVED_STOCK_INCONSISTENT');
+        }
+        const inventoryAfter = await transaction.inventory.findUnique({
+          where: { productId },
+          select: { id: true, reservedQty: true },
+        });
+        if (!inventoryAfter) {
+          throw new Error('INVENTORY_NOT_FOUND');
+        }
+        const newQty = inventoryAfter.reservedQty;
+        const previousQty = newQty + item.quantity;
         await transaction.stockMovement.create({
           data: {
             tenantId: order.tenantId,
@@ -585,18 +600,30 @@ export class PaymentsService {
         continue;
       }
 
-      const previousReservedQty = item.product.inventory.reservedQty;
-      const nextReservedQty = Math.max(0, previousReservedQty - item.quantity);
-      const previousAvailableQty = item.product.inventory.availableQty;
-      const nextAvailableQty = previousAvailableQty + item.quantity;
-
-      await transaction.inventory.update({
-        where: { productId: item.productId ?? item.product.id },
+      const productId = item.productId ?? item.product.id;
+      const inventoryUpdate = await transaction.inventory.updateMany({
+        where: {
+          productId,
+          tenantId: order.tenantId,
+          reservedQty: { gte: item.quantity },
+        },
         data: {
-          reservedQty: nextReservedQty,
-          availableQty: nextAvailableQty,
+          reservedQty: { decrement: item.quantity },
+          availableQty: { increment: item.quantity },
         },
       });
+      if (inventoryUpdate.count === 0) {
+        throw new Error('RESERVED_STOCK_INCONSISTENT');
+      }
+      const inventoryAfter = await transaction.inventory.findUnique({
+        where: { productId },
+        select: { id: true, availableQty: true },
+      });
+      if (!inventoryAfter) {
+        throw new Error('INVENTORY_NOT_FOUND');
+      }
+      const nextAvailableQty = inventoryAfter.availableQty;
+      const previousAvailableQty = nextAvailableQty - item.quantity;
       await transaction.stockMovement.create({
         data: {
           tenantId: order.tenantId,
@@ -666,12 +693,23 @@ export class PaymentsService {
             continue;
           }
 
-          const previousQty = item.product.inventory.availableQty;
-          const newQty = previousQty + item.quantity;
-          await transaction.inventory.update({
-            where: { productId: item.productId ?? item.product.id },
-            data: { availableQty: newQty },
+          const productId = item.productId ?? item.product.id;
+          const inventoryUpdate = await transaction.inventory.updateMany({
+            where: { productId, tenantId: order.tenantId },
+            data: { availableQty: { increment: item.quantity } },
           });
+          if (inventoryUpdate.count === 0) {
+            throw new Error('INVENTORY_NOT_FOUND');
+          }
+          const inventoryAfter = await transaction.inventory.findUnique({
+            where: { productId },
+            select: { id: true, availableQty: true },
+          });
+          if (!inventoryAfter) {
+            throw new Error('INVENTORY_NOT_FOUND');
+          }
+          const newQty = inventoryAfter.availableQty;
+          const previousQty = newQty - item.quantity;
           await transaction.stockMovement.create({
             data: {
               tenantId: order.tenantId,
