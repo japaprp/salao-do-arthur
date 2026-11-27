@@ -17,6 +17,12 @@ O procedimento Nginx/systemd não é o caminho ativo descrito pelos workflows e 
 - O seed demonstrativo não deve ser executado em produção. A variável `ALLOW_DEMO_SEED` deve permanecer `false`.
 - O workflow self-hosted `deploy-production.yml` é uma alternativa separada e só pode ser executado a partir de `main`.
 
+## Transporte de tokens
+
+- Access token de curta duração mantido somente em memória no frontend; não deve ser persistido em localStorage.
+- Refresh token enviado somente em cookie HttpOnly, Secure em produção, e removido do corpo JSON das respostas de login/refresh.
+- A restauração da sessão usa o endpoint `/auth/refresh` antes de consultar o perfil.
+
 ## Compatibilidade de autenticação entre frontend e API
 
 **Bloqueio de produção identificado:** o frontend descrito atualmente usa `https://japaprp.github.io` e a API Render usa um domínio `*.onrender.com`. São sites diferentes. O refresh token é emitido em cookie `HttpOnly; Secure; SameSite=Lax`, enquanto o frontend chama `/auth/refresh` por `fetch/axios` cross-site com credenciais. Nesse cenário, o navegador não envia o cookie Lax na requisição cross-site, e a renovação automática da sessão pode falhar quando o access token expirar.
