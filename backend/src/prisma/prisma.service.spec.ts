@@ -1,3 +1,4 @@
+import { UserRole } from '@prisma/client';
 import { PrismaService } from './prisma.service';
 
 type QueryArgs = Record<string, unknown>;
@@ -56,7 +57,7 @@ describe('PrismaService.withTenant', () => {
     const { service, fakeTransaction } = createServiceHarness();
 
     const result = await service.withTenant('tenant-1', client =>
-      client.user.findMany({ where: { active: true } }) as unknown as Promise<unknown>,
+      client.user.findMany({ where: { isActive: true } }) as unknown as Promise<unknown>,
     );
 
     expect(result).toEqual({ where: { active: true, tenantId: 'tenant-1' } });
@@ -77,11 +78,11 @@ describe('PrismaService.withTenant', () => {
     const { service, fakeTransaction } = createServiceHarness();
 
     const result = await service.withTenant('tenant-1', client =>
-      client.user.create({ data: { email: 'client@example.test' } }) as unknown as Promise<unknown>,
+      client.user.create({ data: { email: 'client@example.test', name: 'Cliente', passwordHash: 'hash', role: UserRole.CLIENT } }) as unknown as Promise<unknown>,
     );
 
     expect(result).toEqual({
-      data: { email: 'client@example.test', tenantId: 'tenant-1' },
+      data: { email: 'client@example.test', name: 'Cliente', passwordHash: 'hash', role: UserRole.CLIENT, tenantId: 'tenant-1' },
     });
     expect(fakeTransaction.user.create).toHaveBeenCalled();
   });
