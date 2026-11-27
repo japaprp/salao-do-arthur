@@ -78,11 +78,11 @@ describe('PrismaService.withTenant', () => {
     const { service, fakeTransaction } = createServiceHarness();
 
     const result = await service.withTenant('tenant-1', client =>
-      client.user.create({ data: { email: 'client@example.test', name: 'Cliente', passwordHash: 'hash', role: UserRole.CLIENT } as never }) as unknown as Promise<unknown>,
+      client.user.create({ data: { email: 'client@example.test', name: 'Cliente', passwordHash: 'hash', role: UserRole.CLIENT, preferences: { tenantId: 'json-value', theme: 'dark' } } as never }) as unknown as Promise<unknown>,
     );
 
     expect(result).toEqual({
-      data: { email: 'client@example.test', name: 'Cliente', passwordHash: 'hash', role: UserRole.CLIENT, tenantId: 'tenant-1' },
+      data: { email: 'client@example.test', name: 'Cliente', passwordHash: 'hash', role: UserRole.CLIENT, preferences: { tenantId: 'json-value', theme: 'dark' }, tenantId: 'tenant-1' },
     });
     expect(fakeTransaction.user.create).toHaveBeenCalled();
   });
