@@ -39,6 +39,12 @@ export class SettingsService {
     await this.getByTenantId(tenantId);
 
     if (updateSalonSettingsDto.enableCheckout === true) {
+      if (this.configService.get<string>('MERCADO_PAGO_CHECKOUT_READY') !== 'true') {
+        throw new BadRequestException(
+          'Checkout indisponível: a equipe técnica ainda não liberou a integração após homologação do Mercado Pago.',
+        );
+      }
+
       const requiredProviderConfig = [
         'MERCADO_PAGO_ACCESS_TOKEN',
         'MERCADO_PAGO_WEBHOOK_SECRET',
