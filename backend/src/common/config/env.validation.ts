@@ -97,7 +97,7 @@ export function validate(config: Record<string, unknown>) {
       ['PASSWORD_RESET_SECRET', validatedConfig.PASSWORD_RESET_SECRET],
     ] as const;
     for (const [name, value] of requiredSecrets) {
-      if (typeof value !== 'string' || value.length < 32 || /change_this|troque_essa|example|placeholder/i.test(value)) {
+      if (typeof value !== 'string' || value.length < 32 || /change_this|troque_(?:essa|por)|example|placeholder/i.test(value)) {
         throw new Error('Production requires ' + name + ' to be a unique secret with at least 32 characters.');
       }
     }
