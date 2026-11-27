@@ -410,7 +410,7 @@ export class AuthService {
     }
 
     const payload = this.jwtService.verify<RefreshTokenPayload>(refreshTokenDto.refreshToken, {
-      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET', 'change_this_refresh_secret'),
+      secret: this.configService.get<string>('REFRESH_TOKEN_SECRET')!,
     });
     const userId = payload.sub;
 
