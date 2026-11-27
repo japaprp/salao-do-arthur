@@ -294,6 +294,7 @@ function buildPaymentFixture() {
     providerReference: null,
     method: PaymentMethod.PIX,
     status: PaymentStatus.PENDING,
+    amount: 100,
     order: {
       id: 'order-1',
       tenantId: 'tenant-1',
