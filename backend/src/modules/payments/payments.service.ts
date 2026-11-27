@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import {
   BadRequestException,
   ForbiddenException,
@@ -113,15 +114,49 @@ export class PaymentsService {
       return { received: true, duplicated: true };
     }
 
-    const paymentDetails = await this.mercadoPagoProvider.getPayment(resourceId);
-    await this.applyProviderPaymentStatus(paymentDetails);
-
-    await this.prisma.paymentWebhookEvent.update({
-      where: { id: event.id },
-      data: { processedAt: new Date() },
+    // Claim the event atomically. A stale lease can be reclaimed after a worker crash.
+    const claimedAt = new Date();
+    const staleLeaseBefore = new Date(claimedAt.getTime() - 5 * 60_000);
+    const claim = await this.prisma.paymentWebhookEvent.updateMany({
+      where: {
+        id: event.id,
+        processedAt: null,
+        OR: [
+          { processingAt: null },
+          { processingAt: { lt: staleLeaseBefore } },
+        ],
+      },
+      data: { processingAt: claimedAt },
     });
 
-    return { received: true };
+    if (claim.count === 0) {
+      const latestEvent = await this.prisma.paymentWebhookEvent.findUnique({
+        where: { id: event.id },
+        select: { processedAt: true },
+      });
+      return latestEvent?.processedAt
+        ? { received: true, duplicated: true }
+        : { received: true, processing: true };
+    }
+
+    try {
+      const paymentDetails = await this.mercadoPagoProvider.getPayment(resourceId);
+      await this.applyProviderPaymentStatus(paymentDetails);
+
+      await this.prisma.paymentWebhookEvent.update({
+        where: { id: event.id },
+        data: { processedAt: new Date(), processingAt: null },
+      });
+
+      return { received: true };
+    } catch (error) {
+      // Release the lease so Mercado Pago can retry immediately after transient failures.
+      await this.prisma.paymentWebhookEvent.updateMany({
+        where: { id: event.id, processedAt: null },
+        data: { processingAt: null },
+      });
+      throw error;
+    }
   }
 
   async cancelPendingOrder(user: AuthenticatedUser, orderId: string) {
@@ -176,33 +211,117 @@ export class PaymentsService {
       throw new NotFoundException('Pagamento não encontrado.');
     }
 
-    if (payment.status !== PaymentStatus.PAID && payment.status !== PaymentStatus.PARTIALLY_REFUNDED) {
-      throw new BadRequestException('Apenas pagamentos aprovados podem ser estornados.');
-    }
-
-    if (!payment.providerReference) {
-      throw new BadRequestException('Pagamento sem referência do Mercado Pago.');
-    }
-
     const amount = dto.amount;
-    const paymentAmount = Number(payment.amount);
-    if (amount != null && amount > paymentAmount) {
-      throw new BadRequestException('Valor do estorno maior que o pagamento.');
+    const idempotencyKey = createHash('sha256')
+      .update([
+        payment.id,
+        amount == null ? 'total' : amount.toFixed(2),
+        dto.idempotencyKey?.trim() || dto.reason.trim(),
+      ].join(':'))
+      .digest('hex');
+
+    const reservation = await this.prisma.withTenant(user.tenantId, async transaction => {
+      // Serialize distinct refund requests for the same payment before reserving an amount.
+      await transaction.$queryRaw<{ id: string }[]>`
+        SELECT id FROM Payment
+        WHERE id = ${payment.id} AND tenantId = ${user.tenantId} AND deletedAt IS NULL
+        FOR UPDATE
+      `;
+
+      const lockedPayment = await transaction.payment.findFirst({
+        where: { id: payment.id, tenantId: user.tenantId, deletedAt: null },
+        select: { id: true, status: true, amount: true, providerReference: true },
+      });
+      if (!lockedPayment) {
+        throw new NotFoundException('Pagamento não encontrado.');
+      }
+      if (
+        lockedPayment.status !== PaymentStatus.PAID
+        && lockedPayment.status !== PaymentStatus.PARTIALLY_REFUNDED
+      ) {
+        throw new BadRequestException('Apenas pagamentos aprovados podem ser estornados.');
+      }
+      if (!lockedPayment.providerReference) {
+        throw new BadRequestException('Pagamento sem referência do Mercado Pago.');
+      }
+
+      const existingRefund = await transaction.refund.findUnique({
+        where: { idempotencyKey },
+        select: { id: true, amount: true, status: true },
+      });
+      if (existingRefund && existingRefund.status !== 'reserved') {
+        return { completed: true as const };
+      }
+
+      const priorRefunds = await transaction.refund.aggregate({
+        where: {
+          paymentId: payment.id,
+          tenantId: user.tenantId,
+          status: { notIn: ['rejected', 'cancelled', 'superseded'] },
+          ...(existingRefund ? { id: { not: existingRefund.id } } : {}),
+        },
+        _sum: { amount: true },
+      });
+      const paymentAmount = Number(lockedPayment.amount);
+      const alreadyRefunded = Number(priorRefunds._sum.amount ?? 0);
+      const remainingAmount = Math.max(0, paymentAmount - alreadyRefunded);
+      const refundAmount = existingRefund ? Number(existingRefund.amount) : amount ?? remainingAmount;
+      if (
+        remainingAmount <= 0
+        || refundAmount <= 0
+        || refundAmount > remainingAmount
+        || (amount != null && amount > remainingAmount)
+      ) {
+        throw new BadRequestException(
+          'Valor do estorno maior que o saldo ainda disponível para estorno.',
+        );
+      }
+
+      if (!existingRefund) {
+        await transaction.refund.create({
+          data: {
+            tenantId: user.tenantId,
+            paymentId: payment.id,
+            idempotencyKey,
+            createdByUserId: user.userId,
+            amount: refundAmount,
+            reason: dto.reason,
+            status: 'reserved',
+          },
+        });
+      }
+
+      return {
+        completed: false as const,
+        providerReference: lockedPayment.providerReference,
+        refundAmount,
+        providerAmount: amount == null && alreadyRefunded === 0 ? undefined : refundAmount,
+        isTotalRefund: refundAmount >= remainingAmount,
+      };
+    });
+
+    if (reservation.completed) {
+      return this.prisma.payment.findFirstOrThrow({
+        where: { id: payment.id, tenantId: user.tenantId },
+        include: { refunds: true, order: { include: { items: true, payments: true } } },
+      });
     }
 
     const refundResult = await this.mercadoPagoProvider.refundPayment({
-      providerReference: payment.providerReference,
-      amount,
-      idempotencyKey: `refund-${payment.id}-${amount ?? 'total'}-${Date.now()}`,
+      providerReference: reservation.providerReference,
+      amount: reservation.providerAmount,
+      idempotencyKey,
     });
 
     await this.persistRefund({
       user,
       payment,
       refundResult,
+      idempotencyKey,
+      reservedAmount: reservation.refundAmount,
       reason: dto.reason,
       restockItems: dto.restockItems === true,
-      isTotalRefund: amount == null || amount >= paymentAmount,
+      isTotalRefund: reservation.isTotalRefund,
     });
 
     return this.prisma.payment.findFirstOrThrow({
@@ -283,8 +402,13 @@ export class PaymentsService {
       return;
     }
 
-    if (['rejected', 'cancelled', 'refunded', 'charged_back'].includes(paymentDetails.status)) {
+    if (paymentDetails.status === 'rejected' || paymentDetails.status === 'cancelled') {
       await this.cancelOrderAndReleaseReservation(payment.order, paymentDetails);
+      return;
+    }
+
+    if (paymentDetails.status === 'refunded' || paymentDetails.status === 'charged_back') {
+      await this.markPaymentReversed(payment.order, payment, paymentDetails);
       return;
     }
 
@@ -308,34 +432,67 @@ export class PaymentsService {
       return;
     }
 
-    await this.prisma.withTenant(order.tenantId, async transaction => {
-      await transaction.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentStatus.PAID,
-          method: paymentDetails.paymentMethod ?? payment.method,
-          providerReference: paymentDetails.id,
-          paidAt: new Date(),
-          metadata: paymentDetails.raw as Prisma.InputJsonObject,
-        },
-      });
+    let settled = false;
+    try {
+      settled = await this.prisma.withTenant(order.tenantId, async transaction => {
+        const paidAt = new Date();
+        const orderClaim = await transaction.order.updateMany({
+          where: {
+            id: order.id,
+            tenantId: order.tenantId,
+            status: OrderStatus.PENDING_PAYMENT,
+          },
+          data: { status: OrderStatus.PAID, paidAt },
+        });
+        if (orderClaim.count === 0) {
+          return false;
+        }
 
-      await transaction.order.update({
-        where: { id: order.id },
-        data: { status: OrderStatus.PAID, paidAt: new Date() },
-      });
+        const paymentClaim = await transaction.payment.updateMany({
+          where: {
+            id: payment.id,
+            tenantId: order.tenantId,
+            status: { in: [PaymentStatus.PENDING, PaymentStatus.AUTHORIZED] },
+          },
+          data: {
+            status: PaymentStatus.PAID,
+            method: paymentDetails.paymentMethod ?? payment.method,
+            providerReference: paymentDetails.id,
+            paidAt,
+            metadata: paymentDetails.raw as Prisma.InputJsonObject,
+          },
+        });
+        if (paymentClaim.count === 0) {
+          // Throwing rolls back the order claim as well.
+          throw new Error('PAYMENT_ALREADY_SETTLED');
+        }
 
-      for (const item of order.items) {
+        for (const item of order.items) {
         if (!item.product?.trackInventory || !item.product.inventory) {
           continue;
         }
 
-        const previousQty = item.product.inventory.reservedQty;
-        const newQty = Math.max(0, previousQty - item.quantity);
-        await transaction.inventory.update({
-          where: { productId: item.productId ?? item.product.id },
-          data: { reservedQty: newQty },
+        const productId = item.productId ?? item.product.id;
+        const inventoryUpdate = await transaction.inventory.updateMany({
+          where: {
+            productId,
+            tenantId: order.tenantId,
+            reservedQty: { gte: item.quantity },
+          },
+          data: { reservedQty: { decrement: item.quantity } },
         });
+        if (inventoryUpdate.count === 0) {
+          throw new Error('RESERVED_STOCK_INCONSISTENT');
+        }
+        const inventoryAfter = await transaction.inventory.findUnique({
+          where: { productId },
+          select: { id: true, reservedQty: true },
+        });
+        if (!inventoryAfter) {
+          throw new Error('INVENTORY_NOT_FOUND');
+        }
+        const newQty = inventoryAfter.reservedQty;
+        const previousQty = newQty + item.quantity;
         await transaction.stockMovement.create({
           data: {
             tenantId: order.tenantId,
@@ -349,10 +506,19 @@ export class PaymentsService {
             reason: `Pagamento aprovado ${paymentDetails.id}`,
           },
         });
+        }
+        return true;
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'PAYMENT_ALREADY_SETTLED') {
+        return;
       }
-    });
+      throw error;
+    }
 
-    await this.loyaltyService.awardPaidOrder(order.tenantId, order.id);
+    if (settled) {
+      await this.loyaltyService.awardPaidOrder(order.tenantId, order.id);
+    }
   }
 
   private async cancelOrderAndReleaseReservation(
@@ -364,13 +530,24 @@ export class PaymentsService {
     }
 
     await this.prisma.withTenant(order.tenantId, async transaction => {
-      await transaction.order.update({
-        where: { id: order.id },
+      const cancellation = await transaction.order.updateMany({
+        where: {
+          id: order.id,
+          tenantId: order.tenantId,
+          status: OrderStatus.PENDING_PAYMENT,
+        },
         data: { status: OrderStatus.CANCELLED, cancelledAt: new Date() },
       });
+      if (cancellation.count === 0) {
+        return;
+      }
 
       await transaction.payment.updateMany({
-        where: { orderId: order.id, tenantId: order.tenantId },
+        where: {
+          orderId: order.id,
+          tenantId: order.tenantId,
+          status: { in: [PaymentStatus.PENDING, PaymentStatus.AUTHORIZED] },
+        },
         data: {
           status: PaymentStatus.CANCELLED,
           failureReason: paymentDetails?.statusDetail,
@@ -380,6 +557,84 @@ export class PaymentsService {
 
       await this.releaseReservedStock(transaction, order, `Pagamento cancelado`);
     });
+  }
+
+  private async markPaymentReversed(
+    order: OrderWithPayment,
+    payment: Payment,
+    paymentDetails: MercadoPagoPaymentDetails,
+  ) {
+    try {
+      await this.prisma.withTenant(order.tenantId, async transaction => {
+        const reversal = await transaction.order.updateMany({
+          where: {
+            id: order.id,
+            tenantId: order.tenantId,
+            status: {
+              in: [
+                OrderStatus.PAID,
+                OrderStatus.PREPARING,
+                OrderStatus.READY_FOR_PICKUP,
+                OrderStatus.SHIPPED,
+                OrderStatus.DELIVERED,
+              ],
+            },
+          },
+          data: { status: OrderStatus.REFUNDED },
+        });
+        if (reversal.count === 0) {
+          return;
+        }
+
+        const paymentReversal = await transaction.payment.updateMany({
+          where: {
+            id: payment.id,
+            tenantId: order.tenantId,
+            status: { in: [PaymentStatus.PAID, PaymentStatus.PARTIALLY_REFUNDED] },
+          },
+          data: {
+            status: PaymentStatus.REFUNDED,
+            failureReason: paymentDetails.statusDetail ?? paymentDetails.status,
+            metadata: paymentDetails.raw as Prisma.InputJsonObject,
+          },
+        });
+        if (paymentReversal.count === 0) {
+          throw new Error('PAYMENT_REVERSAL_ALREADY_APPLIED');
+        }
+
+        await transaction.refund.updateMany({
+          where: {
+            paymentId: payment.id,
+            tenantId: order.tenantId,
+            status: { notIn: ['rejected', 'cancelled', 'superseded'] },
+          },
+          data: {
+            status: 'superseded',
+            metadata: paymentDetails.raw as Prisma.InputJsonObject,
+          },
+        });
+
+        const idempotencyKey = createHash('sha256')
+          .update([payment.id, paymentDetails.id, paymentDetails.status].join(':'))
+          .digest('hex');
+        await transaction.refund.create({
+          data: {
+            tenantId: order.tenantId,
+            paymentId: payment.id,
+            idempotencyKey,
+            amount: payment.amount,
+            reason: paymentDetails.statusDetail ?? paymentDetails.status,
+            status: paymentDetails.status,
+            metadata: paymentDetails.raw as Prisma.InputJsonObject,
+          },
+        });
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'PAYMENT_REVERSAL_ALREADY_APPLIED') {
+        return;
+      }
+      throw error;
+    }
   }
 
   private async releaseReservedStock(
@@ -392,18 +647,30 @@ export class PaymentsService {
         continue;
       }
 
-      const previousReservedQty = item.product.inventory.reservedQty;
-      const nextReservedQty = Math.max(0, previousReservedQty - item.quantity);
-      const previousAvailableQty = item.product.inventory.availableQty;
-      const nextAvailableQty = previousAvailableQty + item.quantity;
-
-      await transaction.inventory.update({
-        where: { productId: item.productId ?? item.product.id },
+      const productId = item.productId ?? item.product.id;
+      const inventoryUpdate = await transaction.inventory.updateMany({
+        where: {
+          productId,
+          tenantId: order.tenantId,
+          reservedQty: { gte: item.quantity },
+        },
         data: {
-          reservedQty: nextReservedQty,
-          availableQty: nextAvailableQty,
+          reservedQty: { decrement: item.quantity },
+          availableQty: { increment: item.quantity },
         },
       });
+      if (inventoryUpdate.count === 0) {
+        throw new Error('RESERVED_STOCK_INCONSISTENT');
+      }
+      const inventoryAfter = await transaction.inventory.findUnique({
+        where: { productId },
+        select: { id: true, availableQty: true },
+      });
+      if (!inventoryAfter) {
+        throw new Error('INVENTORY_NOT_FOUND');
+      }
+      const nextAvailableQty = inventoryAfter.availableQty;
+      const previousAvailableQty = nextAvailableQty - item.quantity;
       await transaction.stockMovement.create({
         data: {
           tenantId: order.tenantId,
@@ -424,6 +691,8 @@ export class PaymentsService {
     user: AuthenticatedUser;
     payment: Payment & { order: OrderWithPayment | null };
     refundResult: MercadoPagoRefundResult;
+    idempotencyKey: string;
+    reservedAmount: number;
     reason: string;
     restockItems: boolean;
     isTotalRefund: boolean;
@@ -433,47 +702,67 @@ export class PaymentsService {
       return;
     }
 
-    await this.prisma.withTenant(input.user.tenantId, async transaction => {
-      await transaction.refund.create({
-        data: {
+    const persisted = await this.prisma.withTenant(input.user.tenantId, async transaction => {
+      const reservationUpdate = await transaction.refund.updateMany({
+        where: {
+          idempotencyKey: input.idempotencyKey,
           tenantId: input.user.tenantId,
-          paymentId: input.payment.id,
-          createdByUserId: input.user.userId,
-          amount: input.refundResult.amount,
-          reason: input.reason,
+          status: 'reserved',
+        },
+        data: {
+          amount: input.refundResult.amount > 0
+            ? input.refundResult.amount
+            : input.reservedAmount,
           status: input.refundResult.status,
           metadata: input.refundResult.raw as Prisma.InputJsonObject,
         },
       });
-
-      await transaction.payment.update({
-        where: { id: input.payment.id },
-        data: {
-          status: input.isTotalRefund
-            ? PaymentStatus.REFUNDED
-            : PaymentStatus.PARTIALLY_REFUNDED,
-        },
-      });
-
-      if (input.isTotalRefund) {
-        await transaction.order.update({
-          where: { id: order.id },
-          data: { status: OrderStatus.REFUNDED },
-        });
+      if (reservationUpdate.count === 0) {
+        return false;
       }
 
-      if (input.restockItems) {
+      const refundApproved = input.refundResult.status === 'approved';
+      if (refundApproved) {
+        await transaction.payment.update({
+          where: { id: input.payment.id },
+          data: {
+            status: input.isTotalRefund
+              ? PaymentStatus.REFUNDED
+              : PaymentStatus.PARTIALLY_REFUNDED,
+          },
+        });
+
+        if (input.isTotalRefund) {
+          await transaction.order.update({
+            where: { id: order.id },
+            data: { status: OrderStatus.REFUNDED },
+          });
+        }
+      }
+
+      if (refundApproved && input.restockItems) {
         for (const item of order.items) {
           if (!item.product?.trackInventory || !item.product.inventory) {
             continue;
           }
 
-          const previousQty = item.product.inventory.availableQty;
-          const newQty = previousQty + item.quantity;
-          await transaction.inventory.update({
-            where: { productId: item.productId ?? item.product.id },
-            data: { availableQty: newQty },
+          const productId = item.productId ?? item.product.id;
+          const inventoryUpdate = await transaction.inventory.updateMany({
+            where: { productId, tenantId: order.tenantId },
+            data: { availableQty: { increment: item.quantity } },
           });
+          if (inventoryUpdate.count === 0) {
+            throw new Error('INVENTORY_NOT_FOUND');
+          }
+          const inventoryAfter = await transaction.inventory.findUnique({
+            where: { productId },
+            select: { id: true, availableQty: true },
+          });
+          if (!inventoryAfter) {
+            throw new Error('INVENTORY_NOT_FOUND');
+          }
+          const newQty = inventoryAfter.availableQty;
+          const previousQty = newQty - item.quantity;
           await transaction.stockMovement.create({
             data: {
               tenantId: order.tenantId,
@@ -490,17 +779,25 @@ export class PaymentsService {
           });
         }
       }
+      return true;
     });
+
+    if (!persisted) {
+      return;
+    }
 
     await this.auditService.record({
       tenantId: input.user.tenantId,
       userId: input.user.userId,
-      action: input.isTotalRefund ? 'payment.refund.total' : 'payment.refund.partial',
+      action: input.refundResult.status === 'approved'
+        ? (input.isTotalRefund ? 'payment.refund.total' : 'payment.refund.partial')
+        : 'payment.refund.requested',
       entity: 'Payment',
       entityId: input.payment.id,
       metadata: {
         amount: input.refundResult.amount,
-        restockItems: input.restockItems,
+        status: input.refundResult.status,
+        restockItems: input.refundResult.status === 'approved' && input.restockItems,
         reason: input.reason,
       },
     });

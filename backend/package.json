@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "API NestJS modular para o Barbearia do Artur",
   "private": true,
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",

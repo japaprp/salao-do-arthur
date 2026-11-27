@@ -2,7 +2,7 @@ name: Backend CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, 'fix/**']
     paths:
       - 'backend/**'
       - '.github/workflows/backend-ci.yml'
@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   validate:
@@ -40,17 +40,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Dependency security audit
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
       - name: Generate Prisma Client
         run: npm run prisma:generate
 
       - name: Type check
         run: npm run type-check
 
+      - name: Lint
+        run: npm run lint:check
+
       - name: Build
         run: npm run build
 
-      - name: Run validated backend specs
-        run: npm test -- --runInBand auth.service.spec.ts professionals.service.spec.ts reports.service.spec.ts appointments.service.spec.ts
+      - name: Run backend unit tests
+        run: npm test -- --runInBand
 
   smoke:
     name: Smoke client flow
@@ -81,6 +88,8 @@ jobs:
       CORS_ORIGINS: http://localhost:3001,http://127.0.0.1:3001
       SMOKE_API_URL: http://127.0.0.1:3100/api
       SMOKE_TEST_CONCURRENT_BOOKING: 'true'
+      ALLOW_DEMO_SEED: 'true'
+      NODE_ENV: test
       SMOKE_TENANT_SUBDOMAIN: barbearia-do-artur
       SMOKE_CLIENT_EMAIL: cliente.demo@barbeariadoartur.app
       SMOKE_CLIENT_PASSWORD: Cliente123!

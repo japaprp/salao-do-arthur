@@ -1,11 +1,6 @@
 name: Deploy Web to GitHub Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'web/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -18,11 +13,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
   NEXT_PUBLIC_SITE_BASE_PATH: /salao-do-arthur
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     name: Build static web
     runs-on: ubuntu-latest
     defaults:
@@ -77,6 +73,7 @@ jobs:
           path: web/out
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     name: Deploy static web
     needs: build
     runs-on: ubuntu-latest

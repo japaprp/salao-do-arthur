@@ -49,6 +49,7 @@ export class FinanceService {
         transaction.transaction.aggregate({
           where: {
             tenantId,
+            appointmentId: null,
             type: 'INCOME',
             status: 'CONFIRMED',
             recordedAt: { gte: range.start, lt: range.end },
@@ -165,55 +166,37 @@ export class FinanceService {
         return;
       }
 
-      const existingCommission = await transaction.commission.findFirst({
-        where: { tenantId, appointmentId, professionalId: appointment.professionalId },
-        select: { id: true },
+      const percentage = Number(appointment.professional.commissionPercent);
+      const commissionAmount = roundMoney((Number(appointment.totalAmount) * percentage) / 100);
+      await transaction.commission.createMany({
+        data: [{
+          tenantId,
+          professionalId: appointment.professionalId,
+          appointmentId,
+          percentage,
+          amount: commissionAmount,
+          metadata: {
+            source: 'appointment_completed',
+            appointmentTotal: Number(appointment.totalAmount),
+          },
+        }],
+        skipDuplicates: true,
       });
 
-      if (!existingCommission) {
-        const percentage = Number(appointment.professional.commissionPercent);
-        const amount = roundMoney((Number(appointment.totalAmount) * percentage) / 100);
-        await transaction.commission.create({
-          data: {
-            tenantId,
-            professionalId: appointment.professionalId,
-            appointmentId,
-            percentage,
-            amount,
-            metadata: {
-              source: 'appointment_completed',
-              appointmentTotal: Number(appointment.totalAmount),
-            },
-          },
-        });
-      }
-
-      const existingRevenue = await transaction.transaction.findFirst({
-        where: {
+      await transaction.transaction.createMany({
+        data: [{
           tenantId,
           appointmentId,
+          professionalId: appointment.professionalId,
           type: 'INCOME',
           category: 'SERVICE',
-          deletedAt: null,
-        },
-        select: { id: true },
+          amount: appointment.totalAmount,
+          status: 'CONFIRMED',
+          description: 'Atendimento concluido',
+          recordedAt: appointment.finishedAt ?? new Date(),
+        }],
+        skipDuplicates: true,
       });
-
-      if (!existingRevenue) {
-        await transaction.transaction.create({
-          data: {
-            tenantId,
-            appointmentId,
-            professionalId: appointment.professionalId,
-            type: 'INCOME',
-            category: 'SERVICE',
-            amount: appointment.totalAmount,
-            status: 'CONFIRMED',
-            description: 'Atendimento concluido',
-            recordedAt: appointment.finishedAt ?? new Date(),
-          },
-        });
-      }
     });
   }
 }

@@ -13,4 +13,9 @@ export class RefundPaymentDto {
   @IsOptional()
   @IsBoolean()
   restockItems?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  idempotencyKey?: string;
 }

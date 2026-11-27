@@ -28,7 +28,7 @@ async function bootstrap() {
 
   app.disable('x-powered-by');
   app.use(cookieParser());
-  app.enableCors(buildCorsOptions());
+  app.enableCors(buildCorsOptions(isProduction));
   app.use(securityHeadersMiddleware(isProduction));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
   app.setGlobalPrefix('api');

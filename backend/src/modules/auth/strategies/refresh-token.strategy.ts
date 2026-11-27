@@ -23,7 +23,7 @@ export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refres
         ExtractJwt.fromBodyField('refreshToken'),
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('REFRESH_TOKEN_SECRET', 'change_this_refresh_secret'),
+      secretOrKey: configService.get<string>('REFRESH_TOKEN_SECRET')!,
     });
   }
 

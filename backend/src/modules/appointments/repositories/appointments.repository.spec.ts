@@ -39,9 +39,11 @@ describe('AppointmentsRepository tenant isolation', () => {
 
     await repository.removeTimeOff('timeoff-1', 'tenant-1');
 
-    expect(transaction.timeOff.update).toHaveBeenCalledWith({
-      where: { id: 'timeoff-1' },
-      data: { deletedAt: expect.any(Date) },
-    });
+    const updateCalls = transaction.timeOff.update.mock.calls as unknown as Array<[
+      { where: { id: string }; data: { deletedAt: Date } },
+    ]>;
+    expect(updateCalls).toHaveLength(1);
+    expect(updateCalls[0][0].where).toEqual({ id: 'timeoff-1' });
+    expect(updateCalls[0][0].data.deletedAt).toBeInstanceOf(Date);
   });
 });

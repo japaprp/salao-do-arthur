@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   rollback:
+    if: github.ref == 'refs/heads/main'
     name: Rollback production
     runs-on: ubuntu-latest
     environment: production

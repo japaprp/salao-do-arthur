@@ -444,7 +444,7 @@ export class AppointmentsService {
     const scheduledLabel = this.formatHumanDateTime(appointment.scheduledAt);
     const message =
       dto.message ??
-      `Oi ${clientName}, aqui é o Artur da Barbearia do Artur. Seu horário de ${serviceName} está marcado para ${scheduledLabel}. Se precisar ajustar, me avise. Cancelamentos com menos de 1 hora podem gerar taxa.`;
+      `Oi ${clientName}, aqui é o Artur da Barbearia do Artur. Seu horário de ${serviceName} está marcado para ${scheduledLabel}. Se precisar ajustar, me avise. Cancelamentos com menos de 1 hora podem ter taxa sugerida, combinada com a barbearia; ela não é cobrada automaticamente pelo sistema.`;
 
     const updatedAppointment = await this.appointmentsRepository.update(id, tenantId, {
       notes: this.appendOperationalNote(appointment.notes, `Mensagem preparada: ${message}`),
@@ -579,7 +579,7 @@ export class AppointmentsService {
       appointment: updatedAppointment,
       feeApplies,
       cancellationFee,
-      policy: 'Cliente pode cancelar sem taxa até 1 hora antes. Depois disso, aplicar taxa mínima de R$ 20 ou 30% do serviço.',
+      policy: 'Cancelamento sem taxa até 1 hora antes. Depois disso, há uma taxa sugerida de R$ 20 ou 30% do serviço, mas ela não é cobrada automaticamente pelo sistema.',
     };
   }
 
@@ -628,6 +628,15 @@ export class AppointmentsService {
     tenantId: string,
     excludeAppointmentId?: string,
   ) {
+    const requestedStartMinutes = scheduledAt.getHours() * 60 + scheduledAt.getMinutes();
+    const requestedEndMinutes = requestedStartMinutes + durationMinutes;
+    if (
+      requestedStartMinutes < BUSINESS_DAY_START_MINUTES
+      || requestedEndMinutes > BUSINESS_DAY_END_MINUTES
+    ) {
+      return false;
+    }
+
     const busyAppointments = await this.loadBusyAppointmentsForDay(
       professionalId,
       scheduledAt,
