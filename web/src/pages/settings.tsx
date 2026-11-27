@@ -60,7 +60,7 @@ const emptySettingsDraft: SettingsDraft = {
   appointmentLeadTimeMinutes: '60',
   cancellationWindowHours: '24',
   enableProductCatalog: true,
-  enableCheckout: true,
+  enableCheckout: false,
   enableLoyalty: true,
   enableCashback: true,
   enableReferrals: true,
