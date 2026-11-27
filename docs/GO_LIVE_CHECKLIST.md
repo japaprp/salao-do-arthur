@@ -35,6 +35,6 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 1. Todas as etapas 1–14 devem ter evidência PASS, ou exceções documentadas e aceitas formalmente pelo responsável.
 2. Nenhum FAIL aberto em isolamento entre tenants, agenda, pagamentos, estornos, estoque ou integridade financeira.
 3. Banco MySQL persistente, TLS, backups automáticos e restauração comprovada.
-4. Checkout desligado até sandbox, webhooks e conciliação aprovados.
+4. Checkout desligado por padrão; ativação também exige liberação técnica explícita (`MERCADO_PAGO_CHECKOUT_READY=true`) após sandbox, webhooks e conciliação aprovados.
 5. Manual validado com Arthur em sessão assistida; ele deve conseguir operar os fluxos sem terminal ou acesso técnico.
 6. Publicação somente após autorização específica para go-live.
