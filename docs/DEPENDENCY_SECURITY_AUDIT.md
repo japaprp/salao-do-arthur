@@ -59,6 +59,7 @@ O Next.js está no runtime de produção do frontend, portanto a vulnerabilidade
 - **NOT RUN:** validação completa do grafo de produção com `npm audit --omit=dev`.
 - **NOT RUN:** atualização controlada dos pacotes transitivos, seguida de testes de regressão.
 - **NOT RUN:** análise de compatibilidade e plano de migração para Prisma 7.
+- **NOT RUN:** auditoria de vulnerabilidades do grafo Flutter/Dart; o CI atual cobre analyze/test, mas não executa auditoria de advisories Dart.
 
 ## Próximas ações técnicas
 
