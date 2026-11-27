@@ -30,8 +30,8 @@ Antes de abrir a agenda ao público:
 2. Configure os canais públicos da barbearia, se forem utilizados.
 3. Em **Serviços**, cadastre cada serviço com nome, duração e preço corretos. Revise também os intervalos antes/depois e se o serviço está ativo.
 4. Em **Profissionais**, cadastre a equipe e associe cada profissional aos serviços que realmente executa. Confira eventuais preços e durações personalizados.
-5. Configure os horários de trabalho e bloqueios/folgas de cada profissional em **Agendamentos**.
-6. Cadastre os clientes ou oriente-os a criar sua conta pelo aplicativo de cliente.
+5. Em **Agendamentos**, registre bloqueios e folgas. **A configuração da jornada semanal recorrente por profissional ainda não tem tela administrativa**; esse ponto precisa ser resolvido pela equipe técnica antes de abrir a agenda ao público.
+6. Oriente os clientes a criarem sua conta pelo aplicativo; os cadastros aparecem no painel conforme forem realizados.
 7. Se usar a Lojinha, cadastre produtos e confira quantidades físicas antes de ativar o catálogo.
 
 ## 4. Rotina diária da agenda
@@ -78,7 +78,7 @@ O bloco **Lançamento rápido** serve para registrar uma receita ou despesa manu
 
 O checkout online deve permanecer desligado até que a integração Mercado Pago esteja configurada e testada pela equipe técnica. Não tente ativá-lo por conta própria.
 
-Se um estorno for necessário:
+Se um estorno for necessário, abra **Lojinha**, localize o pedido e use a ação de estorno disponível para o pagamento. Em seguida:
 
 1. Confirme o pagamento e o pedido corretos.
 2. Informe o valor (deixe vazio somente quando a intenção for estorno total) e o motivo.
@@ -102,6 +102,7 @@ Se um estorno for necessário:
 A homologação ainda precisa comprovar, em ambiente isolado e com dados de teste:
 
 - cadastro e primeiro acesso do proprietário;
+- configuração da jornada semanal por profissional;
 - criação, alteração, confirmação, conclusão e cancelamento de agendamentos;
 - cálculo e conferência do financeiro e comissões;
 - fluxo de produtos, estoque, pedido e estorno;
