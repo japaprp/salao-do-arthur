@@ -30,6 +30,7 @@ describe('PaymentsService', () => {
     },
     refund: {
       findUnique: jest.fn(),
+      aggregate: jest.fn().mockResolvedValue({ _sum: { amount: null } }),
     },
     paymentWebhookEvent: {
       upsert: jest.fn(),
@@ -183,6 +184,23 @@ describe('PaymentsService', () => {
         }),
       }),
     );
+  });
+
+  it('rejects a partial refund larger than the remaining refundable balance', async () => {
+    const payment = buildPaymentFixture();
+    payment.status = PaymentStatus.PARTIALLY_REFUNDED;
+    payment.providerReference = 'mp-payment-1';
+    prisma.payment.findFirst.mockResolvedValue(payment);
+    prisma.refund.findUnique.mockResolvedValue(null);
+    prisma.refund.aggregate.mockResolvedValue({ _sum: { amount: 80 } });
+
+    await expect(service.refundPayment(
+      { userId: 'owner-1', tenantId: 'tenant-1', role: 'OWNER' } as never,
+      'payment-1',
+      { amount: 30, reason: 'Novo pedido de estorno' },
+    )).rejects.toThrow('saldo ainda disponível');
+
+    expect(mercadoPagoProvider.refundPayment).not.toHaveBeenCalled();
   });
 
   it('does not mark a payment refunded before the provider approves it', async () => {
