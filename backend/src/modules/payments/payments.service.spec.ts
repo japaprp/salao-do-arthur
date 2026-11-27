@@ -322,7 +322,7 @@ describe('PaymentsService', () => {
     });
 
     expect(transaction.payment.updateMany).not.toHaveBeenCalled();
-    expect(transaction.inventory.update).not.toHaveBeenCalled();
+    expect(transaction.inventory.updateMany).not.toHaveBeenCalled();
     expect(transaction.stockMovement.create).not.toHaveBeenCalled();
     expect(loyaltyService.awardPaidOrder).not.toHaveBeenCalled();
   });
@@ -339,7 +339,7 @@ describe('PaymentsService', () => {
     });
 
     expect(transaction.payment.updateMany).not.toHaveBeenCalled();
-    expect(transaction.inventory.update).not.toHaveBeenCalled();
+    expect(transaction.inventory.updateMany).not.toHaveBeenCalled();
     expect(transaction.stockMovement.create).not.toHaveBeenCalled();
   });
 
@@ -381,7 +381,7 @@ describe('PaymentsService', () => {
         }),
       }),
     );
-    expect(transaction.inventory.update).not.toHaveBeenCalled();
+    expect(transaction.inventory.updateMany).not.toHaveBeenCalled();
     expect(transaction.stockMovement.create).not.toHaveBeenCalled();
   });
 
