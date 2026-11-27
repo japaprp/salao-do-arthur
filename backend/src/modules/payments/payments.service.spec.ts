@@ -185,6 +185,32 @@ describe('PaymentsService', () => {
     );
   });
 
+  it('does not mark a payment refunded before the provider approves it', async () => {
+    const payment = buildPaymentFixture();
+    payment.status = PaymentStatus.PAID;
+    payment.providerReference = 'mp-payment-1';
+    prisma.payment.findFirst.mockResolvedValue(payment);
+    prisma.refund.findUnique.mockResolvedValue(null);
+    prisma.payment.findFirstOrThrow.mockResolvedValue({ id: 'payment-1' });
+    mercadoPagoProvider.refundPayment.mockResolvedValue({
+      id: 'mp-refund-pending',
+      status: 'in_process',
+      amount: 20,
+      raw: { id: 'mp-refund-pending', status: 'in_process' },
+    });
+
+    await service.refundPayment(
+      { userId: 'owner-1', tenantId: 'tenant-1', role: 'OWNER' } as never,
+      'payment-1',
+      { amount: 20, reason: 'Solicitação do cliente', restockItems: true },
+    );
+
+    expect(transaction.refund.create).toHaveBeenCalled();
+    expect(transaction.payment.update).not.toHaveBeenCalled();
+    expect(transaction.order.update).not.toHaveBeenCalled();
+    expect(transaction.inventory.update).not.toHaveBeenCalled();
+  });
+
   it('does not submit an identical refund request twice', async () => {
     const payment = buildPaymentFixture();
     payment.status = PaymentStatus.PAID;
