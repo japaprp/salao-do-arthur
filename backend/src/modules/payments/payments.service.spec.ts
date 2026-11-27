@@ -10,6 +10,7 @@ describe('PaymentsService', () => {
     },
     order: {
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     inventory: {
       update: jest.fn(),
@@ -60,6 +61,8 @@ describe('PaymentsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    transaction.order.updateMany.mockResolvedValue({ count: 1 });
+    transaction.payment.updateMany.mockResolvedValue({ count: 1 });
     service = new PaymentsService(
       prisma as never,
       mercadoPagoProvider as never,
@@ -212,19 +215,27 @@ describe('PaymentsService', () => {
       raw: { id: 'mp-payment-1', status: 'approved' },
     });
 
-    expect(transaction.payment.update).toHaveBeenCalledWith(
+    expect(transaction.order.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'order-1',
+        tenantId: 'tenant-1',
+        status: OrderStatus.PENDING_PAYMENT,
+      },
+      data: { status: OrderStatus.PAID, paidAt: expect.any(Date) },
+    });
+    expect(transaction.payment.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'payment-1' },
+        where: {
+          id: 'payment-1',
+          tenantId: 'tenant-1',
+          status: { in: [PaymentStatus.PENDING, PaymentStatus.AUTHORIZED] },
+        },
         data: expect.objectContaining({
           status: PaymentStatus.PAID,
           providerReference: 'mp-payment-1',
         }),
       }),
     );
-    expect(transaction.order.update).toHaveBeenCalledWith({
-      where: { id: 'order-1' },
-      data: { status: OrderStatus.PAID, paidAt: expect.any(Date) },
-    });
     expect(transaction.inventory.update).toHaveBeenCalledWith({
       where: { productId: 'product-1' },
       data: { reservedQty: 0 },
@@ -240,6 +251,24 @@ describe('PaymentsService', () => {
       }),
     );
     expect(loyaltyService.awardPaidOrder).toHaveBeenCalledWith('tenant-1', 'order-1');
+  });
+
+  it('does not consume stock or award loyalty when another event already settled the order', async () => {
+    prisma.payment.findFirst.mockResolvedValue(buildPaymentFixture());
+    transaction.order.updateMany.mockResolvedValue({ count: 0 });
+
+    await service.applyProviderPaymentStatus({
+      id: 'mp-payment-1',
+      status: 'approved',
+      externalReference: 'order-1',
+      paymentMethod: PaymentMethod.PIX,
+      raw: { id: 'mp-payment-1', status: 'approved' },
+    });
+
+    expect(transaction.payment.updateMany).not.toHaveBeenCalled();
+    expect(transaction.inventory.update).not.toHaveBeenCalled();
+    expect(transaction.stockMovement.create).not.toHaveBeenCalled();
+    expect(loyaltyService.awardPaidOrder).not.toHaveBeenCalled();
   });
 
   it('cancels rejected payments and releases reserved stock', async () => {
