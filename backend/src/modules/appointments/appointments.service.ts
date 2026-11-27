@@ -579,7 +579,7 @@ export class AppointmentsService {
       appointment: updatedAppointment,
       feeApplies,
       cancellationFee,
-      policy: 'Cliente pode cancelar sem taxa até 1 hora antes. Depois disso, aplicar taxa mínima de R$ 20 ou 30% do serviço.',
+      policy: 'Cancelamento sem taxa até 1 hora antes. Depois disso, há uma taxa sugerida de R$ 20 ou 30% do serviço, mas ela não é cobrada automaticamente pelo sistema.',
     };
   }
 
