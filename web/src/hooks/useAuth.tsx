@@ -46,9 +46,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     const bootstrapAuth = async () => {
       const storedUser = readStoredUser();
-      if (storedUser) {
-        setUser(storedUser);
+      if (!storedUser) {
+        clearAuthSession();
+        setUser(null);
+        setIsLoading(false);
+        return;
       }
+      setUser(storedUser);
 
       try {
         const restored = await restoreAuthSession();
