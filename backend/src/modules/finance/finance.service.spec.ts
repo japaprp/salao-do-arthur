@@ -93,11 +93,13 @@ describe('FinanceService', () => {
     const aggregateCalls = transaction.transaction.aggregate.mock.calls as unknown as Array<[
       { where: Record<string, unknown> },
     ]>;
-    expect(aggregateCalls[1][0].where).toEqual({
+    expect(aggregateCalls[2][0].where).toEqual({
       tenantId: 'tenant-1',
       appointmentId: null,
       type: 'INCOME',
       status: 'CONFIRMED',
+      recordedAt: { gte: expect.any(Date), lt: expect.any(Date) },
+      deletedAt: null,
     });
     expect(result.summary.revenue).toBe(150);
   });
