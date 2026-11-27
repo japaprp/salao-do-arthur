@@ -12,7 +12,7 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 | 6 | Agenda, profissionais, horários e cancelamentos | BLOCKED — smoke concorrente PASS (uma reserva aceita e outra conflito); jornada semanal recorrente não possui tela administrativa e a janela provisória permanece fixa em 09h–19h todos os dias |
 | 7 | Clientes, histórico, pontos e notificações | NOT RUN — validação completa pendente |
 | 8 | Painel administrativo e permissões por perfil | NOT RUN — teste com contas separadas pendente |
-| 9 | Web e aplicativo móvel, responsividade e acessibilidade | BLOCKED — CI web PASS (3 suítes/11 testes), mobile PASS (3 testes); Flutter ainda reporta 34 infos de depreciação do material.dart; teste em dispositivos reais, responsividade e acessibilidade pendentes |
+| 9 | Web e aplicativo móvel, responsividade e acessibilidade | BLOCKED — CI web PASS (3 suítes/11 testes) no commit d29bc6d; mobile PASS (3 testes) no mesmo commit; Flutter ainda reporta 34 infos de depreciação do material.dart; teste em dispositivos reais, responsividade e acessibilidade pendentes |
 | 10 | Automações, lembretes e recuperação de falhas | NOT RUN — teste integrado pendente |
 | 11 | Infraestrutura, domínio, HTTPS, banco e variáveis | BLOCKED — MySQL externo, domínio, segredos e capacidade não verificados; frontend GitHub Pages e API Render são cross-site, incompatíveis com o refresh cookie SameSite=Lax atual sem domínio próprio ou fluxo cross-site homologado |
 | 12 | Backups, restauração, monitoramento e recuperação | BLOCKED — não há evidência de restauração real |
@@ -26,11 +26,11 @@ Este checklist é interno. Não marcar PASS sem evidência reproduzível. Os est
 - A main não recebeu as correções do produto. A branch foi atualizada com a main por commit de merge dentro da própria branch; PR #2 permanece draft e não foi mesclado em main.
 - O npm ci do backend reportou 36 vulnerabilidades: 1 baixa, 20 moderadas, 13 altas e 2 críticas. A etapa npm audit está em modo relatório e o release continua bloqueado por esse achado.
 - Nenhum merge do PR em main, deploy ou publicação foi executado.
-- CI backend: type-check, lint, build e 86 testes unitários PASS no commit 56bcd5b; smoke MySQL de revalidação desse commit em execução.
-- Smoke MySQL anterior PASS: 12 migrações aplicadas, seed, healthcheck e concorrência (uma reserva aceita e outra conflito).
+- CI backend: type-check, lint, build e 86 testes unitários PASS no commit 56bcd5b; smoke MySQL PASS no mesmo commit: 12 migrações aplicadas, seed, healthcheck e concorrência (uma reserva aceita e outra conflito).
+- O mesmo backend smoke foi disparado novamente no commit d29bc6d após ajuste de inicialização web; a última consulta ainda o mostrava em execução.
 - CI web: 3 suítes e 11 testes PASS, type-check, lint e build PASS. CI mobile: analyze e 3 testes PASS; 34 infos de depreciação do Material ainda precisam de migração futura.
 - Correção de tenant wrapper preserva campos JSON, Date e objetos de valor; o smoke concorrente comprovou a correção no MySQL descartável.
-- Web não persiste access token no localStorage; refresh token fica em cookie HttpOnly. Mobile usa endpoints próprios e armazenamento seguro. A combinação atual GitHub Pages + Render ainda é incompatível com SameSite=Lax sem domínio próprio; ver PRODUCTION_DEPLOYMENT.md.
+- Web não persiste access token no localStorage; refresh token fica em cookie HttpOnly. Mobile usa endpoints próprios e armazenamento seguro. A combinação atual GitHub Pages + Render ainda é incompatível com SameSite=Lax sem domínio próprio; ver PRODUCTION_DEPLOYMENT.md. Web access token fica em memória; refresh token é HttpOnly. App nativo usa endpoints próprios e secure storage.
 - CI web: 2 suítes e 8 testes PASS, type-check, lint e build PASS. CI mobile: analyze e testes PASS.
 - Uma nova validação completa precisa rodar sobre o HEAD mais recente antes de classificar o conjunto de correções como PASS.
 - O manual operacional é preliminar, com rota correta de onboarding do proprietário (/auth/register/admin), e não deve ser tratado como aceite de produção.
