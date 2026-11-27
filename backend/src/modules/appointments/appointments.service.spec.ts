@@ -124,6 +124,27 @@ describe('AppointmentsService', () => {
     );
   });
 
+  it('rejects appointment times outside the default operating window', async () => {
+    const availabilityService = service as unknown as {
+      isProfessionalAvailable: (
+        professionalId: string,
+        scheduledAt: Date,
+        durationMinutes: number,
+        tenantId: string,
+      ) => Promise<boolean>;
+    };
+
+    const available = await availabilityService.isProfessionalAvailable(
+      'professional-1',
+      new Date(2026, 4, 10, 8, 30),
+      60,
+      'tenant-1',
+    );
+
+    expect(available).toBe(false);
+    expect(appointmentsRepository.findByProfessionalAndDateRange).not.toHaveBeenCalled();
+  });
+
   it('rejects booking when the professional is not available', async () => {
     clientsService.findByUserIdAndTenant.mockResolvedValue({
       id: 'client-1',
