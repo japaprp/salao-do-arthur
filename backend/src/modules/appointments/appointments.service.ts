@@ -444,7 +444,7 @@ export class AppointmentsService {
     const scheduledLabel = this.formatHumanDateTime(appointment.scheduledAt);
     const message =
       dto.message ??
-      `Oi ${clientName}, aqui é o Artur da Barbearia do Artur. Seu horário de ${serviceName} está marcado para ${scheduledLabel}. Se precisar ajustar, me avise. Cancelamentos com menos de 1 hora podem gerar taxa.`;
+      `Oi ${clientName}, aqui é o Artur da Barbearia do Artur. Seu horário de ${serviceName} está marcado para ${scheduledLabel}. Se precisar ajustar, me avise. Cancelamentos com menos de 1 hora podem ter taxa sugerida, combinada com a barbearia; ela não é cobrada automaticamente pelo sistema.`;
 
     const updatedAppointment = await this.appointmentsRepository.update(id, tenantId, {
       notes: this.appendOperationalNote(appointment.notes, `Mensagem preparada: ${message}`),
