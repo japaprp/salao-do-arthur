@@ -245,7 +245,7 @@ describe('PaymentsService', () => {
       where: {
         id: 'order-1',
         tenantId: 'tenant-1',
-        status: OrderStatus.PENDING_PAYMENT,
+        status: OrderStatus.PENDING_PAYMENT as OrderStatus,
       },
       data: { status: OrderStatus.PAID, paidAt: expect.any(Date) },
     });
@@ -408,9 +408,9 @@ function buildPaymentFixture() {
     id: 'payment-1',
     tenantId: 'tenant-1',
     provider: 'mercado_pago',
-    providerReference: null,
+    providerReference: null as string | null,
     method: PaymentMethod.PIX,
-    status: PaymentStatus.PENDING,
+    status: PaymentStatus.PENDING as PaymentStatus,
     amount: 100,
     order: {
       id: 'order-1',
