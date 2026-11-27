@@ -77,6 +77,10 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  MERCADO_PAGO_CHECKOUT_READY?: string;
+
+  @IsOptional()
+  @IsString()
   MOBILE_PAYMENT_RETURN_URL?: string;
 }
 
