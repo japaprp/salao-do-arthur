@@ -46,11 +46,14 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Lint
+        run: npm run lint:check
+
       - name: Build
         run: npm run build
 
-      - name: Run validated backend specs
-        run: npm test -- --runInBand auth.service.spec.ts professionals.service.spec.ts reports.service.spec.ts appointments.service.spec.ts payments.service.spec.ts finance.service.spec.ts settings.service.spec.ts env.validation.spec.ts appointments.repository.spec.ts
+      - name: Run backend unit tests
+        run: npm test -- --runInBand
 
   smoke:
     name: Smoke client flow
