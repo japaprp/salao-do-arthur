@@ -433,7 +433,7 @@ function buildPaymentFixture() {
     order: {
       id: 'order-1',
       tenantId: 'tenant-1',
-      status: OrderStatus.PENDING_PAYMENT,
+      status: OrderStatus.PENDING_PAYMENT as OrderStatus,
       payments: [],
       items: [
         {
