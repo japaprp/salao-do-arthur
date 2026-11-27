@@ -30,6 +30,12 @@ current_link="${component_root}/current"
 release_dir="${releases_dir}/${release_id}"
 previous_target=""
 
+node_major="$(node -p "Number(process.versions.node.split('.')[0])")"
+if [ "${node_major}" -lt 22 ]; then
+  echo "Node.js 22 ou superior e obrigatorio para esta release." >&2
+  exit 1
+fi
+
 if [ ! -f "${artifact_path}" ]; then
   echo "Artefato nao encontrado: ${artifact_path}" >&2
   exit 1
@@ -45,7 +51,10 @@ if [ -L "${current_link}" ]; then
 fi
 
 mkdir -p "${releases_dir}" "${shared_root}"
-rm -rf "${release_dir}"
+if [ -e "${release_dir}" ]; then
+  echo "Release ja existe; recusando sobrescrever: ${release_dir}" >&2
+  exit 1
+fi
 mkdir -p "${release_dir}"
 
 tar -xzf "${artifact_path}" -C "${release_dir}"
