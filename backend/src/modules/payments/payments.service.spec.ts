@@ -204,11 +204,23 @@ describe('PaymentsService', () => {
         idempotencyKey: expect.stringMatching(/^[a-f0-9]{64}$/),
       }),
     );
+    expect(transaction.$queryRaw).toHaveBeenCalled();
     expect(transaction.refund.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           idempotencyKey: expect.stringMatching(/^[a-f0-9]{64}$/),
+          amount: 20,
+          status: 'reserved',
         }),
+      }),
+    );
+    expect(transaction.refund.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          idempotencyKey: expect.stringMatching(/^[a-f0-9]{64}$/),
+          status: 'reserved',
+        }),
+        data: expect.objectContaining({ status: 'approved', amount: 20 }),
       }),
     );
   });
@@ -250,7 +262,8 @@ describe('PaymentsService', () => {
       { amount: 20, reason: 'Solicitação do cliente', restockItems: true },
     );
 
-    expect(transaction.refund.create).toHaveBeenCalled();
+    expect(transaction.refund.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: 'reserved' }) }));
+    expect(transaction.refund.updateMany).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: 'in_process' }) }));
     expect(transaction.payment.update).not.toHaveBeenCalled();
     expect(transaction.order.update).not.toHaveBeenCalled();
     expect(transaction.inventory.updateMany).not.toHaveBeenCalled();
