@@ -92,8 +92,13 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
               if (scopedArgs.data !== undefined) {
                 scopedArgs.data = scopeTenantData(scopedArgs.data, tenantId);
               }
-              if (queryOperation === 'upsert' && scopedArgs.create !== undefined) {
-                scopedArgs.create = scopeTenantData(scopedArgs.create, tenantId);
+              if (queryOperation === 'upsert') {
+                if (scopedArgs.create !== undefined) {
+                  scopedArgs.create = scopeTenantData(scopedArgs.create, tenantId);
+                }
+                if (scopedArgs.update !== undefined) {
+                  scopedArgs.update = scopeTenantData(scopedArgs.update, tenantId);
+                }
               }
             }
 
