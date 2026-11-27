@@ -3,6 +3,7 @@ import { FinanceService } from './finance.service';
 describe('FinanceService', () => {
   const transaction = {
     appointment: {
+      findFirst: jest.fn(),
       aggregate: jest.fn().mockResolvedValue({
         _sum: { totalAmount: 100 },
         _count: { id: 1 },
@@ -19,8 +20,10 @@ describe('FinanceService', () => {
         .mockResolvedValueOnce({ _sum: { amount: 50 } })
         .mockResolvedValueOnce({ _sum: { amount: 0 }, _count: { id: 0 } }),
       findMany: jest.fn().mockResolvedValue([]),
+      createMany: jest.fn(),
     },
     commission: {
+      createMany: jest.fn(),
       aggregate: jest.fn().mockResolvedValue({
         _sum: { amount: 0 },
         _count: { id: 0 },
@@ -56,15 +59,15 @@ describe('FinanceService', () => {
   });
 
   it('writes appointment revenue and commission with duplicate-safe inserts', async () => {
-    transaction.appointment.findFirst = jest.fn().mockResolvedValue({
+    transaction.appointment.findFirst.mockResolvedValue({
       id: 'appointment-1',
       tenantId: 'tenant-1',
       totalAmount: 100,
       finishedAt: new Date('2026-11-27T12:00:00.000Z'),
       professional: { commissionPercent: 40 },
     });
-    transaction.commission.createMany = jest.fn().mockResolvedValue({ count: 1 });
-    transaction.transaction.createMany = jest.fn().mockResolvedValue({ count: 1 });
+    transaction.commission.createMany.mockResolvedValue({ count: 1 });
+    transaction.transaction.createMany.mockResolvedValue({ count: 1 });
     const service = new FinanceService(prisma as never, auditService as never);
 
     await service.recordAppointmentCompletion('tenant-1', 'appointment-1');
