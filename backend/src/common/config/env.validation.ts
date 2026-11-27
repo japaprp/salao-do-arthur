@@ -81,6 +81,10 @@ class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  TRUST_PROXY_HOPS?: string;
+
+  @IsOptional()
+  @IsString()
   MOBILE_PAYMENT_RETURN_URL?: string;
 }
 
@@ -109,6 +113,10 @@ export function validate(config: Record<string, unknown>) {
     if (new Set(secretValues).size !== secretValues.length) {
       throw new Error('JWT_SECRET, REFRESH_TOKEN_SECRET and PASSWORD_RESET_SECRET must be different.');
     }
+    if (!/^\d+$/.test(validatedConfig.TRUST_PROXY_HOPS ?? '')) {
+      throw new Error('Production requires TRUST_PROXY_HOPS to match the verified reverse-proxy topology.');
+    }
+
     const configuredCorsOrigins = typeof config.CORS_ORIGINS === 'string'
       ? config.CORS_ORIGINS.split(',').map(value => value.trim()).filter(Boolean)
       : [];
