@@ -1167,6 +1167,7 @@ model PaymentWebhookEvent {
   action      String?
   payload     Json?
   processedAt DateTime?
+  processingAt DateTime?
   createdAt   DateTime @default(now())
 
   @@unique([provider, eventId])
