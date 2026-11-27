@@ -34,7 +34,7 @@
 7. Visualiza uma prévia da agenda e confirma que horários indisponíveis não podem ser reservados.
 
 **Aceite:** tenant isolado; apenas proprietário autorizado administra configurações; nenhum dado demonstrativo em produção; horários persistidos e respeitados pela API.  
-**Lacunas conhecidas:** manual preliminar aponta `/auth/register/admin`; tela completa de horários semanais ainda não existe. Não executar cadastro em produção durante esta etapa.
+**Lacunas conhecidas:** manual preliminar aponta `/auth/register/admin`; não executar cadastro em produção durante esta etapa.
 
 ### J02 — Entrar, recuperar senha e sair (P0)
 1. Usuário informa credenciais.
@@ -117,7 +117,7 @@
 6. Proprietário testa um dia comum e uma exceção antes de publicar disponibilidade.
 
 **Aceite:** API é fonte da verdade; intervalos e duração são respeitados; alteração não cria sobreposição; mudanças futuras preservam agendamentos existentes ou exigem remarcação assistida.  
-**Bloqueio conhecido:** agenda provisória fixa 09h–19h; configuração semanal por profissional não está implementada.
+**Bloqueio conhecido:** o schema Prisma já possui o modelo `WorkingHour` (dia da semana, início/fim, intervalo e vínculo opcional ao profissional), mas a auditoria desta branch não encontrou integração desse modelo ao motor de disponibilidade nem tela administrativa para configurá-lo. O motor de agenda ainda usa constantes 09h–19h e intervalo de 30 minutos. Portanto, não tratar o expediente semanal como funcional.
 
 ### J09 — Loja, pedido e estoque (P1)
 1. Cliente consulta apenas produtos ativos e disponíveis.
@@ -210,7 +210,7 @@
 
 1. Corrigir dependências altas/críticas e obter CI + security gate PASS.
 2. Completar autorização multi-tenant e testes negativos/IDOR/BOLA.
-3. Implementar expediente semanal por profissional e fechar J03/J04/J08.
+3. Integrar o modelo `WorkingHour` ao motor de disponibilidade, criar gestão semanal por profissional e fechar J03/J04/J08.
 4. Implementar/validar J05 com conta profissional e transições auditadas.
 5. Fechar J06 em sandbox, conciliação e estornos sem ativar checkout de produção.
 6. Fechar J07/J09/J10 com testes de privacidade, estoque e ledger.
