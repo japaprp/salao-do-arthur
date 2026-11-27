@@ -31,8 +31,9 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
   async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) response: Response) {
     const authResponse = await this.authService.login(loginDto);
-    this.setRefreshTokenCookie(response, authResponse.refreshToken);
-    return authResponse;
+    const { refreshToken, ...publicResponse } = authResponse;
+    this.setRefreshTokenCookie(response, refreshToken);
+    return publicResponse;
   }
 
   @Post('register')
@@ -54,8 +55,9 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     const authResponse = await this.authService.registerAdmin(registerAdminDto);
-    this.setRefreshTokenCookie(response, authResponse.refreshToken);
-    return authResponse;
+    const { refreshToken, ...publicResponse } = authResponse;
+    this.setRefreshTokenCookie(response, refreshToken);
+    return publicResponse;
   }
 
   @Post('forgot-password')
@@ -88,8 +90,9 @@ export class AuthController {
   ) {
     const refreshToken = this.getRefreshTokenFromRequest(request) ?? refreshTokenDto.refreshToken;
     const authResponse = await this.authService.refresh({ refreshToken });
-    this.setRefreshTokenCookie(response, authResponse.refreshToken);
-    return authResponse;
+    const { refreshToken: rotatedRefreshToken, ...publicResponse } = authResponse;
+    this.setRefreshTokenCookie(response, rotatedRefreshToken);
+    return publicResponse;
   }
 
   @UseGuards(JwtAuthGuard)
