@@ -54,7 +54,7 @@ O Next.js está no runtime de produção do frontend, portanto a vulnerabilidade
 
 ## Estado e decisão
 
-- **PASS:** auditoria incorporada ao CI e resultado capturado.
+- **PASS:** auditoria informativa incorporada aos workflows de build; gate separado bloqueante em `.github/workflows/security-audit.yml` reprova high/critical.
 - **BLOCKED:** backend 36 vulnerabilidades (13 altas, 2 críticas) e web 28 vulnerabilidades (10 altas, 1 crítica) ainda presentes; não há evidência de correção nos lockfiles.
 - **NOT RUN:** validação completa do grafo de produção com `npm audit --omit=dev`.
 - **NOT RUN:** atualização controlada dos pacotes transitivos, seguida de testes de regressão.
